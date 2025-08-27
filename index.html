@@ -331,103 +331,9 @@
             userInfoElement.textContent = `Kullanıcı Kimliği: ${userId}`;
         }
 
-        // Mini oyunu oynama
-        gameButton.addEventListener('click', async () => {
-            if (!userId) {
-                showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true);
-                return;
-            }
-
-            // Son tıklamadan bu yana geçen süreyi kontrol et (gereksiz tıklamaları engellemek için)
-            const now = Date.now();
-            const docSnap = await userDocRef.get();
-            if (docSnap.exists) {
-                const lastClick = docSnap.data().lastClick || 0;
-                if (now - lastClick < 500) { // 500ms bekleme süresi
-                    showMessage("Çok hızlısın! Lütfen biraz bekle.");
-                    return;
-                }
-            }
-
-            try {
-                // Firestore'daki puanı güncelle
-                await userDocRef.update({
-                    points: (docSnap.data().points || 0) + 10,
-                    lastClick: now
-                });
-                showMessage("Puan kazandın!");
-            } catch (e) {
-                console.error("Puan güncellenirken hata oluştu: ", e);
-                showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
-            }
-        });
-
-        // Çarkı çevirme
-        spinButton.addEventListener('click', async () => {
-            if (!userId) return;
-            isSpinning = true;
-            spinButton.disabled = true;
-            spinButton.textContent = "Çevriliyor...";
-
-            try {
-                const docSnap = await userDocRef.get();
-                const currentPoints = docSnap.data().points || 0;
-
-                if (currentPoints < 100) {
-                    showMessage("Yeterli puanın yok!", true);
-                    isSpinning = false;
-                    spinButton.disabled = false;
-                    spinButton.textContent = "Çarkı Çevir (100 Puan)";
-                    return;
-                }
-
-                // Puanı düşür
-                await userDocRef.update({
-                    points: currentPoints - 100
-                });
-
-                // Çarkı çevirme animasyonu
-                const targetSegmentIndex = Math.floor(Math.random() * segments.length);
-                const segmentAngle = 360 / segments.length;
-                const totalAngle = 360 * 5 + (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2));
-                
-                wheel.style.transform = `rotate(${totalAngle}deg)`;
-                
-                // Animasyon bitiminde sonuçları göster
-                setTimeout(async () => {
-                    const result = segments[targetSegmentIndex];
-                    if (result.type === 'bonus_code') {
-                        const newBonusCode = `BONUS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-                        await userDocRef.update({
-                            bonusCodes: firebase.firestore.FieldValue.arrayUnion(newBonusCode)
-                        });
-                        showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`);
-                    } else {
-                        showMessage("Maalesef, bir dahaki sefere!");
-                    }
-                    
-                    isSpinning = false;
-                    spinButton.disabled = false;
-                    spinButton.textContent = "Çarkı Çevir (100 Puan)";
-                    wheel.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
-                }, 5000); // 5 saniye animasyon süresi
-            } catch (e) {
-                console.error("Çark çevrilirken bir hata oluştu: ", e);
-                showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
-                isSpinning = false;
-                spinButton.disabled = false;
-                spinButton.textContent = "Çarkı Çevir (100 Puan)";
-            }
-        });
-        
-        // Uygulamayı kapatma butonu
-        closeButton.addEventListener('click', () => {
-            window.Telegram.WebApp.close();
-        });
-
         // Uygulama yüklendiğinde başlat
         window.addEventListener('load', () => {
-            // HTML elemanlarını DOM yüklendikten sonra al
+            // HTML elemanlarını DOM yüklendikten sonra al ve global değişkenlere ata
             loadingScreen = document.getElementById('loading-screen');
             appContainer = document.getElementById('app-container');
             userInfoElement = document.getElementById('user-info');
@@ -439,6 +345,97 @@
             wheel = document.getElementById('wheel');
             closeButton = document.getElementById('close-button');
 
+            // DOM elemanları atandıktan sonra olay dinleyicilerini ekle
+            gameButton.addEventListener('click', async () => {
+                if (!userId) {
+                    showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true);
+                    return;
+                }
+
+                // Son tıklamadan bu yana geçen süreyi kontrol et (gereksiz tıklamaları engellemek için)
+                const now = Date.now();
+                const docSnap = await userDocRef.get();
+                if (docSnap.exists) {
+                    const lastClick = docSnap.data().lastClick || 0;
+                    if (now - lastClick < 500) { // 500ms bekleme süresi
+                        showMessage("Çok hızlısın! Lütfen biraz bekle.");
+                        return;
+                    }
+                }
+
+                try {
+                    // Firestore'daki puanı güncelle
+                    await userDocRef.update({
+                        points: (docSnap.data().points || 0) + 10,
+                        lastClick: now
+                    });
+                    showMessage("Puan kazandın!");
+                } catch (e) {
+                    console.error("Puan güncellenirken hata oluştu: ", e);
+                    showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
+                }
+            });
+
+            spinButton.addEventListener('click', async () => {
+                if (!userId) return;
+                isSpinning = true;
+                spinButton.disabled = true;
+                spinButton.textContent = "Çevriliyor...";
+
+                try {
+                    const docSnap = await userDocRef.get();
+                    const currentPoints = docSnap.data().points || 0;
+
+                    if (currentPoints < 100) {
+                        showMessage("Yeterli puanın yok!", true);
+                        isSpinning = false;
+                        spinButton.disabled = false;
+                        spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                        return;
+                    }
+
+                    // Puanı düşür
+                    await userDocRef.update({
+                        points: currentPoints - 100
+                    });
+
+                    // Çarkı çevirme animasyonu
+                    const targetSegmentIndex = Math.floor(Math.random() * segments.length);
+                    const segmentAngle = 360 / segments.length;
+                    const totalAngle = 360 * 5 + (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2));
+                    
+                    wheel.style.transform = `rotate(${totalAngle}deg)`;
+                    
+                    // Animasyon bitiminde sonuçları göster
+                    setTimeout(async () => {
+                        const result = segments[targetSegmentIndex];
+                        if (result.type === 'bonus_code') {
+                            const newBonusCode = `BONUS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+                            await userDocRef.update({
+                                bonusCodes: firebase.firestore.FieldValue.arrayUnion(newBonusCode)
+                            });
+                            showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`);
+                        } else {
+                            showMessage("Maalesef, bir dahaki sefere!");
+                        }
+                        
+                        isSpinning = false;
+                        spinButton.disabled = false;
+                        spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                        wheel.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
+                    }, 5000); // 5 saniye animasyon süresi
+                } catch (e) {
+                    console.error("Çark çevrilirken bir hata oluştu: ", e);
+                    showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
+                    isSpinning = false;
+                    spinButton.disabled = false;
+                    spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                }
+            });
+            
+            closeButton.addEventListener('click', () => {
+                window.Telegram.WebApp.close();
+            });
 
             createWheel();
             initializeFirebase();
