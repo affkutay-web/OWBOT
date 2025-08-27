@@ -1,0 +1,106 @@
+<!--
+  Bu kod, basit bir Telegram Web Uygulamasını gösterir.
+  Kullanıcı adı gibi bilgileri Telegram'dan alır ve
+  giriş kutusundaki veriyi bota geri gönderir.
+-->
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Web App</title>
+    <!-- Tailwind CSS'i dahil etme -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Telegram Web App SDK'sını dahil etme -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* Varsayılan fontu ayarlama */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--tg-theme-bg-color, #f4f4f4); /* Telegram temasıyla uyumlu arka plan */
+            color: var(--tg-theme-text-color, #000000); /* Telegram temasıyla uyumlu metin rengi */
+        }
+        /* Butonun Telegram temasıyla uyumlu olması için özel stil */
+        .telegram-btn {
+            background-color: var(--tg-theme-button-color, #50a8eb);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+    </style>
+</head>
+<body class="p-6 flex items-center justify-center min-h-screen">
+    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-sm text-center">
+        <!-- Başlık -->
+        <h1 class="text-2xl font-bold mb-4">Telegram Web Uygulaması</h1>
+        
+        <!-- Kullanıcı bilgisi bölümü -->
+        <p id="user-info" class="text-sm text-gray-600 mb-6"></p>
+
+        <!-- Kullanıcı girişi ve butonlar -->
+        <div class="space-y-4">
+            <input 
+                id="input-data" 
+                type="text" 
+                placeholder="Bota veri göndermek için yazın..." 
+                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button 
+                id="send-button" 
+                class="telegram-btn w-full py-3 rounded-lg font-semibold transition duration-200 hover:opacity-80"
+            >
+                Bota Veri Gönder
+            </button>
+            <button 
+                id="close-button" 
+                class="bg-gray-200 text-gray-800 w-full py-3 rounded-lg font-semibold transition duration-200 hover:bg-gray-300"
+            >
+                Uygulamayı Kapat
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // WebApp nesnesinin hazır olup olmadığını kontrol etme
+        window.addEventListener('load', () => {
+            const WebApp = window.Telegram.WebApp;
+            
+            // WebApp'i başlatma ve ana butonu etkinleştirme
+            WebApp.ready();
+            
+            const userInfoElement = document.getElementById('user-info');
+            const inputData = document.getElementById('input-data');
+            const sendButton = document.getElementById('send-button');
+            const closeButton = document.getElementById('close-button');
+
+            // Telegram'dan gelen kullanıcı verilerini gösterme
+            const user = WebApp.initDataUnsafe.user;
+            if (user) {
+                const userName = user.first_name || 'Gizli Kullanıcı';
+                userInfoElement.textContent = `Merhaba, ${userName}!`;
+            } else {
+                userInfoElement.textContent = 'Kullanıcı bilgisi alınamadı.';
+            }
+
+            // "Bota Veri Gönder" butonuna tıklama olayını dinleme
+            sendButton.addEventListener('click', () => {
+                const dataToSend = inputData.value;
+                if (dataToSend) {
+                    // Veriyi bota gönderme
+                    WebApp.sendData(dataToSend);
+                    // Uygulamayı kapama
+                    WebApp.close();
+                } else {
+                    // Kullanıcıya bir şeyler yazması gerektiğini söyleyen bir uyarı gösterme
+                    // Telegram Web Apps'de "alert()" kullanmak yerine özel bir mesaj kutusu oluşturulmalıdır.
+                    alert("Lütfen göndermek istediğiniz veriyi girin.");
+                }
+            });
+
+            // "Uygulamayı Kapat" butonuna tıklama olayını dinleme
+            closeButton.addEventListener('click', () => {
+                // Uygulamayı kapatma komutunu gönderme
+                WebApp.close();
+            });
+        });
+    </script>
+</body>
+</html>
