@@ -311,7 +311,7 @@
         }
         
         // UI'ı verilerle güncelleme
-        function client-UpdateUI(data) {
+        function updateUI(data) {
             pointsDisplay.textContent = `Puan: ${data.points}`;
             
             // Bonus kodlarını listele
@@ -336,7 +336,7 @@
         }
 
         // Uygulama yüklendiğinde başlat
-        window.addEventListener('load', () => {
+        document.addEventListener('DOMContentLoaded', () => { // window.load yerine DOMContentLoaded kullanıldı
             // HTML elemanlarını DOM yüklendikten sonra al ve global değişkenlere ata
             loadingScreen = document.getElementById('loading-screen');
             appContainer = document.getElementById('app-container');
@@ -350,6 +350,8 @@
             closeButton = document.getElementById('close-button');
 
             // DOM elemanları atandıktan sonra olay dinleyicilerini ekle
+            console.log("gameButton değeri:", gameButton); // Hata ayıklama için eklendi
+
             gameButton.addEventListener('click', async () => {
                 if (!userId) {
                     showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true);
