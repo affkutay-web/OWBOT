@@ -215,6 +215,10 @@
 
         // Kullanıcıya mesaj göstermek için özel fonksiyon
         function showMessage(text, isError = false) {
+            if (!messageBox) { // messageBox henüz atanmamışsa konsola yaz
+                console.error("Hata: messageBox HTML elementi bulunamadı. Mesaj:", text);
+                return;
+            }
             messageBox.textContent = text;
             if (isError) {
                 messageBox.style.backgroundColor = '#dc3545'; // Kırmızı arka plan
@@ -307,7 +311,7 @@
         }
         
         // UI'ı verilerle güncelleme
-        function updateUI(data) {
+        function client-UpdateUI(data) {
             pointsDisplay.textContent = `Puan: ${data.points}`;
             
             // Bonus kodlarını listele
