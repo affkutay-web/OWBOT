@@ -23,7 +23,7 @@
     <style>
         /* Varsayılan fontu ayarlama */
         html, body {
-            height: 100%; /* Sayfa ve gövde yüksekliğini tam ekran yap */
+            height: 100%; /* HTML ve body'nin tam yüksekliği almasını sağlar */
             width: 100%;
             margin: 0;
             padding: 0;
@@ -32,11 +32,12 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--tg-theme-bg-color, #f4f4f4);
             color: var(--tg-theme-text-color, #000000);
-            display: flex; /* İçeriği dikeyde ortalamak için flex kullan */
-            flex-direction: column; /* İçeriği sütun olarak sırala */
+            display: flex;
+            flex-direction: column; /* İçeriği dikeyde sırala */
             align-items: center; /* Yatayda ortala */
-            justify-content: flex-start; /* Dikeyde yukarıdan başla */
-            padding: 1.5rem; /* Genel padding ekle */
+            justify-content: flex-start; /* İçeriği yukarıdan başlat */
+            min-height: 100vh; /* En az viewport yüksekliği kadar olmasını sağla */
+            padding: 1.5rem;
             overflow-y: auto; /* Dikeyde kaydırmaya izin ver */
             overflow-x: hidden; /* Yatayda kaydırmayı engelle */
             box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
@@ -109,27 +110,34 @@
             transform-origin: center center;
             overflow: hidden; /* Dilimlerin dışarı taşmasını engelle */
         }
-        .segment { /* Her bir çark diliminin kendisi (üçgen şeklinde) */
+        .segment { /* Her bir çark diliminin kapsayıcısı */
             position: absolute;
+            width: 50%;   /* Yarıçap kadar genişlik */
+            height: 100%; /* Tam çap kadar yükseklik */
             top: 0;
-            left: 50%; /* Çarkın yatay ortasında başla */
-            width: 0;
-            height: 0;
-            /* Dilimin üçgen şeklini veren borderlar */
-            border-left: calc(var(--wheel-radius) * 1px) solid transparent;
-            border-right: calc(var(--wheel-radius) * 1px) solid transparent;
-            border-top: calc(var(--wheel-radius) * 1px) solid var(--segment-color); /* Renkli kısım */
-            transform-origin: 50% 100%; /* Üçgenin alt noktasından dönsün */
-            transform: translateX(-50%) rotate(var(--rotation-angle)); /* Pozisyonuna ve açısına döndür */
-            z-index: 1; /* Arka plan dilimi */
+            left: 50%;    /* Çarkın merkezinden başla */
+            transform-origin: 0% 50%; /* Dönüş noktası çarkın merkezi */
+            overflow: hidden; /* İçerideki renkli kısmı gizlemek için */
+            transform: rotate(var(--rotation-angle)); /* Dilimi kendi yerine döndür */
+        }
+        .segment-color-fill { /* Dilimin renkli görünümünü veren kısım */
+            position: absolute;
+            width: 100%; /* Kapsayıcının tam genişliği */
+            height: 100%; /* Kapsayıcının tam yüksekliği */
+            left: 0;
+            top: 0;
+            background-color: var(--segment-color);
+            transform-origin: 0% 50%; /* Kapsayıcının sol ortasından dön */
+            transform: rotate(var(--segment-sweep-angle)); /* Dilimin yayını oluşturmak için döndür */
+            border-radius: 0 100% 100% 0 / 50%; /* Yarım daire şekli */
         }
         .segment-label { /* Dilim üzerindeki okunabilir metin */
             position: absolute;
-            top: calc(var(--wheel-radius) * 0.35 * 1px); /* Metnin üçgen içinde dikey konumunu ayarla */
-            left: 50%; /* Yatayda ortala */
-            transform: translateX(-50%) rotate(calc(-1 * var(--rotation-angle))); /* Karşıt dönüşle metni yatay tut */
+            top: 50%; /* Dikeyde ortala */
+            left: 75%; /* Merkeze göre dışa doğru konumlandır */
+            transform: translate(-50%, -50%) rotate(calc(-1 * var(--rotation-angle))); /* Yatayda tutmak için karşıt dönüş */
             white-space: nowrap;
-            font-size: 0.85em;
+            font-size: 0.8em;
             font-weight: bold;
             color: white;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Okunabilirliği artır */
@@ -250,260 +258,4 @@
         ];
 
         // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
-        let loadingScreen, appContainer, userInfoElement, pointsDisplay, gameButton, spinButton, bonusCodesList, messageBox, wheel, closeButton;
-
-
-        // Kullanıcıya mesaj göstermek için özel fonksiyon
-        function showMessage(text, isError = false) {
-            if (!messageBox) { 
-                console.error("Hata: messageBox HTML elementi henüz bulunamadı. Mesaj:", text);
-                return;
-            }
-            messageBox.textContent = text;
-            if (isError) {
-                messageBox.style.backgroundColor = '#dc3545'; // Kırmızı arka plan
-            } else {
-                messageBox.style.backgroundColor = '#333'; // Varsayılan arka plan
-            }
-            messageBox.style.display = 'block';
-            setTimeout(() => {
-                messageBox.style.display = 'none';
-            }, 3000); // 3 saniye sonra gizle
-        }
-
-        // Çarkı dinamik olarak oluşturma
-        function createWheel() {
-            const numSegments = segments.length;
-            const segmentAngle = 360 / numSegments;
-            const wheelRadius = wheel.offsetWidth / 2; // wheel-container'ın yarıçapı
-            
-            wheel.innerHTML = ''; // Çarkı temizle
-            wheel.style.setProperty('--wheel-radius', wheelRadius); // CSS değişkenine yarıçapı ata
-
-            segments.forEach((segmentData, index) => {
-                const rotationAngle = index * segmentAngle; // Segmentin dönme açısı
-
-                // Segmentin kendisi (üçgen şeklinde)
-                const segmentEl = document.createElement('div');
-                segmentEl.className = 'segment';
-                segmentEl.style.setProperty('--rotation-angle', `${rotationAngle}deg`);
-                segmentEl.style.setProperty('--segment-color', segmentData.color);
-
-                // Segmentin içindeki metin etiketi
-                const labelEl = document.createElement('div');
-                labelEl.className = 'segment-label';
-                labelEl.textContent = segmentData.text;
-                labelEl.style.setProperty('--rotation-angle', `${rotationAngle}deg`); // Metni yatay tutmak için karşıt dönüş
-
-                segmentEl.appendChild(labelEl);
-                wheel.appendChild(segmentEl);
-            });
-        }
-
-        // Firebase'i başlat ve kullanıcıyı yetkilendir
-        async function initializeFirebase() {
-            try {
-                // Firebase'i başlatma
-                const app = firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth(); // compat versiyonunda bu şekilde
-                db = firebase.firestore(); // compat versiyonunda bu şekilde
-
-                // Kullanıcı yetkilendirmesi
-                if (initialAuthToken) {
-                    await auth.signInWithCustomToken(initialAuthToken);
-                } else {
-                    await auth.signInAnonymously();
-                }
-
-                auth.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        // Firestore collection ve doc referanslarını düzeltme
-                        userDocRef = db.collection(`artifacts/${appId}/public/data/game_data`).doc(userId);
-                        
-                        // Kullanıcı verilerini Firestore'dan al veya oluştur
-                        const docSnap = await userDocRef.get();
-                        if (!docSnap.exists) {
-                            await userDocRef.set({
-                                points: 0,
-                                bonusCodes: [],
-                                lastClick: 0
-                            });
-                        }
-                        
-                        // UI'ı göster ve veriyi dinlemeye başla
-                        loadingScreen.style.display = 'none';
-                        appContainer.style.display = 'block';
-                        listenForDataChanges();
-                    } else {
-                        // Eğer kimlik doğrulama başarısız olursa, bir hata mesajı göster
-                        console.error("Kimlik doğrulama başarısız oldu, kullanıcı nesnesi boş.");
-                        loadingScreen.style.display = 'none';
-                        showMessage('Kimlik doğrulama başarısız oldu, lütfen uygulamayı tekrar açın.', true);
-                    }
-                });
-            } catch (error) {
-                // Firebase başlatılırken veya kimlik doğrulanırken oluşan hataları yakala
-                console.error("Firebase başlatılırken bir hata oluştu:", error);
-                loadingScreen.style.display = 'none';
-                showMessage(`Uygulama başlatılırken bir hata oluştu: ${error.message}`, true);
-            }
-        }
-        
-        // Firestore'dan gerçek zamanlı veri dinleme
-        function listenForDataChanges() {
-            userDocRef.onSnapshot((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    updateUI(data);
-                }
-            });
-        }
-        
-        // UI'ı verilerle güncelleme
-        function updateUI(data) {
-            pointsDisplay.textContent = `Puan: ${data.points}`;
-            
-            // Bonus kodlarını listele
-            bonusCodesList.innerHTML = '';
-            if (data.bonusCodes && data.bonusCodes.length > 0) {
-                data.bonusCodes.forEach(code => {
-                    const li = document.createElement('li');
-                    li.textContent = `• ${code}`;
-                    bonusCodesList.appendChild(li);
-                });
-            } else {
-                const li = document.createElement('li');
-                li.textContent = "Henüz kazanılmış bonus kodunuz yok.";
-                bonusCodesList.appendChild(li);
-            }
-
-            // Çarkı çevir butonunu etkinleştirme
-            spinButton.disabled = data.points < 100 || isSpinning;
-            
-            // Kullanıcı kimliğini göster
-            userInfoElement.textContent = `Kullanıcı Kimliği: ${userId}`;
-        }
-
-        // Uygulama yüklendiğinde başlat
-        document.addEventListener('DOMContentLoaded', () => { 
-            // HTML elemanlarını DOM yüklendikten sonra al ve global değişkenlere ata
-            loadingScreen = document.getElementById('loading-screen');
-            appContainer = document.getElementById('app-container');
-            userInfoElement = document.getElementById('user-info');
-            pointsDisplay = document.getElementById('points-display');
-            gameButton = document.getElementById('game-button');
-            spinButton = document.getElementById('spin-button');
-            bonusCodesList = document.getElementById('bonus-codes-list');
-            messageBox = document.getElementById('message-box');
-            wheel = document.getElementById('wheel');
-            closeButton = document.getElementById('close-button');
-
-            // DOM elemanları atandıktan sonra olay dinleyicilerini ekle
-            if (gameButton) { 
-                gameButton.addEventListener('click', async () => {
-                    if (!userId) {
-                        showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true);
-                        return;
-                    }
-
-                    const now = Date.now();
-                    const docSnap = await userDocRef.get();
-                    if (docSnap.exists) {
-                        const lastClick = docSnap.data().lastClick || 0;
-                        if (now - lastClick < 500) { 
-                            showMessage("Çok hızlısın! Lütfen biraz bekle.");
-                            return;
-                        }
-                    }
-
-                    try {
-                        await userDocRef.update({
-                            points: (docSnap.data().points || 0) + 10,
-                            lastClick: now
-                        });
-                        showMessage("Puan kazandın!");
-                    } catch (e) {
-                        console.error("Puan güncellenirken hata oluştu: ", e);
-                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
-                    }
-                });
-            } else {
-                console.error("Hata: gameButton HTML elementi bulunamadı!");
-                showMessage("Uygulama yüklenirken bir sorun oluştu (Oyun Butonu bulunamadı).", true);
-            }
-
-            if (spinButton) { 
-                spinButton.addEventListener('click', async () => {
-                    if (!userId) return;
-                    isSpinning = true;
-                    spinButton.disabled = true;
-                    spinButton.textContent = "Çevriliyor...";
-
-                    try {
-                        const docSnap = await userDocRef.get();
-                        const currentPoints = docSnap.data().points || 0;
-
-                        if (currentPoints < 100) {
-                            showMessage("Yeterli puanın yok!", true);
-                            isSpinning = false;
-                            spinButton.disabled = false;
-                            spinButton.textContent = "Çarkı Çevir (100 Puan)";
-                            return;
-                        }
-
-                        await userDocRef.update({
-                            points: currentPoints - 100
-                        });
-
-                        const targetSegmentIndex = Math.floor(Math.random() * segments.length);
-                        const segmentAngle = 360 / segments.length;
-                        const totalAngle = 360 * 5 + (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2));
-                        
-                        wheel.style.transform = `rotate(${totalAngle}deg)`;
-                        
-                        setTimeout(async () => {
-                            const result = segments[targetSegmentIndex];
-                            if (result.type === 'bonus_code') {
-                                const newBonusCode = `BONUS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-                                await userDocRef.update({
-                                    bonusCodes: firebase.firestore.FieldValue.arrayUnion(newBonusCode)
-                                });
-                                showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`);
-                            } else {
-                                showMessage("Maalesef, bir dahaki sefere!");
-                            }
-                            
-                            isSpinning = false;
-                            spinButton.disabled = false;
-                            spinButton.textContent = "Çarkı Çevir (100 Puan)";
-                            wheel.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
-                        }, 5000); // 5 saniye animasyon süresi
-                    } catch (e) {
-                        console.error("Çark çevrilirken bir hata oluştu: ", e);
-                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
-                        isSpinning = false;
-                        spinButton.disabled = false;
-                        spinButton.textContent = "Çarkı Çevir (100 Puan)";
-                    }
-                });
-            } else {
-                console.error("Hata: spinButton HTML elementi bulunamadı!");
-                showMessage("Uygulama yüklenirken bir sorun oluştu (Çark Butonu bulunamadı).", true);
-            }
-            
-            if (closeButton) { 
-                closeButton.addEventListener('click', () => {
-                    window.Telegram.WebApp.close();
-                });
-            } else {
-                console.error("Hata: closeButton HTML elementi bulunamadı!");
-                showMessage("Uygulama yüklenirken bir sorun oluştu (Kapat Butonu bulunamadı).", true);
-            }
-
-            createWheel(); // createWheel çağrısı wheel elementi atandıktan sonra yapılmalı
-            initializeFirebase();
-        });
-    </script>
-</body>
-</html>
+        let loadingScreen, appContainer, userInfoElement, pointsDisplay, gameButton, spinButton, bonusCodesL
