@@ -214,8 +214,13 @@
 
 
         // Kullanıcıya mesaj göstermek için özel fonksiyon
-        function showMessage(text) {
+        function showMessage(text, isError = false) {
             messageBox.textContent = text;
+            if (isError) {
+                messageBox.style.backgroundColor = '#dc3545'; // Kırmızı arka plan
+            } else {
+                messageBox.style.backgroundColor = '#333'; // Varsayılan arka plan
+            }
             messageBox.style.display = 'block';
             setTimeout(() => {
                 messageBox.style.display = 'none';
@@ -280,14 +285,14 @@
                         // Eğer kimlik doğrulama başarısız olursa, bir hata mesajı göster
                         console.error("Kimlik doğrulama başarısız oldu, kullanıcı nesnesi boş.");
                         loadingScreen.style.display = 'none';
-                        showMessage('Kimlik doğrulama başarısız oldu, lütfen uygulamayı tekrar açın.');
+                        showMessage('Kimlik doğrulama başarısız oldu, lütfen uygulamayı tekrar açın.', true);
                     }
                 });
             } catch (error) {
                 // Firebase başlatılırken veya kimlik doğrulanırken oluşan hataları yakala
                 console.error("Firebase başlatılırken bir hata oluştu:", error);
                 loadingScreen.style.display = 'none';
-                showMessage("Uygulama başlatılırken bir hata oluştu. Lütfen tekrar deneyin.");
+                showMessage(`Uygulama başlatılırken bir hata oluştu: ${error.message}`, true);
             }
         }
         
@@ -329,7 +334,7 @@
         // Mini oyunu oynama
         gameButton.addEventListener('click', async () => {
             if (!userId) {
-                showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.");
+                showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true);
                 return;
             }
 
@@ -353,7 +358,7 @@
                 showMessage("Puan kazandın!");
             } catch (e) {
                 console.error("Puan güncellenirken hata oluştu: ", e);
-                showMessage("Bir hata oluştu, lütfen tekrar deneyin.");
+                showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
             }
         });
 
@@ -369,7 +374,7 @@
                 const currentPoints = docSnap.data().points || 0;
 
                 if (currentPoints < 100) {
-                    showMessage("Yeterli puanın yok!");
+                    showMessage("Yeterli puanın yok!", true);
                     isSpinning = false;
                     spinButton.disabled = false;
                     spinButton.textContent = "Çarkı Çevir (100 Puan)";
@@ -408,7 +413,7 @@
                 }, 5000); // 5 saniye animasyon süresi
             } catch (e) {
                 console.error("Çark çevrilirken bir hata oluştu: ", e);
-                showMessage("Bir hata oluştu, lütfen tekrar deneyin.");
+                showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
                 isSpinning = false;
                 spinButton.disabled = false;
                 spinButton.textContent = "Çarkı Çevir (100 Puan)";
