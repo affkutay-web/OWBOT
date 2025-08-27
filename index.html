@@ -180,7 +180,15 @@
 
         // Firebase ve Uygulama Ayarlarını Global Değişkenlerden Alın
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+       const firebaseConfig = {
+  apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
+  authDomain: "onwingiris-afccf.firebaseapp.com",
+  projectId: "onwingiris-afccf",
+  storageBucket: "onwingiris-afccf.firebasestorage.app",
+  messagingSenderId: "1059998132611",
+  appId: "1:1059998132611:web:7f415159c54936cc796eb6",
+  measurementId: "G-RE79PDJSJX"
+};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let db, auth, userId, userDocRef;
@@ -422,3 +430,4 @@
     </script>
 </body>
 </html>
+
