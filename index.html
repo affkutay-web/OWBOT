@@ -215,8 +215,9 @@
 
         // Kullanıcıya mesaj göstermek için özel fonksiyon
         function showMessage(text, isError = false) {
-            if (!messageBox) { // messageBox henüz atanmamışsa konsola yaz
-                console.error("Hata: messageBox HTML elementi bulunamadı. Mesaj:", text);
+            // messageBox atanana kadar beklemeliyiz. Eğer null ise konsola hata basar.
+            if (!messageBox) { 
+                console.error("Hata: messageBox HTML elementi henüz bulunamadı. Mesaj:", text);
                 return;
             }
             messageBox.textContent = text;
@@ -352,100 +353,136 @@
             // DOM elemanları atandıktan sonra olay dinleyicilerini ekle
             console.log("gameButton değeri:", gameButton); // Hata ayıklama için eklendi
 
-            gameButton.addEventListener('click', async () => {
-                if (!userId) {
-                    showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true);
-                    return;
-                }
-
-                // Son tıklamadan bu yana geçen süreyi kontrol et (gereksiz tıklamaları engellemek için)
-                const now = Date.now();
-                const docSnap = await userDocRef.get();
-                if (docSnap.exists) {
-                    const lastClick = docSnap.data().lastClick || 0;
-                    if (now - lastClick < 500) { // 500ms bekleme süresi
-                        showMessage("Çok hızlısın! Lütfen biraz bekle.");
+            if (gameButton) { // gameButton'ın varlığını kontrol et
+                gameButton.addEventListener('click', async () => {
+                    if (!userId) {
+                        showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true);
                         return;
                     }
-                }
 
-                try {
-                    // Firestore'daki puanı güncelle
-                    await userDocRef.update({
-                        points: (docSnap.data().points || 0) + 10,
-                        lastClick: now
-                    });
-                    showMessage("Puan kazandın!");
-                } catch (e) {
-                    console.error("Puan güncellenirken hata oluştu: ", e);
-                    showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
-                }
-            });
-
-            spinButton.addEventListener('click', async () => {
-                if (!userId) return;
-                isSpinning = true;
-                spinButton.disabled = true;
-                spinButton.textContent = "Çevriliyor...";
-
-                try {
+                    // Son tıklamadan bu yana geçen süreyi kontrol et (gereksiz tıklamaları engellemek için)
+                    const now = Date.now();
                     const docSnap = await userDocRef.get();
-                    const currentPoints = docSnap.data().points || 0;
-
-                    if (currentPoints < 100) {
-                        showMessage("Yeterli puanın yok!", true);
-                        isSpinning = false;
-                        spinButton.disabled = false;
-                        spinButton.textContent = "Çarkı Çevir (100 Puan)";
-                        return;
+                    if (docSnap.exists) {
+                        const lastClick = docSnap.data().lastClick || 0;
+                        if (now - lastClick < 500) { // 500ms bekleme süresi
+                            showMessage("Çok hızlısın! Lütfen biraz bekle.");
+                            return;
+                        }
                     }
 
-                    // Puanı düşür
-                    await userDocRef.update({
-                        points: currentPoints - 100
-                    });
+                    try {
+                        // Firestore'daki puanı güncelle
+                        await userDocRef.update({
+                            points: (docSnap.data().points || 0) + 10,
+                            lastClick: now
+                        });
+                        showMessage("Puan kazandın!");
+                    } catch (e) {
+                        console.error("Puan güncellenirken hata oluştu: ", e);
+                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
+                    }
+                });
+            } else {
+                console.error("Hata: gameButton HTML elementi bulunamadı!");
+                // Hata mesajını kullanıcıya göster (eğer messageBox atanmışsa)
+                showMessage("Uygulama yüklenirken bir sorun oluştu (Oyun Butonu bulunamadı).", true);
+            }
 
-                    // Çarkı çevirme animasyonu
-                    const targetSegmentIndex = Math.floor(Math.random() * segments.length);
-                    const segmentAngle = 360 / segments.length;
-                    const totalAngle = 360 * 5 + (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2));
-                    
-                    wheel.style.transform = `rotate(${totalAngle}deg)`;
-                    
-                    // Animasyon bitiminde sonuçları göster
-                    setTimeout(async () => {
-                        const result = segments[targetSegmentIndex];
-                        if (result.type === 'bonus_code') {
-                            const newBonusCode = `BONUS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-                            await userDocRef.update({
-                                bonusCodes: firebase.firestore.FieldValue.arrayUnion(newBonusCode)
-                            });
-                            showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`);
-                        } else {
-                            showMessage("Maalesef, bir dahaki sefere!");
+            if (spinButton) { // spinButton'ın varlığını kontrol et
+                spinButton.addEventListener('click', async () => {
+                    if (!userId) return;
+                    isSpinning = true;
+                    spinButton.disabled = true;
+                    spinButton.textContent = "Çevriliyor...";
+
+                    try {
+                        const docSnap = await userDocRef.get();
+                        const currentPoints = docSnap.data().points || 0;
+
+                        if (currentPoints < 100) {
+                            showMessage("Yeterli puanın yok!", true);
+                            isSpinning = false;
+                            spinButton.disabled = false;
+                            spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                            return;
                         }
+
+                        // Puanı düşür
+                        await userDocRef.update({
+                            points: currentPoints - 100
+                        });
+
+                        // Çarkı çevirme animasyonu
+                        const targetSegmentIndex = Math.floor(Math.random() * segments.length);
+                        const segmentAngle = 360 / segments.length;
+                        const totalAngle = 360 * 5 + (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2));
                         
+                        wheel.style.transform = `rotate(${totalAngle}deg)`;
+                        
+                        // Animasyon bitiminde sonuçları göster
+                        setTimeout(async () => {
+                            const result = segments[targetSegmentIndex];
+                            if (result.type === 'bonus_code') {
+                                const newBonusCode = `BONUS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+                                await userDocRef.update({
+                                    bonusCodes: firebase.firestore.FieldValue.arrayUnion(newBonusCode)
+                                });
+                                showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`);
+                            } else {
+                                showMessage("Maalesef, bir dahaki sefere!");
+                            }
+                            
+                            isSpinning = false;
+                            spinButton.disabled = false;
+                            spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                            wheel.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
+                        }, 5000); // 5 saniye animasyon süresi
+                    } catch (e) {
+                        console.error("Çark çevrilirken bir hata oluştu: ", e);
+                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
                         isSpinning = false;
                         spinButton.disabled = false;
                         spinButton.textContent = "Çarkı Çevir (100 Puan)";
-                        wheel.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
-                    }, 5000); // 5 saniye animasyon süresi
-                } catch (e) {
-                    console.error("Çark çevrilirken bir hata oluştu: ", e);
-                    showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
-                    isSpinning = false;
-                    spinButton.disabled = false;
-                    spinButton.textContent = "Çarkı Çevir (100 Puan)";
-                }
-            });
+                    }
+                });
+            } else {
+                console.error("Hata: spinButton HTML elementi bulunamadı!");
+                showMessage("Uygulama yüklenirken bir sorun oluştu (Çark Butonu bulunamadı).", true);
+            }
             
-            closeButton.addEventListener('click', () => {
-                window.Telegram.WebApp.close();
-            });
+            if (closeButton) { // closeButton'ın varlığını kontrol et
+                closeButton.addEventListener('click', () => {
+                    window.Telegram.WebApp.close();
+                });
+            } else {
+                console.error("Hata: closeButton HTML elementi bulunamadı!");
+                showMessage("Uygulama yüklenirken bir sorun oluştu (Kapat Butonu bulunamadı).", true);
+            }
 
-            createWheel();
+
+            createWheel(); // createWheel çağrısı wheel elementi atandıktan sonra yapılmalı
             initializeFirebase();
         });
     </script>
 </body>
 </html>
+```
+---
+
+### Ek Bilgiler ve Kontrol Adımları
+
+Bu son sürümde, `addEventListener` çağrılarından önce ilgili HTML öğelerinin varlığını kontrol eden `if (gameButton)` gibi koşullar ekledim. Bu, `TypeError` hatasının ortaya çıkmasını engelleyecektir. Ayrıca, hata mesajlarını daha anlaşılır hale getirdim ve `messageBox` bulunamadığında konsola hata yazılmasını sağladım.
+
+`DOMContentLoaded` olayı, sayfanın HTML'i tamamen yüklendiğinde tetiklenir, bu da elementlerin mevcut olmasını garanti eder. Bu, `window.load`'a göre genellikle daha erken ve daha uygun bir zamandır.
+
+**Lütfen aşağıdaki adımları tekrar kontrol edin ve uygulayın:**
+
+1.  **Firebase Config Doğruluğu:** `firebaseConfig` objesindeki `apiKey`, `authDomain`, `projectId` vb. değerlerin kendi Firebase projenizden kopyaladığınız değerlerle **tamamen aynı** olduğundan emin olun.
+2.  **Firebase Authentication (Anonim Giriş) Etkinliği:** Firebase Console'da (**Authentication > Sign-in method**) **Anonymous** (Anonim) giriş yönteminin **etkin** olduğundan emin olun.
+3.  **Firestore Güvenlik Kuralları:** Firebase Console'da (**Firestore Database > Rules**) güvenlik kurallarınızın yukarıda paylaştığım şekilde ayarlı olduğundan emin olun. Bu, uygulamanızın verilere erişmesini sağlar.
+4.  **HTML Element ID'leri:** HTML kodunuzdaki butonların ve diğer elementlerin `id` değerlerinin (`id="game-button"`, `id="spin-button"`, `id="close-button"`, `id="message-box"`, `id="wheel"`) JavaScript kodundaki `document.getElementById()` çağrılarıyla **tam olarak eşleştiğinden** emin olun. Yazım hataları bu hataya neden olabilir.
+5.  **Tarayıcı Önbelleğini Temizleyin:** En son kodu kullandığınızdan emin olmak için tarayıcınızın **önbelleğini temizleyin ve sert yenileme yapın** (`Ctrl + Shift + R` veya `Cmd + Shift + R`). Gizli modda denemek de iyi bir fikirdir.
+6.  **Konsol Çıktısını Kontrol Edin:** Uygulamayı açtıktan sonra tarayıcınızın konsolunu tekrar kontrol edin. Özellikle `console.log("gameButton değeri:", gameButton);` çıktısının ne olduğunu bana bildirin. Bu, `gameButton`'ın `null` mı yoksa bir HTML elementi mi olduğunu gösterecektir.
+
+Bu adımları dikkatlice uyguladıktan sonra, umarım uygulamanız sorunsuz bir şekilde çalışacaktır. Eğer hala bir sorun yaşarsanız, lütfen konsoldaki **en yeni ve güncel hata mesajlarının tamamını** ve özellikle `gameButton` için olan `console.log` çıktısını benimle paylaş
