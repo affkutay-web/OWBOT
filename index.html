@@ -27,12 +27,15 @@
             background-color: var(--tg-theme-bg-color, #f4f4f4);
             color: var(--tg-theme-text-color, #000000);
             display: flex; /* Ekranın ortalanması için */
+            flex-direction: column; /* İçeriğin dikeyde hizalanması için */
             align-items: center;
-            justify-content: center;
-            min-height: 100vh; /* Tam ekran yüksekliği */
+            justify-content: flex-start; /* İçeriği yukarıdan başlat */
+            min-height: 100vh; /* Minimum viewport yüksekliği */
             margin: 0;
-            padding: 0;
-            overflow: hidden; /* Taşmaları engelle */
+            padding: 1.5rem; /* Genel padding ekle */
+            overflow-y: auto; /* Dikeyde kaydırmaya izin ver */
+            overflow-x: hidden; /* Yatayda kaydırmayı engelle */
+            box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
         }
         .telegram-btn {
             background-color: var(--tg-theme-button-color, #50a8eb);
@@ -91,6 +94,7 @@
             border-radius: 50%;
             overflow: hidden; /* Dilimlerin dışarı taşmasını engelle */
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            margin-bottom: 1.5rem; /* Altına boşluk bırak */
         }
         .wheel {
             position: absolute;
@@ -166,6 +170,14 @@
             transform: translateX(-50%);
             z-index: 10;
         }
+
+        .app-container {
+            width: 100%;
+            max-width: 600px; /* Daha geniş cihazlarda daha iyi görünüm */
+            margin: auto; /* Ortalamak için */
+            padding: 1.5rem; /* İç padding */
+            box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
+        }
     </style>
 </head>
 <body class="p-6">
@@ -175,7 +187,7 @@
         <p class="text-sm">Bağlanıyor...</p>
     </div>
 
-    <div id="app-container" class="bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl text-center hidden">
+    <div id="app-container" class="bg-white rounded-lg shadow-xl p-8 text-center hidden">
         <h1 class="text-3xl font-bold mb-2">Bonus Çarkı Uygulaması</h1>
         <p class="text-sm text-gray-600 mb-6">Puan kazanmak ve bonus kodları almak için oyna!</p>
         
@@ -291,24 +303,31 @@
                 segmentEl.className = 'segment';
                 segmentEl.style.transform = `rotate(${rotationAngle}deg)`;
                 segmentEl.style.setProperty('--segment-color', segment.color);
-                segmentEl.style.setProperty('--half-rotation', `${Math.min(segmentAngle, 180)}deg`); // For half-circle rotation
 
+                // CSS 'half-circle' tekniği için dönüş
+                // Her dilim aslında çarkın 1/2'si kadar büyüklükte bir 'segment' kapsayıcının içinde
+                // yer alan tam boy bir dairenin belirli bir kısmını gösterir.
+                // Bu daire, 'segment' kapsayıcısı döndürüldükten sonra kendi içinde belirli bir açıyla döndürülerek
+                // dilimin üçgenimsi görüntüsü oluşturulur.
                 const halfCircleEl = document.createElement('div');
                 halfCircleEl.className = 'segment-half';
+                // segmentAngle 180'den büyükse, yarım dairenin dönme açısı ona göre ayarlanır.
+                halfCircleEl.style.setProperty('--half-rotation', `${Math.min(segmentAngle, 180)}deg`); 
                 segmentEl.appendChild(halfCircleEl);
 
                 const labelEl = document.createElement('div');
                 labelEl.className = 'segment-label';
                 labelEl.textContent = segment.text;
                 
-                // Metni yatay tutmak için ters dönüş ve konumlandırma
-                const radius = 100; // Çark merkezinden metin uzaklığı (px cinsinden, çarkın yarıçapına bağlı)
+                // Metni yatay tutmak ve doğru konumlandırmak için hesaplamalar
+                const radius = 90; // Çark merkezinden metin uzaklığı (çarkın yarıçapına göre ayarlanabilir)
                 const textX = radius * Math.cos((midAngle - 90) * Math.PI / 180);
                 const textY = radius * Math.sin((midAngle - 90) * Math.PI / 180);
 
+                // CSS değişkenleri ile metin konumunu ve dönüşünü ayarla
                 labelEl.style.setProperty('--text-offset-x', `${textX}`);
                 labelEl.style.setProperty('--text-offset-y', `${textY}`);
-                labelEl.style.setProperty('--label-rotation', `${-rotationAngle}deg`); // Metni yatay tutmak için
+                labelEl.style.setProperty('--label-rotation', `${-midAngle}deg`); // Metni yatay tutmak için ters dönüş
 
                 segmentEl.appendChild(labelEl);
                 wheel.appendChild(segmentEl);
