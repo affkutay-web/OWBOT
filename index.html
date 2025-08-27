@@ -201,7 +201,7 @@
         const segments = [
             { text: "10 TL Bonus", color: "#FF6384", type: "bonus_code" },
             { text: "Tekrar Dene", color: "#36A2EB", type: "try_again" },
-            { text: "25 TL Bonus", color: "#FFCE56", type: "bonus_code" },
+            { text: "25 TL TL Bonus", color: "#FFCE56", type: "bonus_code" },
             { text: "Tekrar Dene", color: "#4BC0C0", type: "try_again" },
             { text: "50 TL Bonus", color: "#9966FF", type: "bonus_code" },
             { text: "Tekrar Dene", color: "#FF9F40", type: "try_again" },
@@ -209,17 +209,8 @@
             { text: "Tekrar Dene", color: "#E0E0E0", type: "try_again" }
         ];
 
-        // HTML elemanları
-        const loadingScreen = document.getElementById('loading-screen');
-        const appContainer = document.getElementById('app-container');
-        const userInfoElement = document.getElementById('user-info');
-        const pointsDisplay = document.getElementById('points-display');
-        const gameButton = document.getElementById('game-button');
-        const spinButton = document.getElementById('spin-button');
-        const bonusCodesList = document.getElementById('bonus-codes-list');
-        const messageBox = document.getElementById('message-box');
-        const wheel = document.getElementById('wheel');
-        const closeButton = document.getElementById('close-button');
+        // HTML elemanları (DOMContentLoaded veya window.load içinde tanımlanacak)
+        let loadingScreen, appContainer, userInfoElement, pointsDisplay, gameButton, spinButton, bonusCodesList, messageBox, wheel, closeButton;
 
 
         // Kullanıcıya mesaj göstermek için özel fonksiyon
@@ -255,8 +246,8 @@
             try {
                 // Firebase'i başlatma
                 const app = firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth();
-                db = firebase.firestore();
+                auth = firebase.auth(); // compat versiyonunda bu şekilde
+                db = firebase.firestore(); // compat versiyonunda bu şekilde
 
                 // Kullanıcı yetkilendirmesi
                 if (initialAuthToken) {
@@ -268,6 +259,7 @@
                 auth.onAuthStateChanged(async (user) => {
                     if (user) {
                         userId = user.uid;
+                        // Firestore collection ve doc referanslarını düzeltme
                         userDocRef = db.collection(`artifacts/${appId}/public/data/game_data`).doc(userId);
                         
                         // Kullanıcı verilerini Firestore'dan al veya oluştur
@@ -430,6 +422,19 @@
 
         // Uygulama yüklendiğinde başlat
         window.addEventListener('load', () => {
+            // HTML elemanlarını DOM yüklendikten sonra al
+            loadingScreen = document.getElementById('loading-screen');
+            appContainer = document.getElementById('app-container');
+            userInfoElement = document.getElementById('user-info');
+            pointsDisplay = document.getElementById('points-display');
+            gameButton = document.getElementById('game-button');
+            spinButton = document.getElementById('spin-button');
+            bonusCodesList = document.getElementById('bonus-codes-list');
+            messageBox = document.getElementById('message-box');
+            wheel = document.getElementById('wheel');
+            closeButton = document.getElementById('close-button');
+
+
             createWheel();
             initializeFirebase();
         });
