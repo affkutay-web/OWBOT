@@ -1,31 +1,62 @@
 <!--
-  Bu kod, basit bir Telegram Web Uygulamasını gösterir.
-  Kullanıcı adı gibi bilgileri Telegram'dan alır ve
-  giriş kutusundaki veriyi bota geri gönderir.
+  Bu dosya, bir Telegram Web Uygulaması'nı
+  Firebase Firestore ile entegre ederek çok kullanıcılı ve
+  gerçek zamanlı veri saklama özelliğine kavuşturur.
+  Kullanıcılar bir mini oyundan puan kazanır ve bu puanlarla
+  bir bonus çarkını çevirerek kodlar kazanabilir.
 -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Web App</title>
+    <title>Çarkıfelek Web Uygulaması</title>
     <!-- Tailwind CSS'i dahil etme -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Telegram Web App SDK'sını dahil etme -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Firebase SDK'larını dahil etme -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"></script>
     <style>
         /* Varsayılan fontu ayarlama */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--tg-theme-bg-color, #f4f4f4); /* Telegram temasıyla uyumlu arka plan */
-            color: var(--tg-theme-text-color, #000000); /* Telegram temasıyla uyumlu metin rengi */
+            background-color: var(--tg-theme-bg-color, #f4f4f4);
+            color: var(--tg-theme-text-color, #000000);
         }
-        /* Butonun Telegram temasıyla uyumlu olması için özel stil */
         .telegram-btn {
             background-color: var(--tg-theme-button-color, #50a8eb);
             color: var(--tg-theme-button-text-color, #ffffff);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
-
+        /* Yükleme ekranı stili */
+        #loading-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--tg-theme-bg-color, #f4f4f4);
+            z-index: 9999;
+        }
+        .spinner {
+            border: 4px solid var(--tg-theme-hint-color, #999);
+            border-top: 4px solid var(--tg-theme-button-color, #50a8eb);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         /* Mesaj kutusu için stil */
         #message-box {
             position: fixed;
@@ -37,94 +68,356 @@
             padding: 10px 20px;
             border-radius: 8px;
             z-index: 1000;
-            display: none; /* Varsayılan olarak gizle */
+            display: none;
+            text-align: center;
+        }
+
+        /* Çark stili */
+        .wheel-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 0 auto;
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 5s cubic-bezier(0.1, 0.9, 0.2, 1); /* Hızlı başla, yavaş dur */
+        }
+        .wheel-segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            top: 0;
+            left: 50%;
+            transform-origin: 0% 100%;
+        }
+        .wheel-segment-content {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transform: rotate(-45deg); /* Metni döndür */
+        }
+        .wheel-marker {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 20px solid red;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
         }
     </style>
 </head>
 <body class="p-6 flex items-center justify-center min-h-screen">
-    <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-sm text-center">
-        <!-- Başlık -->
-        <h1 class="text-2xl font-bold mb-4">Telegram Web Uygulaması</h1>
-        
-        <!-- Kullanıcı bilgisi bölümü -->
-        <p id="user-info" class="text-sm text-gray-600 mb-6"></p>
+    <!-- Yükleme Ekranı -->
+    <div id="loading-screen" class="space-y-4">
+        <div class="spinner"></div>
+        <p class="text-sm">Bağlanıyor...</p>
+    </div>
 
-        <!-- Kullanıcı girişi ve butonlar -->
-        <div class="space-y-4">
-            <input 
-                id="input-data" 
-                type="text" 
-                placeholder="Bota veri göndermek için yazın..." 
-                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button 
-                id="send-button" 
-                class="telegram-btn w-full py-3 rounded-lg font-semibold transition duration-200 hover:opacity-80"
-            >
-                Bota Veri Gönder
-            </button>
-            <button 
-                id="close-button" 
-                class="bg-gray-200 text-gray-800 w-full py-3 rounded-lg font-semibold transition duration-200 hover:bg-gray-300"
-            >
-                Uygulamayı Kapat
+    <div id="app-container" class="bg-white rounded-lg shadow-xl p-8 w-full max-w-2xl text-center hidden">
+        <h1 class="text-3xl font-bold mb-2">Bonus Çarkı Uygulaması</h1>
+        <p class="text-sm text-gray-600 mb-6">Puan kazanmak ve bonus kodları almak için oyna!</p>
+        
+        <!-- Kullanıcı Bilgisi -->
+        <div class="bg-gray-100 p-4 rounded-lg mb-6">
+            <p id="user-info" class="text-sm font-semibold mb-2">Yükleniyor...</p>
+            <p id="points-display" class="text-2xl font-bold text-blue-600">Puan: 0</p>
+        </div>
+        
+        <!-- Mini Oyun Bölümü -->
+        <div class="border-b border-gray-200 pb-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Mini Oyun</h2>
+            <p class="text-sm text-gray-600 mb-4">Butona her tıkladığınızda puan kazanırsınız.</p>
+            <button id="game-button" class="telegram-btn w-full py-3 rounded-lg font-semibold transition duration-200 hover:opacity-80">
+                <span id="game-button-text">Puan Kazan (+10)</span>
             </button>
         </div>
+        
+        <!-- Çarkıfelek Bölümü -->
+        <div class="border-b border-gray-200 pb-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Bonus Çarkı</h2>
+            <p class="text-sm text-gray-600 mb-4">Çarkı çevirmek için 100 puana ihtiyacın var.</p>
+            <div class="wheel-container">
+                <div class="wheel-marker"></div>
+                <div id="wheel" class="wheel">
+                    <!-- Çark bölümleri dinamik olarak eklenecek -->
+                </div>
+            </div>
+            <button id="spin-button" class="telegram-btn w-full py-3 mt-6 rounded-lg font-semibold transition duration-200 hover:opacity-80 disabled:opacity-50" disabled>
+                <span id="spin-button-text">Çarkı Çevir (100 Puan)</span>
+            </button>
+        </div>
+        
+        <!-- Bonus Kodları Bölümü -->
+        <div>
+            <h2 class="text-xl font-bold mb-4">Kazanılan Bonus Kodları</h2>
+            <ul id="bonus-codes-list" class="text-sm text-gray-600 space-y-2">
+                <!-- Bonus kodları buraya eklenecek -->
+            </ul>
+        </div>
+        
+        <!-- Mesaj kutusu öğesi -->
+        <div id="message-box"></div>
     </div>
-    <!-- Mesaj kutusu öğesi -->
-    <div id="message-box"></div>
 
-    <script>
-        // WebApp nesnesinin hazır olup olmadığını kontrol etme
-        window.addEventListener('load', () => {
-            const WebApp = window.Telegram.WebApp;
-            
-            // WebApp'i başlatma ve ana butonu etkinleştirme
-            WebApp.ready();
-            
-            const userInfoElement = document.getElementById('user-info');
-            const inputData = document.getElementById('input-data');
-            const sendButton = document.getElementById('send-button');
-            const closeButton = document.getElementById('close-button');
-            const messageBox = document.getElementById('message-box');
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-            // Kullanıcıya mesaj göstermek için özel fonksiyon
-            function showMessage(text) {
-                messageBox.textContent = text;
-                messageBox.style.display = 'block';
-                setTimeout(() => {
-                    messageBox.style.display = 'none';
-                }, 3000); // 3 saniye sonra gizle
-            }
+        // Firebase ve Uygulama Ayarlarını Global Değişkenlerden Alın
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-            // Telegram'dan gelen kullanıcı verilerini gösterme
-            const user = WebApp.initDataUnsafe.user;
-            if (user) {
-                const userName = user.first_name || 'Gizli Kullanıcı';
-                userInfoElement.textContent = `Merhaba, ${userName}!`;
-            } else {
-                userInfoElement.textContent = 'Kullanıcı bilgisi alınamadı.';
-            }
+        let db, auth, userId, userDocRef;
+        let isSpinning = false;
+        
+        // Bonus çarkı için bölümler
+        const segments = [
+            { text: "10 TL Bonus", color: "#FF6384", type: "bonus_code" },
+            { text: "Tekrar Dene", color: "#36A2EB", type: "try_again" },
+            { text: "25 TL Bonus", color: "#FFCE56", type: "bonus_code" },
+            { text: "Tekrar Dene", color: "#4BC0C0", type: "try_again" },
+            { text: "50 TL Bonus", color: "#9966FF", type: "bonus_code" },
+            { text: "Tekrar Dene", color: "#FF9F40", type: "try_again" },
+            { text: "25 TL Bonus", color: "#B3F7B3", type: "bonus_code" },
+            { text: "Tekrar Dene", color: "#E0E0E0", type: "try_again" }
+        ];
 
-            // "Bota Veri Gönder" butonuna tıklama olayını dinleme
-            sendButton.addEventListener('click', () => {
-                const dataToSend = inputData.value;
-                if (dataToSend) {
-                    // Veriyi bota gönderme
-                    WebApp.sendData(dataToSend);
-                    // Uygulamayı kapama
-                    WebApp.close();
+        // HTML elemanları
+        const loadingScreen = document.getElementById('loading-screen');
+        const appContainer = document.getElementById('app-container');
+        const userInfoElement = document.getElementById('user-info');
+        const pointsDisplay = document.getElementById('points-display');
+        const gameButton = document.getElementById('game-button');
+        const spinButton = document.getElementById('spin-button');
+        const bonusCodesList = document.getElementById('bonus-codes-list');
+        const messageBox = document.getElementById('message-box');
+        const wheel = document.getElementById('wheel');
+        const inputData = document.getElementById('input-data');
+        const sendButton = document.getElementById('send-button');
+        const closeButton = document.getElementById('close-button');
+
+
+        // Kullanıcıya mesaj göstermek için özel fonksiyon
+        function showMessage(text) {
+            messageBox.textContent = text;
+            messageBox.style.display = 'block';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 3000); // 3 saniye sonra gizle
+        }
+
+        // Çarkı dinamik olarak oluşturma
+        function createWheel() {
+            const segmentAngle = 360 / segments.length;
+            wheel.innerHTML = '';
+            segments.forEach((segment, index) => {
+                const element = document.createElement('div');
+                element.className = 'wheel-segment';
+                element.style.transform = `rotate(${index * segmentAngle}deg) skewY(45deg)`;
+                element.style.backgroundColor = segment.color;
+
+                const content = document.createElement('div');
+                content.className = 'wheel-segment-content';
+                content.textContent = segment.text;
+                element.appendChild(content);
+
+                wheel.appendChild(element);
+            });
+        }
+
+        // Firebase'i başlat ve kullanıcıyı yetkilendir
+        async function initializeFirebase() {
+            try {
+                // Firebase'i başlatma
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // Kullanıcı yetkilendirmesi
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
                 } else {
-                    // Kullanıcıya bir şeyler yazması gerektiğini söyleyen özel bir mesaj gösterme
-                    showMessage("Lütfen göndermek istediğiniz veriyi girin.");
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        userDocRef = doc(db, `artifacts/${appId}/public/data/game_data`, userId);
+                        
+                        // Kullanıcı verilerini Firestore'dan al veya oluştur
+                        const docSnap = await getDoc(userDocRef);
+                        if (!docSnap.exists()) {
+                            await setDoc(userDocRef, {
+                                points: 0,
+                                bonusCodes: [],
+                                lastClick: 0
+                            });
+                        }
+                        
+                        // UI'ı göster ve veriyi dinlemeye başla
+                        loadingScreen.style.display = 'none';
+                        appContainer.style.display = 'block';
+                        listenForDataChanges();
+                    } else {
+                        showMessage('Kimlik doğrulama başarısız.');
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase başlatılırken bir hata oluştu:", error);
+                showMessage("Uygulama başlatılırken bir hata oluştu.");
+            }
+        }
+        
+        // Firestore'dan gerçek zamanlı veri dinleme
+        function listenForDataChanges() {
+            onSnapshot(userDocRef, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    updateUI(data);
                 }
             });
+        }
+        
+        // UI'ı verilerle güncelleme
+        function updateUI(data) {
+            pointsDisplay.textContent = `Puan: ${data.points}`;
+            
+            // Bonus kodlarını listele
+            bonusCodesList.innerHTML = '';
+            if (data.bonusCodes && data.bonusCodes.length > 0) {
+                data.bonusCodes.forEach(code => {
+                    const li = document.createElement('li');
+                    li.textContent = `• ${code}`;
+                    bonusCodesList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = "Henüz kazanılmış bonus kodunuz yok.";
+                bonusCodesList.appendChild(li);
+            }
 
-            // "Uygulamayı Kapat" butonuna tıklama olayını dinleme
-            closeButton.addEventListener('click', () => {
-                // Uygulamayı kapatma komutunu gönderme
-                WebApp.close();
-            });
+            // Çarkı çevir butonunu etkinleştirme
+            spinButton.disabled = data.points < 100 || isSpinning;
+            
+            // Kullanıcı kimliğini göster
+            userInfoElement.textContent = `Kullanıcı Kimliği: ${userId}`;
+        }
+
+        // Mini oyunu oynama
+        gameButton.addEventListener('click', async () => {
+            if (!userId) {
+                showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.");
+                return;
+            }
+
+            // Son tıklamadan bu yana geçen süreyi kontrol et (gereksiz tıklamaları engellemek için)
+            const now = Date.now();
+            const docSnap = await getDoc(userDocRef);
+            if (docSnap.exists()) {
+                const lastClick = docSnap.data().lastClick || 0;
+                if (now - lastClick < 500) { // 500ms bekleme süresi
+                    showMessage("Çok hızlısın! Lütfen biraz bekle.");
+                    return;
+                }
+            }
+
+            try {
+                // Firestore'daki puanı güncelle
+                await updateDoc(userDocRef, {
+                    points: (docSnap.data().points || 0) + 10,
+                    lastClick: now
+                });
+                showMessage("Puan kazandın!");
+            } catch (e) {
+                console.error("Puan güncellenirken hata oluştu: ", e);
+                showMessage("Bir hata oluştu, lütfen tekrar deneyin.");
+            }
+        });
+
+        // Çarkı çevirme
+        spinButton.addEventListener('click', async () => {
+            if (!userId) return;
+            isSpinning = true;
+            spinButton.disabled = true;
+            spinButton.textContent = "Çevriliyor...";
+
+            try {
+                const docSnap = await getDoc(userDocRef);
+                const currentPoints = docSnap.data().points || 0;
+
+                if (currentPoints < 100) {
+                    showMessage("Yeterli puanın yok!");
+                    isSpinning = false;
+                    spinButton.disabled = false;
+                    spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                    return;
+                }
+
+                // Puanı düşür
+                await updateDoc(userDocRef, {
+                    points: currentPoints - 100
+                });
+
+                // Çarkı çevirme animasyonu
+                const targetSegmentIndex = Math.floor(Math.random() * segments.length);
+                const segmentAngle = 360 / segments.length;
+                const totalAngle = 360 * 5 + (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2));
+                
+                wheel.style.transform = `rotate(${totalAngle}deg)`;
+                
+                // Animasyon bitiminde sonuçları göster
+                setTimeout(async () => {
+                    const result = segments[targetSegmentIndex];
+                    if (result.type === 'bonus_code') {
+                        const newBonusCode = `BONUS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+                        await updateDoc(userDocRef, {
+                            bonusCodes: arrayUnion(newBonusCode)
+                        });
+                        showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`);
+                    } else {
+                        showMessage("Maalesef, bir dahaki sefere!");
+                    }
+                    
+                    isSpinning = false;
+                    spinButton.disabled = false;
+                    spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                    wheel.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
+                }, 5000); // 5 saniye animasyon süresi
+            } catch (e) {
+                console.error("Çark çevrilirken bir hata oluştu: ", e);
+                showMessage("Bir hata oluştu, lütfen tekrar deneyin.");
+                isSpinning = false;
+                spinButton.disabled = false;
+                spinButton.textContent = "Çarkı Çevir (100 Puan)";
+            }
+        });
+        
+        // Uygulamayı kapatma butonu
+        closeButton.addEventListener('click', () => {
+            window.Telegram.WebApp.close();
+        });
+
+        // Uygulama yüklendiğinde başlat
+        window.addEventListener('load', () => {
+            createWheel();
+            initializeFirebase();
         });
     </script>
 </body>
