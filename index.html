@@ -15,10 +15,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Telegram Web App SDK'sını dahil etme -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Firebase SDK'larını dahil etme -->
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js"></script>
+    <!-- Firebase SDK'larını uyumluluk (compat) modunda dahil etme -->
+    <!-- Bu, `import` hatalarını önler ve `firebase` nesnesini global olarak erişilebilir kılar. -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
     <style>
         /* Varsayılan fontu ayarlama */
         body {
@@ -176,7 +177,16 @@
     <script>
         // Firebase ve Uygulama Ayarlarını Global Değişkenlerden Alın
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        // Kendi firebaseConfig'inizi buraya yapıştırın.
+        const firebaseConfig = {
+  apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
+  authDomain: "onwingiris-afccf.firebaseapp.com",
+  projectId: "onwingiris-afccf",
+  storageBucket: "onwingiris-afccf.firebasestorage.app",
+  messagingSenderId: "1059998132611",
+  appId: "1:1059998132611:web:7f415159c54936cc796eb6",
+  measurementId: "G-RE79PDJSJX"
+};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let db, auth, userId, userDocRef;
@@ -241,26 +251,26 @@
         async function initializeFirebase() {
             try {
                 // Firebase'i başlatma
-                const app = window.firebase.initializeApp(firebaseConfig);
-                auth = window.firebase.auth.getAuth(app);
-                db = window.firebase.firestore.getFirestore(app);
+                const app = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth().getAuth(app); // compat versiyonunda bu şekilde
+                db = firebase.firestore().getFirestore(app); // compat versiyonunda bu şekilde
 
                 // Kullanıcı yetkilendirmesi
                 if (initialAuthToken) {
-                    await window.firebase.auth.signInWithCustomToken(auth, initialAuthToken);
+                    await firebase.auth().signInWithCustomToken(auth, initialAuthToken);
                 } else {
-                    await window.firebase.auth.signInAnonymously(auth);
+                    await firebase.auth().signInAnonymously(auth);
                 }
 
-                window.firebase.auth.onAuthStateChanged(auth, async (user) => {
+                firebase.auth().onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
-                        userDocRef = window.firebase.firestore.doc(db, `artifacts/${appId}/public/data/game_data`, userId);
+                        userDocRef = firebase.firestore().doc(db, `artifacts/${appId}/public/data/game_data`, userId);
                         
                         // Kullanıcı verilerini Firestore'dan al veya oluştur
-                        const docSnap = await window.firebase.firestore.getDoc(userDocRef);
+                        const docSnap = await firebase.firestore().getDoc(userDocRef);
                         if (!docSnap.exists()) {
-                            await window.firebase.firestore.setDoc(userDocRef, {
+                            await firebase.firestore().setDoc(userDocRef, {
                                 points: 0,
                                 bonusCodes: [],
                                 lastClick: 0
@@ -288,7 +298,7 @@
         
         // Firestore'dan gerçek zamanlı veri dinleme
         function listenForDataChanges() {
-            window.firebase.firestore.onSnapshot(userDocRef, (doc) => {
+            firebase.firestore().onSnapshot(userDocRef, (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
                     updateUI(data);
@@ -330,7 +340,7 @@
 
             // Son tıklamadan bu yana geçen süreyi kontrol et (gereksiz tıklamaları engellemek için)
             const now = Date.now();
-            const docSnap = await window.firebase.firestore.getDoc(userDocRef);
+            const docSnap = await firebase.firestore().getDoc(userDocRef);
             if (docSnap.exists()) {
                 const lastClick = docSnap.data().lastClick || 0;
                 if (now - lastClick < 500) { // 500ms bekleme süresi
@@ -341,7 +351,7 @@
 
             try {
                 // Firestore'daki puanı güncelle
-                await window.firebase.firestore.updateDoc(userDocRef, {
+                await firebase.firestore().updateDoc(userDocRef, {
                     points: (docSnap.data().points || 0) + 10,
                     lastClick: now
                 });
@@ -360,7 +370,7 @@
             spinButton.textContent = "Çevriliyor...";
 
             try {
-                const docSnap = await window.firebase.firestore.getDoc(userDocRef);
+                const docSnap = await firebase.firestore().getDoc(userDocRef);
                 const currentPoints = docSnap.data().points || 0;
 
                 if (currentPoints < 100) {
@@ -372,7 +382,7 @@
                 }
 
                 // Puanı düşür
-                await window.firebase.firestore.updateDoc(userDocRef, {
+                await firebase.firestore().updateDoc(userDocRef, {
                     points: currentPoints - 100
                 });
 
@@ -388,8 +398,8 @@
                     const result = segments[targetSegmentIndex];
                     if (result.type === 'bonus_code') {
                         const newBonusCode = `BONUS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-                        await window.firebase.firestore.updateDoc(userDocRef, {
-                            bonusCodes: window.firebase.firestore.arrayUnion(newBonusCode)
+                        await firebase.firestore().updateDoc(userDocRef, {
+                            bonusCodes: firebase.firestore().arrayUnion(newBonusCode)
                         });
                         showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`);
                     } else {
