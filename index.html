@@ -31,7 +31,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #4b0082; /* Ana tema arkaplanı mor */
-            color: #ffffff; /* Yazılar beyaz */
+            color: #ffffff; /* Varsayılan yazılar beyaz */
             display: flex;
             flex-direction: column; /* İçeriği dikeyde sırala */
             align-items: center; /* Yatayda ortala */
@@ -167,16 +167,18 @@
             margin: auto; /* Ortalamak için */
             padding: 1.5rem; /* İç padding */
             box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
+            background-color: #1a1a1a; /* Uygulama kapsayıcısı için koyu siyah */
+            color: #ffffff; /* Kapsayıcıdaki yazılar beyaz */
         }
 
         /* Puan göstergesi için renk güncellemesi */
         #points-display {
-            color: #fcd34d; /* Sarımsı bir renk seçildi, mor ile iyi kontrast sağlar */
+            color: #fcd34d; /* Sarımsı bir renk seçildi, mor/siyah ile iyi kontrast sağlar */
         }
 
         /* Başlıklar için renk güncellemesi */
         h1, h2 {
-            color: #ffffff; /* Başlıklar da beyaz olsun */
+            color: #000000; /* Başlıklar siyah */
         }
 
         /* Gri arka planlı bölümlerin metni için renk */
@@ -196,7 +198,7 @@
         <p class="text-sm">Bağlanıyor...</p>
     </div>
 
-    <div id="app-container" class="bg-white rounded-lg shadow-xl p-8 text-center hidden">
+    <div id="app-container" class="rounded-lg shadow-xl p-8 text-center hidden">
         <h1 class="text-3xl font-bold mb-2">Bonus Çarkı Uygulaması</h1>
         <p class="text-sm text-gray-600 mb-6">Puan kazanmak ve bonus kodları almak için oyna!</p>
         
@@ -265,16 +267,16 @@
         let db, auth, userId, userDocRef;
         let isSpinning = false;
         
-        // Bonus çarkı için bölümler
+        // Bonus çarkı için bölümler - Mor ve siyah tonlarında güncellendi
         const segments = [
-            { text: "10 TL Bonus", color: "#FF6384", type: "bonus_code" },
-            { text: "Tekrar Dene", color: "#36A2EB", type: "try_again" },
-            { text: "25 TL Bonus", color: "#FFCE56", type: "bonus_code" },
-            { text: "Tekrar Dene", color: "#4BC0C0", type: "try_again" },
-            { text: "50 TL Bonus", color: "#9966FF", type: "bonus_code" },
-            { text: "Tekrar Dene", color: "#FF9F40", type: "try_again" },
-            { text: "25 TL Bonus", color: "#B3F7B3", type: "bonus_code" },
-            { text: "Tekrar Dene", color: "#E0E0E0", type: "try_again" }
+            { text: "10 TL Bonus", color: "#6f2da8", type: "bonus_code" }, // Açık mor
+            { text: "Tekrar Dene", color: "#1a1a1a", type: "try_again" }, // Siyah
+            { text: "25 TL Bonus", color: "#8a2be2", type: "bonus_code" }, // Orta mor
+            { text: "Tekrar Dene", color: "#2a0045", type: "try_again" }, // Koyu mor
+            { text: "50 TL Bonus", color: "#b19cd9", type: "bonus_code" }, // Lavanta moru
+            { text: "Tekrar Dene", color: "#3a005f", type: "try_again" }, // Çok koyu mor
+            { text: "25 TL Bonus", color: "#c3aed6", type: "bonus_code" }, // Daha açık lavanta
+            { text: "Tekrar Dene", color: "#1a1a1a", type: "try_again" }  // Siyah
         ];
 
         // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
