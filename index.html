@@ -26,11 +26,19 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--tg-theme-bg-color, #f4f4f4);
             color: var(--tg-theme-text-color, #000000);
+            display: flex; /* Ekranın ortalanması için */
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; /* Tam ekran yüksekliği */
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Taşmaları engelle */
         }
         .telegram-btn {
             background-color: var(--tg-theme-button-color, #50a8eb);
             color: var(--tg-theme-button-text-color, #ffffff);
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border-radius: 0.5rem; /* Yuvarlak köşeler */
         }
         /* Yükleme ekranı stili */
         #loading-screen {
@@ -71,14 +79,18 @@
             z-index: 1000;
             display: none;
             text-align: center;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
         /* Çark stili */
         .wheel-container {
             position: relative;
-            width: 250px;
-            height: 250px;
+            width: 280px; /* Daha büyük çark */
+            height: 280px; /* Daha büyük çark */
             margin: 0 auto;
+            border-radius: 50%;
+            overflow: hidden; /* Dilimlerin dışarı taşmasını engelle */
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
         .wheel {
             width: 100%;
@@ -89,23 +101,30 @@
         }
         .wheel-segment {
             position: absolute;
-            width: 50%;
-            height: 50%;
+            width: 100%; /* Tüm çarkı kapla */
+            height: 100%; /* Tüm çarkı kapla */
             top: 0;
-            left: 50%;
-            transform-origin: 0% 100%;
+            left: 0;
+            transform-origin: center center; /* Ortadan döndür */
+            /* Dilim şeklini vermek için clip-path kullanılacak */
+            /* Javascript ile her dilim için dinamik olarak ayarlanacak */
         }
-        .wheel-segment-content {
+        .wheel-text-label {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 80px;
-            height: 80px;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform-origin: center center; /* Metin konteynerini ortadan döndür */
+            pointer-events: none; /* Metin tıklamaları çarkın tıklanmasını engellemesin */
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            transform: rotate(-45deg); /* Metni döndür */
+            font-size: 0.9em; /* Font boyutu */
+            font-weight: bold;
+            color: white; /* Metin rengi */
+            white-space: nowrap; /* Metni tek satırda tut */
         }
         .wheel-marker {
             position: absolute;
@@ -113,15 +132,15 @@
             height: 0;
             border-left: 15px solid transparent;
             border-right: 15px solid transparent;
-            border-top: 20px solid red;
-            top: -10px;
+            border-top: 25px solid var(--tg-theme-button-color, #50a8eb); /* Telegram temasıyla uyumlu ok */
+            top: -15px; /* Çarkın biraz üzerine konumlandır */
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
         }
     </style>
 </head>
-<body class="p-6 flex items-center justify-center min-h-screen">
+<body class="p-6">
     <!-- Yükleme Ekranı -->
     <div id="loading-screen" class="space-y-4">
         <div class="spinner"></div>
@@ -154,7 +173,7 @@
             <div class="wheel-container">
                 <div class="wheel-marker"></div>
                 <div id="wheel" class="wheel">
-                    <!-- Çark bölümleri dinamik olarak eklenecek -->
+                    <!-- Çark dilimleri ve metin etiketleri dinamik olarak eklenecek -->
                 </div>
             </div>
             <button id="spin-button" class="telegram-btn w-full py-3 mt-6 rounded-lg font-semibold transition duration-200 hover:opacity-80 disabled:opacity-50" disabled>
@@ -201,7 +220,7 @@
         const segments = [
             { text: "10 TL Bonus", color: "#FF6384", type: "bonus_code" },
             { text: "Tekrar Dene", color: "#36A2EB", type: "try_again" },
-            { text: "25 TL TL Bonus", color: "#FFCE56", type: "bonus_code" },
+            { text: "25 TL Bonus", color: "#FFCE56", type: "bonus_code" },
             { text: "Tekrar Dene", color: "#4BC0C0", type: "try_again" },
             { text: "50 TL Bonus", color: "#9966FF", type: "bonus_code" },
             { text: "Tekrar Dene", color: "#FF9F40", type: "try_again" },
@@ -234,20 +253,57 @@
 
         // Çarkı dinamik olarak oluşturma
         function createWheel() {
-            const segmentAngle = 360 / segments.length;
-            wheel.innerHTML = '';
+            const segmentAngle = 360 / segments.length; // Her dilimin açısı
+            wheel.innerHTML = ''; // Çarkı temizle
+
             segments.forEach((segment, index) => {
-                const element = document.createElement('div');
-                element.className = 'wheel-segment';
-                element.style.transform = `rotate(${index * segmentAngle}deg) skewY(45deg)`;
-                element.style.backgroundColor = segment.color;
+                // 1. Dilimin arka planı için element (görsel dilim)
+                const segmentBg = document.createElement('div');
+                segmentBg.className = 'wheel-segment';
+                segmentBg.style.backgroundColor = segment.color;
 
-                const content = document.createElement('div');
-                content.className = 'wheel-segment-content';
-                content.textContent = segment.text;
-                element.appendChild(content);
+                // Dilimin clip-path ile şekillendirilmesi (poligon koordinatları)
+                // Her dilim için başlangıç ve bitiş açıları
+                const startAngle = index * segmentAngle;
+                const endAngle = (index + 1) * segmentAngle;
 
-                wheel.appendChild(element);
+                // Yarıçap (wheel-container'ın %50'si)
+                const r = 50; 
+                // Merkezi nokta
+                const center = { x: 50, y: 50 };
+
+                // Dereceden radyana çevirme (trigonometrik fonksiyonlar için)
+                const startRad = (startAngle - 90) * Math.PI / 180; // -90 ile 0 derece tepe noktasına gelir
+                const endRad = (endAngle - 90) * Math.PI / 180;
+
+                // Başlangıç ve bitiş noktalarının koordinatları
+                const p1 = { x: center.x + r * Math.cos(startRad), y: center.y + r * Math.sin(startRad) };
+                const p2 = { x: center.x + r * Math.cos(endRad), y: center.y + r * Math.sin(endRad) };
+
+                // Clip-path oluştur
+                segmentBg.style.clipPath = `polygon(${center.x}% ${center.y}%, ${p1.x}% ${p1.y}%, ${p2.x}% ${p2.y}%)`;
+
+                wheel.appendChild(segmentBg);
+
+                // 2. Dilimdeki metin etiketi (okunabilir metin)
+                const textLabel = document.createElement('div');
+                textLabel.className = 'wheel-text-label';
+                
+                // Metin konteynerini dilimin ortasına döndür
+                // Çarkın merkezinden dışa doğru bir eksende metni konumlandır
+                const midAngle = index * segmentAngle + segmentAngle / 2;
+                const midRad = (midAngle - 90) * Math.PI / 180; // -90 ile tepe noktası referans alınır
+
+                const textRadialOffset = 70; // Metnin çarkın merkezinden uzaklığı (piksel)
+                textLabel.style.left = `calc(50% + ${textRadialOffset * Math.cos(midRad)}px)`;
+                textLabel.style.top = `calc(50% + ${textRadialOffset * Math.sin(midRad)}px)`;
+                
+                // Metni kendi ekseni etrafında döndürerek her zaman yatay tut
+                // Bu dönüş, metin label'ının konumlandırıldığı eksene göre ayarlanır
+                textLabel.style.transform = `translate(-50%, -50%) rotate(${midAngle}deg) rotate(90deg)`; // 90 derece metni düzeltir
+
+                textLabel.textContent = segment.text;
+                wheel.appendChild(textLabel);
             });
         }
 
@@ -351,8 +407,6 @@
             closeButton = document.getElementById('close-button');
 
             // DOM elemanları atandıktan sonra olay dinleyicilerini ekle
-            console.log("gameButton değeri:", gameButton); // Hata ayıklama için eklendi
-
             if (gameButton) { // gameButton'ın varlığını kontrol et
                 gameButton.addEventListener('click', async () => {
                     if (!userId) {
@@ -416,6 +470,9 @@
                         // Çarkı çevirme animasyonu
                         const targetSegmentIndex = Math.floor(Math.random() * segments.length);
                         const segmentAngle = 360 / segments.length;
+                        // Çarkın döneceği toplam açı hesaplanırken, hedef dilimin ortasına gelecek şekilde ayar yapılır.
+                        // 360 * 5: Çarkın en az 5 tam tur atmasını sağlar.
+                        // (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2)): Hedef dilimin ortasına gelmesi için ek dönüş açısı.
                         const totalAngle = 360 * 5 + (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2));
                         
                         wheel.style.transform = `rotate(${totalAngle}deg)`;
@@ -459,7 +516,6 @@
                 console.error("Hata: closeButton HTML elementi bulunamadı!");
                 showMessage("Uygulama yüklenirken bir sorun oluştu (Kapat Butonu bulunamadı).", true);
             }
-
 
             createWheel(); // createWheel çağrısı wheel elementi atandıktan sonra yapılmalı
             initializeFirebase();
