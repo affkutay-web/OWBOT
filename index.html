@@ -30,8 +30,8 @@
         }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--tg-theme-bg-color, #f4f4f4);
-            color: var(--tg-theme-text-color, #000000);
+            background-color: #4b0082; /* Ana tema arkaplanı mor */
+            color: #ffffff; /* Yazılar beyaz */
             display: flex;
             flex-direction: column; /* İçeriği dikeyde sırala */
             align-items: center; /* Yatayda ortala */
@@ -43,7 +43,7 @@
             box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
         }
         .telegram-btn {
-            background-color: var(--tg-theme-button-color, #50a8eb);
+            background-color: var(--tg-theme-button-color, #a78bfa); /* Telegram tema butonu veya mor bir ton */
             color: var(--tg-theme-button-text-color, #ffffff);
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             border-radius: 0.5rem; /* Yuvarlak köşeler */
@@ -59,12 +59,13 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: var(--tg-theme-bg-color, #f4f4f4);
+            background-color: #4b0082; /* Mor arkaplan */
+            color: #ffffff; /* Beyaz yazı */
             z-index: 9999;
         }
         .spinner {
-            border: 4px solid var(--tg-theme-hint-color, #999);
-            border-top: 4px solid var(--tg-theme-button-color, #50a8eb);
+            border: 4px solid #ffffff; /* Beyaz spinner */
+            border-top: 4px solid #a78bfa; /* Mor tonunda spinner üst kenarı */
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -80,8 +81,8 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: #333;
-            color: white;
+            background-color: #333; /* Mesaj kutusu için daha koyu bir arka plan */
+            color: #ffffff; /* Beyaz yazı */
             padding: 10px 20px;
             border-radius: 8px;
             z-index: 1000;
@@ -139,7 +140,7 @@
             white-space: nowrap;
             font-size: 0.8em;
             font-weight: bold;
-            color: white;
+            color: #ffffff; /* Beyaz metin */
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Okunabilirliği artır */
             z-index: 2; /* Metin dilimin üstünde olsun */
             pointer-events: none; /* Metnin tıklamayı engellememesi için */
@@ -152,7 +153,7 @@
             height: 0;
             border-left: 15px solid transparent;
             border-right: 15px solid transparent;
-            border-top: 25px solid var(--tg-theme-button-color, #50a8eb);
+            border-top: 25px solid #a78bfa; /* Mor tonunda ok */
             top: -15px;
             left: 50%;
             transform: translateX(-50%);
@@ -166,6 +167,25 @@
             margin: auto; /* Ortalamak için */
             padding: 1.5rem; /* İç padding */
             box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
+        }
+
+        /* Puan göstergesi için renk güncellemesi */
+        #points-display {
+            color: #fcd34d; /* Sarımsı bir renk seçildi, mor ile iyi kontrast sağlar */
+        }
+
+        /* Başlıklar için renk güncellemesi */
+        h1, h2 {
+            color: #ffffff; /* Başlıklar da beyaz olsun */
+        }
+
+        /* Gri arka planlı bölümlerin metni için renk */
+        .bg-gray-100 {
+            background-color: rgba(255, 255, 255, 0.1); /* Mor ile iyi gidecek şeffaf beyaz */
+            color: #ffffff; /* Metin beyaz */
+        }
+        .text-gray-600 {
+            color: #d1d5db; /* Açık gri tonu, beyaz arkaplan üzerindeki gibi */
         }
     </style>
 </head>
@@ -183,7 +203,7 @@
         <!-- Kullanıcı Bilgisi -->
         <div class="bg-gray-100 p-4 rounded-lg mb-6">
             <p id="user-info" class="text-sm font-semibold mb-2">Yükleniyor...</p>
-            <p id="points-display" class="text-2xl font-bold text-blue-600">Puan: 0</p>
+            <p id="points-display" class="text-2xl font-bold">Puan: 0</p>
         </div>
         
         <!-- Mini Oyun Bölümü -->
@@ -258,4 +278,265 @@
         ];
 
         // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
-        let loadingScreen, appContainer, userInfoElement, pointsDisplay, gameButton, spinButton, bonusCodesL
+        let loadingScreen, appContainer, userInfoElement, pointsDisplay, gameButton, spinButton, bonusCodesList, messageBox, wheel, closeButton;
+
+
+        // Kullanıcıya mesaj göstermek için özel fonksiyon
+        function showMessage(text, isError = false) {
+            if (!messageBox) { 
+                console.error("Hata: messageBox HTML elementi henüz bulunamadı. Mesaj:", text);
+                return;
+            }
+            messageBox.textContent = text;
+            if (isError) {
+                messageBox.style.backgroundColor = '#dc3545'; // Kırmızı arka plan
+            } else {
+                messageBox.style.backgroundColor = '#333'; // Varsayılan arka plan
+            }
+            messageBox.style.display = 'block';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 3000); // 3 saniye sonra gizle
+        }
+
+        // Çarkı dinamik olarak oluşturma
+        function createWheel() {
+            const numSegments = segments.length;
+            const segmentAngle = 360 / numSegments;
+            
+            wheel.innerHTML = ''; // Çarkı temizle
+            
+            segments.forEach((segmentData, index) => {
+                const rotationAngle = index * segmentAngle; // Segmentin dönme açısı
+
+                // Her bir dilim için kapsayıcı div
+                const segmentEl = document.createElement('div');
+                segmentEl.className = 'segment';
+                segmentEl.style.setProperty('--rotation-angle', `${rotationAngle}deg`);
+                segmentEl.style.setProperty('--segment-color', segmentData.color);
+                segmentEl.style.setProperty('--segment-sweep-angle', `${segmentAngle}deg`); // Dilim yay açısı
+
+                // Renkli kısmın kendisi
+                const colorFillEl = document.createElement('div');
+                colorFillEl.className = 'segment-color-fill';
+                segmentEl.appendChild(colorFillEl);
+
+                // Segmentin içindeki metin etiketi
+                const labelEl = document.createElement('div');
+                labelEl.className = 'segment-label';
+                labelEl.textContent = segmentData.text;
+                // Metni yatay tutmak için karşıt dönüş
+                labelEl.style.setProperty('--rotation-angle', `${rotationAngle}deg`); 
+
+                segmentEl.appendChild(labelEl);
+                wheel.appendChild(segmentEl);
+            });
+        }
+
+        // Firebase'i başlat ve kullanıcıyı yetkilendir
+        async function initializeFirebase() {
+            try {
+                // Firebase'i başlatma
+                const app = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth(); // compat versiyonunda bu şekilde
+                db = firebase.firestore(); // compat versiyonunda bu şekilde
+
+                // Kullanıcı yetkilendirmesi
+                if (initialAuthToken) {
+                    await auth.signInWithCustomToken(initialAuthToken);
+                } else {
+                    await auth.signInAnonymously();
+                }
+
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        // Firestore collection ve doc referanslarını düzeltme
+                        userDocRef = db.collection(`artifacts/${appId}/public/data/game_data`).doc(userId);
+                        
+                        // Kullanıcı verilerini Firestore'dan al veya oluştur
+                        const docSnap = await userDocRef.get();
+                        if (!docSnap.exists) {
+                            await userDocRef.set({
+                                points: 0,
+                                bonusCodes: [],
+                                lastClick: 0
+                            });
+                        }
+                        
+                        // UI'ı göster ve veriyi dinlemeye başla
+                        loadingScreen.style.display = 'none';
+                        appContainer.style.display = 'block';
+                        listenForDataChanges();
+                    } else {
+                        // Eğer kimlik doğrulama başarısız olursa, bir hata mesajı göster
+                        console.error("Kimlik doğrulama başarısız oldu, kullanıcı nesnesi boş.");
+                        loadingScreen.style.display = 'none';
+                        showMessage('Kimlik doğrulama başarısız oldu, lütfen uygulamayı tekrar açın.', true);
+                    }
+                });
+            } catch (error) {
+                // Firebase başlatılırken veya kimlik doğrulanırken oluşan hataları yakala
+                console.error("Firebase başlatılırken bir hata oluştu:", error);
+                loadingScreen.style.display = 'none';
+                showMessage(`Uygulama başlatılırken bir hata oluştu: ${error.message}`, true);
+            }
+        }
+        
+        // Firestore'dan gerçek zamanlı veri dinleme
+        function listenForDataChanges() {
+            userDocRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    updateUI(data);
+                }
+            });
+        }
+        
+        // UI'ı verilerle güncelleme
+        function updateUI(data) {
+            pointsDisplay.textContent = `Puan: ${data.points}`;
+            
+            // Bonus kodlarını listele
+            bonusCodesList.innerHTML = '';
+            if (data.bonusCodes && data.bonusCodes.length > 0) {
+                data.bonusCodes.forEach(code => {
+                    const li = document.createElement('li');
+                    li.textContent = `• ${code}`;
+                    bonusCodesList.appendChild(li);
+                });
+            } else {
+                const li = document.createElement('li');
+                li.textContent = "Henüz kazanılmış bonus kodunuz yok.";
+                bonusCodesList.appendChild(li);
+            }
+
+            // Çarkı çevir butonunu etkinleştirme
+            spinButton.disabled = data.points < 100 || isSpinning;
+            
+            // Kullanıcı kimliğini göster
+            userInfoElement.textContent = `Kullanıcı Kimliği: ${userId}`;
+        }
+
+        // Uygulama yüklendiğinde başlat
+        document.addEventListener('DOMContentLoaded', () => { 
+            // HTML elemanlarını DOM yüklendikten sonra al ve global değişkenlere ata
+            loadingScreen = document.getElementById('loading-screen');
+            appContainer = document.getElementById('app-container');
+            userInfoElement = document.getElementById('user-info');
+            pointsDisplay = document.getElementById('points-display');
+            gameButton = document.getElementById('game-button');
+            spinButton = document.getElementById('spin-button');
+            bonusCodesList = document.getElementById('bonus-codes-list');
+            messageBox = document.getElementById('message-box');
+            wheel = document.getElementById('wheel');
+            closeButton = document.getElementById('close-button');
+
+            // DOM elemanları atandıktan sonra olay dinleyicilerini ekle
+            if (gameButton) { 
+                gameButton.addEventListener('click', async () => {
+                    if (!userId) {
+                        showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true);
+                        return;
+                    }
+
+                    const now = Date.now();
+                    const docSnap = await userDocRef.get();
+                    if (docSnap.exists) {
+                        const lastClick = docSnap.data().lastClick || 0;
+                        if (now - lastClick < 500) { 
+                            showMessage("Çok hızlısın! Lütfen biraz bekle.");
+                            return;
+                        }
+                    }
+
+                    try {
+                        await userDocRef.update({
+                            points: (docSnap.data().points || 0) + 10,
+                            lastClick: now
+                        });
+                        showMessage("Puan kazandın!");
+                    } catch (e) {
+                        console.error("Puan güncellenirken hata oluştu: ", e);
+                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
+                    }
+                });
+            } else {
+                console.error("Hata: gameButton HTML elementi bulunamadı!");
+                showMessage("Uygulama yüklenirken bir sorun oluştu (Oyun Butonu bulunamadı).", true);
+            }
+
+            if (spinButton) { 
+                spinButton.addEventListener('click', async () => {
+                    if (!userId) return;
+                    isSpinning = true;
+                    spinButton.disabled = true;
+                    spinButton.textContent = "Çevriliyor...";
+
+                    try {
+                        const docSnap = await userDocRef.get();
+                        const currentPoints = docSnap.data().points || 0;
+
+                        if (currentPoints < 100) {
+                            showMessage("Yeterli puanın yok!", true);
+                            isSpinning = false;
+                            spinButton.disabled = false;
+                            spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                            return;
+                        }
+
+                        await userDocRef.update({
+                            points: currentPoints - 100
+                        });
+
+                        const targetSegmentIndex = Math.floor(Math.random() * segments.length);
+                        const segmentAngle = 360 / segments.length;
+                        const totalAngle = 360 * 5 + (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2));
+                        
+                        wheel.style.transform = `rotate(${totalAngle}deg)`;
+                        
+                        setTimeout(async () => {
+                            const result = segments[targetSegmentIndex];
+                            if (result.type === 'bonus_code') {
+                                const newBonusCode = `BONUS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+                                await userDocRef.update({
+                                    bonusCodes: firebase.firestore.FieldValue.arrayUnion(newBonusCode)
+                                });
+                                showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`);
+                            } else {
+                                showMessage("Maalesef, bir dahaki sefere!");
+                            }
+                            
+                            isSpinning = false;
+                            spinButton.disabled = false;
+                            spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                            wheel.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
+                        }, 5000); // 5 saniye animasyon süresi
+                    } catch (e) {
+                        console.error("Çark çevrilirken bir hata oluştu: ", e);
+                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
+                        isSpinning = false;
+                        spinButton.disabled = false;
+                        spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                    }
+                });
+            } else {
+                console.error("Hata: spinButton HTML elementi bulunamadı!");
+                showMessage("Uygulama yüklenirken bir sorun oluştu (Çark Butonu bulunamadı).", true);
+            }
+            
+            if (closeButton) { 
+                closeButton.addEventListener('click', () => {
+                    window.Telegram.WebApp.close();
+                });
+            } else {
+                console.error("Hata: closeButton HTML elementi bulunamadı!");
+                showMessage("Uygulama yüklenirken bir sorun oluştu (Kapat Butonu bulunamadı).", true);
+            }
+
+            createWheel(); // createWheel çağrısı wheel elementi atandıktan sonra yapılmalı
+            initializeFirebase();
+        });
+    </script>
+</body>
+</html>
