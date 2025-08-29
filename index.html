@@ -10,7 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çarkıfelek Web Uygulaması</title>
+    <title>ONWIN Web Uygulaması</title> <!-- Başlık güncellendi -->
     <!-- Tailwind CSS'i dahil etme -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Telegram Web App SDK'sını dahil etme -->
@@ -205,36 +205,42 @@
             height: 60px; /* Başlık için sabit yükseklik */
         }
         #app-header .title {
-            font-size: 1.7rem; /* Biraz daha büyük başlık */
+            font-size: 2.2rem; /* Daha büyük başlık */
             font-weight: 900;
-            letter-spacing: 0.08em; /* Harf aralığı */
-            text-shadow: 2px 2px 5px rgba(0,0,0,0.7); /* Daha belirgin gölge */
+            letter-spacing: 0.12em; /* Harf aralığı artırıldı */
+            text-shadow: 3px 3px 7px rgba(0,0,0,0.8); /* Daha belirgin gölge */
+            color: #fcd34d; /* ONWIN başlığı sarımsı olsun */
         }
         #app-header .user-info-display {
             text-align: right;
             font-size: 0.9rem;
             display: flex; /* İçindeki öğeleri yatayda sıralamak için */
             align-items: center; /* Dikeyde ortala */
-            gap: 0.75rem; /* Resim ve metin arasına boşluk */
+            gap: 0.5rem; /* Resim ve metin arasına boşluk azaltıldı */
         }
         #app-header .user-info-text { /* Kullanıcı adı ve puan için yeni kapsayıcı */
             display: flex;
             flex-direction: column;
             align-items: flex-end; /* Metni sağa yasla */
         }
+        #app-header .user-info-header { /* Kullanıcı adı için daha belirgin stil */
+            font-weight: bold;
+            color: #e8e8e8;
+            font-size: 1rem;
+        }
         #app-header .points-display {
-            font-size: 1.25rem; /* Daha büyük puan yazısı */
+            font-size: 1.15rem; /* Puan yazısı boyutu güncellendi */
             font-weight: bold;
             color: #fcd34d; /* Sarımsı renk puanlar için */
             text-shadow: 0 0 8px rgba(252, 211, 77, 0.7); /* Hafif parlama */
         }
         #app-header .points-display .fa-coins { /* Puan ikonuna stil */
             color: #fcd34d;
-            margin-right: 0.4rem;
+            margin-right: 0.3rem; /* Boşluk azaltıldı */
         }
         #user-profile-pic { /* Kullanıcı profil resmi için stil */
-            width: 40px;
-            height: 40px;
+            width: 36px; /* Boyut azaltıldı */
+            height: 36px; /* Boyut azaltıldı */
             border-radius: 50%; /* Yuvarlak profil resmi */
             background-color: #555; /* Varsayılan arka plan */
             background-size: cover;
@@ -255,7 +261,7 @@
             -webkit-overflow-scrolling: touch; /* iOS'ta daha akıcı kaydırma */
             display: flex; /* İçeriğini dikeyde sıralamak için */
             flex-direction: column;
-            /* padding-bottom: 1.5rem;  Bu artık margin içinde */
+            padding: 0 0.5rem; /* Kenarlardan hafif boşluk eklendi */
         }
 
         #home-page-content {
@@ -278,10 +284,10 @@
             color: #fcd34d; /* Başlıklar sarımsı olsun */
             font-weight: 900; /* Daha kalın ve etkileyici */
             text-shadow: 0 0 10px rgba(252, 211, 77, 0.8); /* Hafif parlama */
-            font-size: 2.5rem; /* H1 için daha büyük */
+            font-size: 2.2rem; /* H1 için daha büyük */
         }
         h2 {
-            font-size: 2rem; /* H2 için daha büyük */
+            font-size: 1.7rem; /* H2 için daha büyük */
         }
 
         /* Tüm küçük yazıları beyaz yapalım */
@@ -322,23 +328,23 @@
         }
         .game-modal-content {
             background: linear-gradient(180deg, #1a1a1a 0%, #333333 100%); /* Degradeli arka plan */
-            padding: 2.5rem; /* Daha fazla padding */
+            padding: 2.0rem; /* Daha fazla padding */
             border-radius: 1rem; /* Daha yuvarlak köşeler */
             text-align: center;
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); /* Daha büyük gölge */
             max-width: 90%;
-            width: min(400px, 95vw); /* Responsive genişlik */
+            width: min(380px, 95vw); /* Responsive genişlik */
             position: relative; /* Mesaj kutusu için göreceli konum */
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .game-modal-close-btn { /* Modal kapatma butonu için genel sınıf */
             position: absolute;
-            top: 15px; /* Konumu ayarla */
-            right: 15px; /* Konumu ayarla */
+            top: 10px; /* Konumu ayarla */
+            right: 10px; /* Konumu ayarla */
             background: none;
             border: none;
             color: #fcd34d; /* Sarımsı renk */
-            font-size: 2.2em; /* Daha büyük */
+            font-size: 1.8em; /* Boyut küçültüldü */
             cursor: pointer;
             transition: transform 0.2s ease;
         }
@@ -349,14 +355,14 @@
         /* Oyun kartı stili (Ana sayfadaki görsel) */
         .game-card-homepage { /* Ana sayfadaki tıklanabilir oyun kartları */
             background: linear-gradient(145deg, #2a0045 0%, #4b0082 100%); /* Degradeli arka plan */
-            padding: 1.5rem;
-            border-radius: 1rem; /* Daha yuvarlak köşeler */
+            padding: 1.2rem; /* Padding azaltıldı */
+            border-radius: 0.8rem; /* Daha yuvarlak köşeler */
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease-in-out; /* Yumuşak geçişler */
-            min-width: 250px; /* Her kartın minimum genişliği */
+            min-width: 200px; /* Her kartın minimum genişliği azaltıldı */
             flex-shrink: 0; /* Kartların küçülmesini engelle */
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4), inset 0 3px 8px rgba(255, 255, 255, 0.15); /* Daha belirgin ve iç gölge */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35), inset 0 2px 6px rgba(255, 255, 255, 0.1); /* Gölgeler azaltıldı */
             border: 1px solid rgba(255, 255, 255, 0.15);
             scroll-snap-align: start; /* Kaydırma hizalaması */
             display: flex; /* İçeriğini ortalamak için */
@@ -365,49 +371,49 @@
             align-items: center;
         }
         .game-card-homepage + .game-card-homepage { /* Kartlar arasına boşluk */
-            margin-left: 1.5rem;
+            margin-left: 1rem; /* Boşluk azaltıldı */
         }
         .game-card-homepage:last-child { /* Son karttan sonraki boşluğu kapat */
-            margin-right: 1.5rem;
+            margin-right: 1rem; /* Boşluk azaltıldı */
         }
 
         .game-card-homepage:hover {
-            transform: translateY(-10px) scale(1.03); /* Daha belirgin büyüme ve kalkma */
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 3px 10px rgba(255, 255, 255, 0.25);
+            transform: translateY(-8px) scale(1.02); /* Daha belirgin büyüme ve kalkma */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), inset 0 2px 8px rgba(255, 255, 255, 0.15);
         }
         .game-card-homepage .game-icon { /* İkonlar için stil */
-            font-size: 3.5rem; /* İkon boyutu */
+            font-size: 3rem; /* İkon boyutu azaltıldı */
             color: #fcd34d; /* Sarımsı renk */
-            margin-bottom: 1rem;
-            border: 3px solid #fcd34d; /* Sarımsı çerçeve */
+            margin-bottom: 0.8rem; /* Boşluk azaltıldı */
+            border: 2px solid #fcd34d; /* Sarımsı çerçeve */
             border-radius: 50%; /* Yuvarlak çerçeve */
-            width: 100px; /* Sabit genişlik */
-            height: 100px; /* Sabit yükseklik */
+            width: 80px; /* Sabit genişlik azaltıldı */
+            height: 80px; /* Sabit yükseklik azaltıldı */
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: rgba(0,0,0,0.2); /* Hafif arkaplan */
-            box-shadow: 0 0 18px rgba(252, 211, 77, 0.7); /* Resme parlama efekti */
+            box-shadow: 0 0 15px rgba(252, 211, 77, 0.6); /* Resme parlama efekti */
             transition: all 0.3s ease-in-out;
         }
         .game-card-homepage:hover .game-icon {
-            transform: scale(1.07); /* Hover'da ikonun da büyümesi */
-            box-shadow: 0 0 25px rgba(252, 211, 77, 0.9);
+            transform: scale(1.05); /* Hover'da ikonun da büyümesi */
+            box-shadow: 0 0 20px rgba(252, 211, 77, 0.8);
         }
         
         /* Mini Oyunlar bölümü stili */
         #mini-games-carousel-container { /* Carousel için dış konteyner */
             width: 100%;
             position: relative; /* Ok butonları için */
-            margin-bottom: 1.5rem; /* Alt boşluk */
+            margin-bottom: 1.2rem; /* Alt boşluk */
         }
 
         #mini-games-section {
             width: 100%;
             background: linear-gradient(160deg, #2a0045 0%, #3a005f 100%); /* Degradeli arka plan */
-            padding: 2rem 1rem; /* Dikey padding, yatay 1rem */
-            border-radius: 1rem; /* Daha yuvarlak köşeler */
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            padding: 1.5rem 0.8rem; /* Dikey padding, yatay 1rem */
+            border-radius: 0.8rem; /* Daha yuvarlak köşeler */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
             display: flex; /* İçindeki oyunları yatayda sırala */
             flex-direction: row; /* Yatay düzen */
             flex-wrap: nowrap; /* Alt satıra geçme */
@@ -417,7 +423,7 @@
             scroll-snap-type: x mandatory; /* Kaydırma hizalaması */
             scrollbar-width: none; /* Firefox kaydırma çubuğunu gizle */
             -ms-overflow-style: none;  /* IE and Edge kaydırma çubuğunu gizle */
-            margin-bottom: 1rem; /* Oklar ile oyunlar arasına boşluk */
+            margin-bottom: 0.8rem; /* Oklar ile oyunlar arasına boşluk */
             border: 1px solid rgba(255, 255, 255, 0.1);
             /* Dokunmatik/sürükleme kaydırması için varsayılan cursor */
             cursor: grab;
@@ -436,20 +442,20 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background-color: rgba(75, 0, 130, 0.7); /* Mor yarı şeffaf */
+            background-color: rgba(75, 0, 130, 0.6); /* Mor yarı şeffaf */
             color: #fcd34d; /* Sarımsı ok */
             border: none;
-            padding: 0.5rem 0.8rem;
+            padding: 0.4rem 0.7rem; /* Boyut azaltıldı */
             border-radius: 50%;
-            font-size: 1.5rem;
+            font-size: 1.3rem; /* Boyut azaltıldı */
             cursor: pointer;
             z-index: 10;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            box-shadow: 0 1px 8px rgba(0,0,0,0.4);
             transition: background-color 0.2s ease, transform 0.2s ease;
         }
         .scroll-button:hover {
-            background-color: rgba(75, 0, 130, 0.9);
-            transform: translateY(-50%) scale(1.1);
+            background-color: rgba(75, 0, 130, 0.8);
+            transform: translateY(-50%) scale(1.08);
         }
         #scroll-left-btn {
             left: 5px;
@@ -463,30 +469,26 @@
         #bonus-codes-list-section {
             width: 100%;
             background: linear-gradient(160deg, #2a0045 0%, #3a005f 100%); /* Degradeli arka plan */
-            padding: 2rem; /* Daha fazla padding */
-            border-radius: 1rem; /* Daha yuvarlak köşeler */
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            padding: 1.5rem; /* Padding azaltıldı */
+            border-radius: 0.8rem; /* Daha yuvarlak köşeler */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         #bonus-codes-list li {
             background-color: rgba(75, 0, 130, 0.3); /* Listeler için şeffaf mor arkaplan */
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
+            padding: 0.6rem 0.8rem; /* Padding azaltıldı */
+            border-radius: 0.4rem; /* Köşeler azaltıldı */
+            margin-bottom: 0.4rem; /* Boşluk azaltıldı */
+            font-size: 0.9rem; /* Yazı boyutu azaltıldı */
             font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
-        }
-        #bonus-codes-list li::before {
-            content: ''; /* Kontrol edelim, eğer font awesome yeterliyse kaldırılabilir */
-            margin-right: 0;
+            gap: 0.4rem;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
         }
         #bonus-codes-list li .fa-gift {
             color: #fcd34d;
-            margin-right: 0.5rem;
+            margin-right: 0.4rem;
         }
 
 
@@ -494,11 +496,11 @@
         #leaderboard-section {
             width: 100%;
             background: linear-gradient(160deg, #2a0045 0%, #3a005f 100%); /* Degradeli arka plan */
-            padding: 2rem; /* Daha fazla padding */
-            border-radius: 1rem; /* Daha yuvarlak köşeler */
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            padding: 1.5rem; /* Padding azaltıldı */
+            border-radius: 0.8rem; /* Daha yuvarlak köşeler */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: 1.5rem; /* Diğer bölümlerden üst boşluk */
+            margin-top: 1.2rem; /* Diğer bölümlerden üst boşluk azaltıldı */
         }
         #leaderboard-list {
             list-style: none;
@@ -507,15 +509,15 @@
         }
         #leaderboard-list li {
             background-color: rgba(75, 0, 130, 0.3); /* Listeler için şeffaf mor arkaplan */
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
+            padding: 0.6rem 0.8rem; /* Padding azaltıldı */
+            border-radius: 0.4rem; /* Köşeler azaltıldı */
+            margin-bottom: 0.4rem; /* Boşluk azaltıldı */
+            font-size: 0.9rem; /* Yazı boyutu azaltıldı */
             font-weight: 500;
             display: flex;
             justify-content: space-between; /* İsim ve puanı iki yana yasla */
             align-items: center;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
         }
         #leaderboard-list li span:first-child { /* Sıra ve kullanıcı adı */
             font-weight: bold;
@@ -525,7 +527,7 @@
         }
         #leaderboard-list li span:first-child .fa-trophy {
             color: #fcd34d;
-            margin-right: 0.5rem;
+            margin-right: 0.4rem;
         }
         #leaderboard-list li span:last-child { /* Puan */
             font-weight: bold;
@@ -537,21 +539,21 @@
         #rps-choices {
             display: flex;
             justify-content: center;
-            gap: 0.75rem; /* Butonlar arasında boşluk */
-            margin-bottom: 1rem;
+            gap: 0.6rem; /* Butonlar arasında boşluk azaltıldı */
+            margin-bottom: 0.8rem; /* Boşluk azaltıldı */
         }
         #rps-choices .rps-btn {
-            padding: 0.75rem 1.25rem;
-            font-size: 1.1em;
+            padding: 0.6rem 1rem; /* Padding azaltıldı */
+            font-size: 1em; /* Boyut azaltıldı */
             font-weight: bold;
             flex: 1; /* Eşit genişlik */
-            max-width: 120px; /* Maksimum genişlik */
+            max-width: 100px; /* Maksimum genişlik azaltıldı */
             /* telegram-btn'in stilini kullanır */
         }
         #rps-result-display-text {
             font-weight: bold;
-            margin-bottom: 1rem;
-            font-size: 1.3em; /* Daha büyük metin */
+            margin-bottom: 0.8rem; /* Boşluk azaltıldı */
+            font-size: 1.1em; /* Boyut azaltıldı */
             text-shadow: 0 0 5px rgba(255,255,255,0.7);
         }
         #rps-play-again-button {
@@ -574,35 +576,35 @@
             display: flex;
             justify-content: space-around;
             background-color: rgba(0,0,0,0.3);
-            border-radius: 0.75rem;
-            padding: 0.5rem;
-            margin-bottom: 1.5rem;
+            border-radius: 0.6rem; /* Köşeler azaltıldı */
+            padding: 0.4rem; /* Padding azaltıldı */
+            margin-bottom: 1.2rem; /* Boşluk azaltıldı */
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.1);
         }
 
         .tab-button {
             flex: 1;
-            padding: 0.75rem 0.5rem;
+            padding: 0.6rem 0.4rem; /* Padding azaltıldı */
             background: none;
             border: none;
             color: #e8e8e8;
             font-weight: 600;
-            font-size: 0.95rem;
-            border-radius: 0.5rem;
+            font-size: 0.9rem; /* Yazı boyutu azaltıldı */
+            border-radius: 0.4rem; /* Köşeler azaltıldı */
             cursor: pointer;
             transition: all 0.2s ease-in-out;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 0.4rem; /* Boşluk azaltıldı */
         }
 
         .tab-button.active {
             background: linear-gradient(45deg, #6f2da8 0%, #a78bfa 100%);
             color: #ffffff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 5px rgba(255,255,255,0.2);
-            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.25), inset 0 1px 4px rgba(255,255,255,0.15);
+            transform: translateY(-1px);
             font-weight: bold;
         }
 
@@ -637,12 +639,12 @@
     <!-- Sabit Uygulama Başlığı -->
     <header id="app-header">
         <div class="flex items-center">
-            <span class="title">Çarkıfelek Uygulaması</span>
+            <span class="title">ONWIN</span> <!-- Başlık güncellendi -->
         </div>
         <div class="user-info-display">
             <div id="user-profile-pic"></div> <!-- Kullanıcı profil resmi -->
             <div class="user-info-text">
-                <p id="user-info-header" class="text-sm font-semibold">Yükleniyor...</p>
+                <p id="user-info-header" class="user-info-header">Yükleniyor...</p> <!-- Sınıf güncellendi -->
                 <p id="points-display-header" class="points-display"><i class="fa-solid fa-coins"></i> Puan: 0</p>
             </div>
         </div>
@@ -651,7 +653,7 @@
     <!-- Ana Uygulama İçeriği (Kaydırılabilir Alan) -->
     <div id="app-wrapper">
         <div id="home-page-content" class="text-center hidden">
-            <h1 class="text-3xl font-bold mb-4">Hoş Geldin!</h1>
+            <h1 class="font-bold mb-4">Hoş Geldin!</h1>
             <p class="text-sm text-gray-600 mb-6">Puan kazanmak ve bonus kodları almak için oyna!</p>
 
             <!-- Sekme Navigasyonu -->
@@ -666,7 +668,7 @@
             <div id="tab-content-games" class="tab-content active w-full">
                 <!-- Mini Oyunlar Bölümü -->
                 <section id="mini-games-carousel-container" class="w-full relative">
-                    <h2 class="text-xl font-bold mb-4">Mini Oyunlar</h2>
+                    <h2 class="font-bold mb-4">Mini Oyunlar</h2>
                     <p class="text-sm text-gray-600 mb-4">Yatay kaydırarak farklı oyunları keşfet ve puan topla!</p>
                     
                     <button id="scroll-left-btn" class="scroll-button -ml-2">‹</button>
@@ -720,7 +722,7 @@
             <div id="tab-content-leaderboard" class="tab-content w-full">
                 <!-- Liderlik Tablosu Bölümü -->
                 <section id="leaderboard-section" class="w-full">
-                    <h2 class="text-xl font-bold mb-4">Liderlik Tablosu</h2>
+                    <h2 class="font-bold mb-4">Liderlik Tablosu</h2>
                     <ul id="leaderboard-list" class="text-sm text-gray-600 space-y-2">
                         <!-- Liderler buraya eklenecek -->
                     </ul>
@@ -730,7 +732,7 @@
             <div id="tab-content-bonus-codes" class="tab-content w-full">
                 <!-- Bonus Kodları Bölümü -->
                 <section id="bonus-codes-list-section" class="w-full">
-                    <h2 class="text-xl font-bold mb-4">Kazanılan Bonus Kodları</h2>
+                    <h2 class="font-bold mb-4">Kazanılan Bonus Kodları</h2>
                     <ul id="bonus-codes-list" class="text-sm text-gray-600 space-y-2">
                         <!-- Bonus kodları buraya eklenecek -->
                     </ul>
@@ -748,7 +750,7 @@
     <div id="wheel-modal" class="game-modal">
         <div class="game-modal-content">
             <button id="wheel-modal-close-btn" class="game-modal-close-btn">×</button>
-            <h2 class="text-xl font-bold mb-4">Bonus Çarkı</h2>
+            <h2 class="font-bold mb-4">Bonus Çarkı</h2>
             <p class="text-sm text-gray-600 mb-4">Çarkı çevirmek için 100 puana ihtiyacın var.</p>
             <div class="wheel-container">
                 <div class="wheel-marker"></div>
@@ -768,7 +770,7 @@
     <div id="fast-click-modal" class="game-modal">
         <div class="game-modal-content">
             <button id="fast-click-modal-close-btn" class="game-modal-close-btn">×</button>
-            <h2 class="text-xl font-bold mb-4">Hızlı Tıkla!</h2>
+            <h2 class="font-bold mb-4">Hızlı Tıkla!</h2>
             <p class="text-sm text-gray-600 mb-3">Butona her tıkladığınızda 10 puan kazanırsınız.</p>
             <button id="fast-click-game-button" class="telegram-btn w-full py-3 transition duration-200 hover:opacity-80">
                 <span id="fast-click-game-button-text">Puan Kazan (+10)</span>
@@ -781,7 +783,7 @@
     <div id="guess-game-modal" class="game-modal">
         <div class="game-modal-content">
             <button id="guess-game-modal-close-btn" class="game-modal-close-btn">×</button>
-            <h2 class="text-xl font-bold mb-4">Sayı Tahmin Oyunu</h2>
+            <h2 class="font-bold mb-4">Sayı Tahmin Oyunu</h2>
             <p class="text-sm text-gray-600 mb-3">1 ile 100 arasında bir sayı tuttum. 7 tahmin hakkın var!</p>
             <input type="number" id="guess-game-input" class="w-full p-2 mb-3 rounded-md bg-gray-700 text-white border-none text-center" placeholder="Tahminini gir (1-100)">
             <button id="guess-game-submit-button" class="telegram-btn w-full py-2 mb-2 transition duration-200 hover:opacity-80">Tahmin Et</button>
@@ -795,7 +797,7 @@
     <div id="rps-game-modal" class="game-modal">
         <div class="game-modal-content">
             <button id="rps-game-modal-close-btn" class="game-modal-close-btn">×</button>
-            <h2 class="text-xl font-bold mb-4">Taş, Kağıt, Makas!</h2>
+            <h2 class="font-bold mb-4">Taş, Kağıt, Makas!</h2>
             <p class="text-sm text-gray-600 mb-3">Bilgisayarı yen, 20 puan kazan!</p>
             <div id="rps-choices" class="flex justify-center gap-3 mb-4">
                 <button id="rps-rock-btn" class="rps-btn telegram-btn">Taş</button>
@@ -1527,7 +1529,7 @@
                     const firstCard = miniGamesSection.querySelector('.game-card-homepage');
                     if (firstCard) {
                         miniGamesSection.scrollBy({
-                            left: -firstCard.offsetWidth - 24, 
+                            left: -firstCard.offsetWidth - 16, // Kart genişliği + margin-left (1rem = 16px)
                             behavior: 'smooth'
                         });
                     }
@@ -1539,7 +1541,7 @@
                     const firstCard = miniGamesSection.querySelector('.game-card-homepage');
                     if (firstCard) {
                         miniGamesSection.scrollBy({
-                            left: firstCard.offsetWidth + 24, 
+                            left: firstCard.offsetWidth + 16, // Kart genişliği + margin-left (1rem = 16px)
                             behavior: 'smooth'
                         });
                     }
