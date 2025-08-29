@@ -187,6 +187,52 @@
         .text-gray-600 {
             color: #ffffff; /* Açık gri tonu yerine tüm küçük yazılar beyaz olsun */
         }
+
+        /* Kullanıcı adı giriş modal stili */
+        #username-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .username-modal-content {
+            background-color: #1a1a1a;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+        }
+        .username-modal-content input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #333;
+            background-color: #2a2a2a;
+            color: #ffffff;
+            font-size: 1em;
+            text-align: center;
+        }
+        .username-modal-content button {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            background-color: #a78bfa;
+            color: #ffffff;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        .username-modal-content button:hover {
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body class="p-6">
@@ -194,6 +240,16 @@
     <div id="loading-screen" class="space-y-4">
         <div class="spinner"></div>
         <p class="text-sm">Bağlanıyor...</p>
+    </div>
+
+    <!-- Kullanıcı Adı Belirleme Modalı -->
+    <div id="username-modal" class="hidden">
+        <div class="username-modal-content">
+            <h2 class="text-xl font-bold mb-4">Hoş Geldin!</h2>
+            <p class="text-sm text-gray-600">Devam etmek için bir kullanıcı adı belirle.</p>
+            <input type="text" id="username-input" placeholder="Kullanıcı adını gir..." maxlength="20">
+            <button id="save-username-btn" class="telegram-btn">Kullanıcı Adını Kaydet</button>
+        </div>
     </div>
 
     <div id="app-container" class="rounded-lg shadow-xl p-8 text-center hidden">
@@ -208,11 +264,23 @@
         
         <!-- Mini Oyun Bölümü -->
         <div class="border-b border-gray-200 pb-6 mb-6">
-            <h2 class="text-xl font-bold mb-4">Mini Oyun</h2>
-            <p class="text-sm text-gray-600 mb-4">Butona her tıkladığınızda puan kazanırsınız.</p>
-            <button id="game-button" class="telegram-btn w-full py-3 rounded-lg font-semibold transition duration-200 hover:opacity-80">
-                <span id="game-button-text">Puan Kazan (+10)</span>
-            </button>
+            <h2 class="text-xl font-bold mb-4">Mini Oyunlar</h2>
+            <p class="text-sm text-gray-600 mb-4">Puan toplamak için farklı oyun seçenekleri.</p>
+            
+            <!-- Mevcut Mini Oyun -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold text-white mb-2">Hızlı Tıkla!</h3>
+                <p class="text-sm text-gray-600 mb-3">Butona her tıkladığınızda 10 puan kazanırsınız.</p>
+                <button id="game-button" class="telegram-btn w-full py-3 transition duration-200 hover:opacity-80">
+                    <span id="game-button-text">Puan Kazan (+10)</span>
+                </button>
+            </div>
+
+            <!-- Yeni Mini Oyun Seçenekleri Buraya Gelecek -->
+            <div class="mt-8">
+                <h3 class="text-lg font-semibold text-white mb-2">Daha Fazla Oyun Yakında!</h3>
+                <p class="text-sm text-gray-600">Uygulamaya yeni ve heyecan verici mini oyunlar eklemeye devam edeceğiz. Takipte kalın!</p>
+            </div>
         </div>
         
         <!-- Çarkıfelek Bölümü -->
@@ -225,7 +293,7 @@
                     <!-- Çark dilimleri ve metin etiketleri dinamik olarak eklenecek -->
                 </div>
             </div>
-            <button id="spin-button" class="telegram-btn w-full py-3 mt-6 rounded-lg font-semibold transition duration-200 hover:opacity-80 disabled:opacity-50" disabled>
+            <button id="spin-button" class="telegram-btn w-full py-3 mt-6 transition duration-200 hover:opacity-80 disabled:opacity-50" disabled>
                 <span id="spin-button-text">Çarkı Çevir (100 Puan)</span>
             </button>
         </div>
@@ -242,7 +310,7 @@
         <div id="message-box"></div>
 
         <!-- Uygulamayı kapatma butonu -->
-        <button id="close-button" class="telegram-btn w-full py-3 mt-6 rounded-lg font-semibold transition duration-200 hover:opacity-80">
+        <button id="close-button" class="telegram-btn w-full py-3 mt-6 transition duration-200 hover:opacity-80">
             Uygulamayı Kapat
         </button>
     </div>
@@ -279,7 +347,7 @@
 
         // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
         let loadingScreen, appContainer, userInfoElement, pointsDisplay, gameButton, spinButton, bonusCodesList, messageBox, wheel, closeButton;
-
+        let usernameModal, usernameInput, saveUsernameBtn; // Yeni elementler
 
         // Kullanıcıya mesaj göstermek için özel fonksiyon
         function showMessage(text, isError = false) {
@@ -356,18 +424,29 @@
                         
                         // Kullanıcı verilerini Firestore'dan al veya oluştur
                         const docSnap = await userDocRef.get();
+                        
                         if (!docSnap.exists) {
+                            // Yeni kullanıcı, varsayılan verileri ayarla
                             await userDocRef.set({
+                                username: null, // Kullanıcı adı boş olarak başla
                                 points: 0,
                                 bonusCodes: [],
                                 lastClick: 0
                             });
+                            // Kullanıcı adı modalını göster
+                            loadingScreen.style.display = 'none';
+                            usernameModal.style.display = 'flex';
+                        } else if (!docSnap.data().username) {
+                            // Kullanıcı var ama kullanıcı adı ayarlı değil
+                            loadingScreen.style.display = 'none';
+                            usernameModal.style.display = 'flex';
                         }
-                        
-                        // UI'ı göster ve veriyi dinlemeye başla
-                        loadingScreen.style.display = 'none';
-                        appContainer.style.display = 'block';
-                        listenForDataChanges();
+                        else {
+                            // Kullanıcı adı zaten ayarlı, ana uygulamayı göster
+                            loadingScreen.style.display = 'none';
+                            appContainer.style.display = 'block';
+                            listenForDataChanges();
+                        }
                     } else {
                         // Eğer kimlik doğrulama başarısız olursa, bir hata mesajı göster
                         console.error("Kimlik doğrulama başarısız oldu, kullanıcı nesnesi boş.");
@@ -397,6 +476,13 @@
         function updateUI(data) {
             pointsDisplay.textContent = `Puan: ${data.points}`;
             
+            // Kullanıcı adını göster
+            if (data.username) {
+                userInfoElement.textContent = `Kullanıcı: ${data.username}`;
+            } else {
+                userInfoElement.textContent = `Kullanıcı Kimliği: ${userId}`;
+            }
+            
             // Bonus kodlarını listele
             bonusCodesList.innerHTML = '';
             if (data.bonusCodes && data.bonusCodes.length > 0) {
@@ -413,9 +499,33 @@
 
             // Çarkı çevir butonunu etkinleştirme
             spinButton.disabled = data.points < 100 || isSpinning;
-            
-            // Kullanıcı kimliğini göster
-            userInfoElement.textContent = `Kullanıcı Kimliği: ${userId}`;
+        }
+
+        // Kullanıcı adını kaydetme fonksiyonu
+        async function saveUsername() {
+            const username = usernameInput.value.trim();
+            if (username.length < 3 || username.length > 20) {
+                showMessage("Kullanıcı adı 3 ile 20 karakter arasında olmalıdır.", true);
+                return;
+            }
+
+            try {
+                // Kullanıcı adının benzersizliğini kontrol et (basit bir yaklaşım)
+                const usernameQuery = await db.collection(`artifacts/${appId}/public/data/game_data`).where('username', '==', username).get();
+                if (!usernameQuery.empty) {
+                    showMessage("Bu kullanıcı adı zaten alınmış, lütfen başka bir tane dene.", true);
+                    return;
+                }
+
+                await userDocRef.update({ username: username });
+                usernameModal.style.display = 'none';
+                appContainer.style.display = 'block';
+                showMessage(`Hoş geldin, ${username}!`);
+                listenForDataChanges(); // Kullanıcı adı kaydedildikten sonra UI'ı güncelle
+            } catch (e) {
+                console.error("Kullanıcı adı kaydedilirken hata oluştu: ", e);
+                showMessage("Kullanıcı adı kaydedilirken bir hata oluştu, lütfen tekrar deneyin.", true);
+            }
         }
 
         // Uygulama yüklendiğinde başlat
@@ -431,6 +541,9 @@
             messageBox = document.getElementById('message-box');
             wheel = document.getElementById('wheel');
             closeButton = document.getElementById('close-button');
+            usernameModal = document.getElementById('username-modal'); // Yeni modal
+            usernameInput = document.getElementById('username-input'); // Yeni input
+            saveUsernameBtn = document.getElementById('save-username-btn'); // Yeni buton
 
             // DOM elemanları atandıktan sonra olay dinleyicilerini ekle
             if (gameButton) { 
@@ -532,6 +645,12 @@
             } else {
                 console.error("Hata: closeButton HTML elementi bulunamadı!");
                 showMessage("Uygulama yüklenirken bir sorun oluştu (Kapat Butonu bulunamadı).", true);
+            }
+
+            if (saveUsernameBtn) {
+                saveUsernameBtn.addEventListener('click', saveUsername);
+            } else {
+                console.error("Hata: saveUsernameBtn HTML elementi bulunamadı!");
             }
 
             createWheel(); // createWheel çağrısı wheel elementi atandıktan sonra yapılmalı
