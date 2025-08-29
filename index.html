@@ -427,6 +427,43 @@
             font-size: 1.2em;
         }
 
+        /* Liderlik Tablosu Stili */
+        #leaderboard-section {
+            width: 100%;
+            background: linear-gradient(160deg, #2a0045 0%, #3a005f 100%); /* Degradeli arka plan */
+            padding: 2rem; /* Daha fazla padding */
+            border-radius: 1rem; /* Daha yuvarlak köşeler */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 1.5rem; /* Diğer bölümlerden üst boşluk */
+        }
+        #leaderboard-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #leaderboard-list li {
+            background-color: rgba(75, 0, 130, 0.3); /* Listeler için şeffaf mor arkaplan */
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between; /* İsim ve puanı iki yana yasla */
+            align-items: center;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        #leaderboard-list li span:first-child { /* Sıra ve kullanıcı adı */
+            font-weight: bold;
+            color: #ffffff;
+        }
+        #leaderboard-list li span:last-child { /* Puan */
+            font-weight: bold;
+            color: #fcd34d; /* Sarımsı renk */
+        }
+
+
         /* Taş-Kağıt-Makas butonları için düzen */
         #rps-choices {
             display: flex;
@@ -530,6 +567,14 @@
                 <h3 class="text-xl font-bold mb-2">Bonus Çarkı</h3>
                 <p class="text-sm text-gray-600">Çevirmek için tıkla ve bonus kazan!</p>
             </div>
+
+            <!-- Liderlik Tablosu Bölümü -->
+            <section id="leaderboard-section" class="w-full">
+                <h2 class="text-xl font-bold mb-4">Liderlik Tablosu</h2>
+                <ul id="leaderboard-list" class="text-sm text-gray-600 space-y-2">
+                    <!-- Liderler buraya eklenecek -->
+                </ul>
+            </section>
 
             <!-- Bonus Kodları Bölümü -->
             <section id="bonus-codes-list-section" class="w-full">
@@ -648,7 +693,7 @@
         // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
         let loadingScreen, usernameModal, usernameInput, saveUsernameBtn;
         let appHeader, userInfoHeader, pointsDisplayHeader;
-        let appWrapper, homePageContent, bonusCodesListSection, bonusCodesList;
+        let appWrapper, homePageContent, bonusCodesListSection, bonusCodesList, leaderboardSection, leaderboardList;
         // Anasayfa oyun kartları
         let wheelCard, fastClickCard, guessGameCard, rpsGameCard;
 
@@ -787,6 +832,7 @@
                                 loadingScreen.style.display = 'none';
                                 if (homePageContent) homePageContent.style.display = 'flex';
                                 listenForDataChanges();
+                                fetchLeaderboard(); // Liderlik tablosunu yükle
                             }
                         }
                     } else {
@@ -810,6 +856,7 @@
                 if (doc.exists) {
                     const data = doc.data();
                     updateUI(data);
+                    fetchLeaderboard(); // Kendi puanları değiştiğinde liderlik tablosunu güncelle
                 }
             });
         }
@@ -891,9 +938,47 @@
 
                 showMessage(`Hoş geldin, ${username}!`, false, 'message-box-home');
                 listenForDataChanges(); // Kullanıcı adı kaydedildikten sonra UI'ı güncelle
+                fetchLeaderboard(); // Kullanıcı adı güncellendiğinde liderlik tablosunu yenile
             } catch (e) {
                 console.error("Kullanıcı adı kaydedilirken hata oluştu: ", e);
                 showMessage("Kullanıcı adı kaydedilirken bir hata oluştu, lütfen tekrar deneyin. Detay: " + e.message, true, 'message-box-home');
+            }
+        }
+
+        // Liderlik Tablosunu getirme fonksiyonu
+        async function fetchLeaderboard() {
+            if (!db || !leaderboardList) return;
+
+            try {
+                // Sadece kullanıcı adı olan ve en yüksek puana sahip ilk 10 kullanıcıyı getir
+                const leaderboardSnapshot = await db.collection(`artifacts/${appId}/public/data/game_data`)
+                    .where('username', '!=', null) // Kullanıcı adı olmayanları filtrele
+                    .orderBy('username') // Firestore orderBy kısıtlaması için (eğer 'points' ile birlikte kullanılırsa index gerekir)
+                    .orderBy('points', 'desc')
+                    .limit(10)
+                    .get();
+
+                leaderboardList.innerHTML = ''; // Listeyi temizle
+                if (leaderboardSnapshot.empty) {
+                    const li = document.createElement('li');
+                    li.textContent = "Liderlik tablosu henüz boş.";
+                    leaderboardList.appendChild(li);
+                    return;
+                }
+
+                let rank = 1;
+                leaderboardSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.username && data.points !== undefined) { // Hem kullanıcı adı hem de puanı kontrol et
+                        const li = document.createElement('li');
+                        li.innerHTML = `<span>${rank}. ${data.username}</span><span>${data.points} Puan</span>`;
+                        leaderboardList.appendChild(li);
+                        rank++;
+                    }
+                });
+            } catch (error) {
+                console.error("Liderlik tablosu getirilirken hata oluştu:", error);
+                showMessage("Liderlik tablosu yüklenemedi.", true, 'message-box-home');
             }
         }
 
@@ -1044,6 +1129,8 @@
             bonusCodesListSection = document.getElementById('bonus-codes-list-section');
             bonusCodesList = document.getElementById('bonus-codes-list');
             messageBoxHome = document.getElementById('message-box-home');
+            leaderboardSection = document.getElementById('leaderboard-section'); // Yeni liderlik tablosu bölümü
+            leaderboardList = document.getElementById('leaderboard-list'); // Yeni liderlik tablosu listesi
 
             // Anasayfa oyun kartları
             wheelCard = document.getElementById('wheel-card');
