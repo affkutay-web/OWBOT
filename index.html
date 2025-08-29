@@ -20,6 +20,8 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    <!-- Font Awesome ikonları için CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Varsayılan fontu ayarlama */
         html, body {
@@ -218,6 +220,10 @@
             color: #fcd34d; /* Sarımsı renk puanlar için */
             text-shadow: 0 0 8px rgba(252, 211, 77, 0.7); /* Hafif parlama */
         }
+        #app-header .points-display .fa-coins { /* Puan ikonuna stil */
+            color: #fcd34d;
+            margin-right: 0.4rem;
+        }
 
         #app-wrapper {
             flex-grow: 1; /* Kalan tüm dikey boşluğu doldur */
@@ -298,7 +304,14 @@
             font-size: 1em;
             text-align: center;
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* İç gölge */
+            transition: all 0.2s ease-in-out; /* Animasyon ekle */
         }
+        .username-modal-content input:focus {
+            border-color: #a78bfa; /* Odaklandığında mor kenarlık */
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.4); /* Hafif dış gölge */
+            outline: none;
+        }
+
         .username-modal-content button {
             width: 100%;
             padding: 0.9rem; /* Daha büyük padding */
@@ -374,6 +387,10 @@
             box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4), inset 0 3px 8px rgba(255, 255, 255, 0.15); /* Daha belirgin ve iç gölge */
             border: 1px solid rgba(255, 255, 255, 0.15);
             scroll-snap-align: start; /* Kaydırma hizalaması */
+            display: flex; /* İçeriğini ortalamak için */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         .game-card-homepage + .game-card-homepage { /* Kartlar arasına boşluk */
             margin-left: 1.5rem;
@@ -386,18 +403,23 @@
             transform: translateY(-10px) scale(1.03); /* Daha belirgin büyüme ve kalkma */
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 3px 10px rgba(255, 255, 255, 0.25);
         }
-        .game-card-homepage img {
-            width: 100px; /* Resim boyutu */
-            height: 100px;
-            margin: 0 auto 1rem auto;
-            border-radius: 50%; /* Yuvarlak resim */
-            object-fit: cover;
+        .game-card-homepage .game-icon { /* İkonlar için stil */
+            font-size: 3.5rem; /* İkon boyutu */
+            color: #fcd34d; /* Sarımsı renk */
+            margin-bottom: 1rem;
             border: 3px solid #fcd34d; /* Sarımsı çerçeve */
+            border-radius: 50%; /* Yuvarlak çerçeve */
+            width: 100px; /* Sabit genişlik */
+            height: 100px; /* Sabit yükseklik */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0,0,0,0.2); /* Hafif arkaplan */
             box-shadow: 0 0 18px rgba(252, 211, 77, 0.7); /* Resme parlama efekti */
             transition: all 0.3s ease-in-out;
         }
-        .game-card-homepage:hover img {
-            transform: scale(1.07); /* Hover'da resmin de büyümesi */
+        .game-card-homepage:hover .game-icon {
+            transform: scale(1.07); /* Hover'da ikonun da büyümesi */
             box-shadow: 0 0 25px rgba(252, 211, 77, 0.9);
         }
         
@@ -487,9 +509,14 @@
             box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
         }
         #bonus-codes-list li::before {
-            content: '💎'; /* Elmas emojisi */
-            font-size: 1.2em;
+            content: ''; /* Kontrol edelim, eğer font awesome yeterliyse kaldırılabilir */
+            margin-right: 0;
         }
+        #bonus-codes-list li .fa-gift {
+            color: #fcd34d;
+            margin-right: 0.5rem;
+        }
+
 
         /* Liderlik Tablosu Stili */
         #leaderboard-section {
@@ -521,6 +548,12 @@
         #leaderboard-list li span:first-child { /* Sıra ve kullanıcı adı */
             font-weight: bold;
             color: #ffffff;
+            display: flex;
+            align-items: center;
+        }
+        #leaderboard-list li span:first-child .fa-trophy {
+            color: #fcd34d;
+            margin-right: 0.5rem;
         }
         #leaderboard-list li span:last-child { /* Puan */
             font-weight: bold;
@@ -562,6 +595,64 @@
             color: #fcd34d; /* Sarımsı renk */
             text-shadow: 0 0 5px rgba(252, 211, 77, 0.5);
         }
+
+        /* Yeni Sekme Navigasyonu Stilleri */
+        #tab-navigation {
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 0.75rem;
+            padding: 0.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 0.75rem 0.5rem;
+            background: none;
+            border: none;
+            color: #e8e8e8;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(45deg, #6f2da8 0%, #a78bfa 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3), inset 0 1px 5px rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+            font-weight: bold;
+        }
+
+        .tab-button:not(.active):hover {
+            background-color: rgba(255,255,255,0.1);
+            color: #fcd34d;
+        }
+
+        .tab-content {
+            width: 100%;
+            display: none; /* Varsayılan olarak gizli */
+            animation: fadeIn 0.5s ease-out; /* İçerik görünür olduğunda animasyon */
+        }
+
+        .tab-content.active {
+            display: block; /* Aktif olduğunda görünür */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -588,7 +679,7 @@
         </div>
         <div class="user-info-display">
             <p id="user-info-header" class="text-sm font-semibold">Yükleniyor...</p>
-            <p id="points-display-header" class="points-display">Puan: 0</p>
+            <p id="points-display-header" class="points-display"><i class="fa-solid fa-coins"></i> Puan: 0</p>
         </div>
     </header>
 
@@ -598,71 +689,88 @@
             <h1 class="text-3xl font-bold mb-4">Hoş Geldin!</h1>
             <p class="text-sm text-gray-600 mb-6">Puan kazanmak ve bonus kodları almak için oyna!</p>
 
-            <!-- Mini Oyunlar Bölümü -->
-            <section id="mini-games-carousel-container" class="w-full relative">
-                <h2 class="text-xl font-bold mb-4">Mini Oyunlar</h2>
-                <p class="text-sm text-gray-600 mb-4">Yatay kaydırarak farklı oyunları keşfet ve puan topla!</p>
-                
-                <button id="scroll-left-btn" class="scroll-button -ml-2">‹</button>
-                <div id="mini-games-section">
-                    <!-- Mini Oyun Kartı: Hızlı Tıkla! -->
-                    <div id="fast-click-card" class="game-card-homepage">
-                        <img src="https://placehold.co/100x100/6f2da8/FFFFFF?text=TIKLA" alt="Hızlı Tıkla!" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
-                        <h3 class="text-xl font-bold mb-2">Hızlı Tıkla!</h3>
-                        <p class="text-sm text-gray-600">Butona basarak puan kazan.</p>
-                    </div>
+            <!-- Sekme Navigasyonu -->
+            <nav id="tab-navigation">
+                <button class="tab-button active" data-tab="games"><i class="fa-solid fa-gamepad"></i> Oyunlar</button>
+                <button class="tab-button" data-tab="wheel"><i class="fa-solid fa-gem"></i> Bonus Çarkı</button>
+                <button class="tab-button" data-tab="leaderboard"><i class="fa-solid fa-trophy"></i> Liderlik</button>
+                <button class="tab-button" data-tab="bonus-codes"><i class="fa-solid fa-gift"></i> Kodlarım</button>
+            </nav>
 
-                    <!-- Mini Oyun Kartı: Sayı Tahmin Oyunu -->
-                    <div id="guess-game-card" class="game-card-homepage">
-                        <img src="https://placehold.co/100x100/8a2be2/FFFFFF?text=SAYI" alt="Sayı Tahmin Oyunu" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
-                        <h3 class="text-xl font-bold mb-2">Sayı Tahmin Oyunu</h3>
-                        <p class="text-sm text-gray-600">Sayıyı tahmin et, puanı kap!</p>
-                    </div>
+            <!-- Sekme İçerikleri -->
+            <div id="tab-content-games" class="tab-content active w-full">
+                <!-- Mini Oyunlar Bölümü -->
+                <section id="mini-games-carousel-container" class="w-full relative">
+                    <h2 class="text-xl font-bold mb-4">Mini Oyunlar</h2>
+                    <p class="text-sm text-gray-600 mb-4">Yatay kaydırarak farklı oyunları keşfet ve puan topla!</p>
+                    
+                    <button id="scroll-left-btn" class="scroll-button -ml-2">‹</button>
+                    <div id="mini-games-section">
+                        <!-- Mini Oyun Kartı: Hızlı Tıkla! -->
+                        <div id="fast-click-card" class="game-card-homepage">
+                            <div class="game-icon"><i class="fa-solid fa-hand-pointer"></i></div>
+                            <h3 class="text-xl font-bold mb-2">Hızlı Tıkla!</h3>
+                            <p class="text-sm text-gray-600">Butona basarak puan kazan.</p>
+                        </div>
 
-                    <!-- Mini Oyun Kartı: Taş, Kağıt, Makas -->
-                    <div id="rps-game-card" class="game-card-homepage">
-                        <img src="https://placehold.co/100x100/b19cd9/FFFFFF?text=RPS" alt="Taş, Kağıt, Makas" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
-                        <h3 class="text-xl font-bold mb-2">Taş, Kağıt, Makas!</h3>
-                        <p class="text-sm text-gray-600">Bilgisayarı yen ve puan kazan.</p>
-                    </div>
+                        <!-- Mini Oyun Kartı: Sayı Tahmin Oyunu -->
+                        <div id="guess-game-card" class="game-card-homepage">
+                            <div class="game-icon"><i class="fa-solid fa-dice-one"></i></div>
+                            <h3 class="text-xl font-bold mb-2">Sayı Tahmin Oyunu</h3>
+                            <p class="text-sm text-gray-600">Sayıyı tahmin et, puanı kap!</p>
+                        </div>
 
-                    <!-- Daha fazla oyun kartı eklenebilir -->
-                    <div class="game-card-homepage">
-                        <img src="https://placehold.co/100x100/5a2a8a/FFFFFF?text=OYUN4" alt="Yeni Oyun" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
-                        <h3 class="text-xl font-bold mb-2">Yeni Oyun 1</h3>
-                        <p class="text-sm text-gray-600">Çok yakında!</p>
+                        <!-- Mini Oyun Kartı: Taş, Kağıt, Makas -->
+                        <div id="rps-game-card" class="game-card-homepage">
+                            <div class="game-icon"><i class="fa-solid fa-hand-fist"></i></div>
+                            <h3 class="text-xl font-bold mb-2">Taş, Kağıt, Makas!</h3>
+                            <p class="text-sm text-gray-600">Bilgisayarı yen ve puan kazan.</p>
+                        </div>
+
+                        <!-- Daha fazla oyun kartı eklenebilir -->
+                        <div class="game-card-homepage">
+                            <div class="game-icon"><i class="fa-solid fa-star"></i></div>
+                            <h3 class="text-xl font-bold mb-2">Yeni Oyun 1</h3>
+                            <p class="text-sm text-gray-600">Çok yakında!</p>
+                        </div>
+                        <div class="game-card-homepage">
+                            <div class="game-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                            <h3 class="text-xl font-bold mb-2">Yeni Oyun 2</h3>
+                            <p class="text-sm text-gray-600">Geliyor!</p>
+                        </div>
                     </div>
-                    <div class="game-card-homepage">
-                        <img src="https://placehold.co/100x100/7c4da8/FFFFFF?text=OYUN5" alt="Yeni Oyun" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
-                        <h3 class="text-xl font-bold mb-2">Yeni Oyun 2</h3>
-                        <p class="text-sm text-gray-600">Geliyor!</p>
-                    </div>
-                </div>
-                <button id="scroll-right-btn" class="scroll-button -mr-2">›</button>
-            </section>
-            
-            <!-- Çarkıfelek Kartı -->
-            <div id="wheel-card" class="game-card-homepage">
-                <img src="https://placehold.co/100x100/A78BFA/FFFFFF?text=ÇARK" alt="Çarkıfelek" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
-                <h3 class="text-xl font-bold mb-2">Bonus Çarkı</h3>
-                <p class="text-sm text-gray-600">Çevirmek için tıkla ve bonus kazan!</p>
+                    <button id="scroll-right-btn" class="scroll-button -mr-2">›</button>
+                </section>
             </div>
 
-            <!-- Liderlik Tablosu Bölümü -->
-            <section id="leaderboard-section" class="w-full">
-                <h2 class="text-xl font-bold mb-4">Liderlik Tablosu</h2>
-                <ul id="leaderboard-list" class="text-sm text-gray-600 space-y-2">
-                    <!-- Liderler buraya eklenecek -->
-                </ul>
-            </section>
+            <div id="tab-content-wheel" class="tab-content w-full">
+                <!-- Çarkıfelek Kartı (Artık sekme içeriği) -->
+                <div id="wheel-card" class="game-card-homepage">
+                    <div class="game-icon"><i class="fa-solid fa-gem"></i></div>
+                    <h3 class="text-xl font-bold mb-2">Bonus Çarkı</h3>
+                    <p class="text-sm text-gray-600">Çevirmek için tıkla ve bonus kazan!</p>
+                </div>
+            </div>
 
-            <!-- Bonus Kodları Bölümü -->
-            <section id="bonus-codes-list-section" class="w-full">
-                <h2 class="text-xl font-bold mb-4">Kazanılan Bonus Kodları</h2>
-                <ul id="bonus-codes-list" class="text-sm text-gray-600 space-y-2">
-                    <!-- Bonus kodları buraya eklenecek -->
-                </ul>
-            </section>
+            <div id="tab-content-leaderboard" class="tab-content w-full">
+                <!-- Liderlik Tablosu Bölümü -->
+                <section id="leaderboard-section" class="w-full">
+                    <h2 class="text-xl font-bold mb-4">Liderlik Tablosu</h2>
+                    <ul id="leaderboard-list" class="text-sm text-gray-600 space-y-2">
+                        <!-- Liderler buraya eklenecek -->
+                    </ul>
+                </section>
+            </div>
+
+            <div id="tab-content-bonus-codes" class="tab-content w-full">
+                <!-- Bonus Kodları Bölümü -->
+                <section id="bonus-codes-list-section" class="w-full">
+                    <h2 class="text-xl font-bold mb-4">Kazanılan Bonus Kodları</h2>
+                    <ul id="bonus-codes-list" class="text-sm text-gray-600 space-y-2">
+                        <!-- Bonus kodları buraya eklenecek -->
+                    </ul>
+                </section>
+            </div>
 
             <!-- Mesaj kutusu öğesi -->
             <div id="message-box-home" class="message-box"></div>
@@ -773,10 +881,19 @@
         // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
         let loadingScreen, usernameModal, usernameInput, saveUsernameBtn;
         let appHeader, userInfoHeader, pointsDisplayHeader;
-        let appWrapper, homePageContent, bonusCodesListSection, bonusCodesList, leaderboardSection, leaderboardList;
-        // Anasayfa oyun kartları
-        let wheelCard, fastClickCard, guessGameCard, rpsGameCard;
-        let miniGamesSection, scrollLeftBtn, scrollRightBtn; // Yeni elemanlar
+        let appWrapper, homePageContent, messageBoxHome;
+        
+        // Tab navigasyonu elemanları
+        let tabButtons, tabContents;
+
+        // Sekme içerik elemanları
+        let miniGamesCarouselContainer, miniGamesSection, scrollLeftBtn, scrollRightBtn;
+        let wheelCardElement; // Çarkıfelek kartı elemanı, karışmaması için ID'si güncellendi
+        let leaderboardSection, leaderboardList;
+        let bonusCodesListSection, bonusCodesList;
+        
+        // Anasayfa oyun kartları (Artık sekmeler içinde)
+        let fastClickCard, guessGameCard, rpsGameCard;
         
         // Kaydırma (sürükleme) için değişkenler
         let isDragging = false;
@@ -788,8 +905,6 @@
         let fastClickModal, fastClickModalCloseBtn, fastClickGameButton, messageBoxFastClickModal; // fastClickGameButton olarak güncellendi
         let guessGameModal, guessGameModalCloseBtn, guessGameInput, guessGameSubmitButton, guessGameFeedback, guessGameNewButton, messageBoxGuessGameModal; // unique ID'ler
         let rpsGameModal, rpsGameModalCloseBtn, rpsRockBtn, rpsPaperBtn, rpsScissorsBtn, rpsPlayerChoiceDisplay, rpsComputerChoiceDisplay, rpsResultDisplayText, rpsPlayAgainButton, messageBoxRpsGameModal; // unique ID'ler
-
-        let messageBoxHome; // Anasayfa için genel mesaj kutusu
 
         // Sayı Tahmin Oyunu Değişkenleri
         let targetNumber, attemptsLeft, gameOver;
@@ -808,6 +923,7 @@
             setTimeout(() => { // Geçişin tetiklenmesi için kısa bir gecikme
                 modalElement.classList.add('open');
             }, 10);
+            Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Modal açılışında hafif titreşim
         }
 
         function closeModal(modalElement) {
@@ -816,6 +932,7 @@
                 modalElement.style.display = 'none'; // Geçiş bittikten sonra display'i gizle
                 modalElement.removeEventListener('transitionend', handler); // Dinleyiciyi kaldır
             }, { once: true });
+            Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Modal kapanışında hafif titreşim
         }
         // MODAL YÖNETİMİ BİTİŞ
 
@@ -836,6 +953,7 @@
             setTimeout(() => {
                 targetBox.style.display = 'none';
             }, 3000); // 3 saniye sonra gizle
+            Telegram.WebApp.HapticFeedback.notificationOccurred(isError ? 'error' : 'success'); // Mesaj türüne göre titreşim
         }
 
         // Çarkı dinamik olarak oluşturma
@@ -961,7 +1079,7 @@
                 if (data.bonusCodes && data.bonusCodes.length > 0) {
                     data.bonusCodes.forEach(code => {
                         const li = document.createElement('li');
-                        li.textContent = `• ${code}`;
+                        li.innerHTML = `<i class="fa-solid fa-gift"></i> ${code}`;
                         bonusCodesList.appendChild(li);
                     });
                 } else {
@@ -1051,7 +1169,7 @@
                     const data = doc.data();
                     if (data.username && data.points !== undefined) { // Hem kullanıcı adı hem de puanı kontrol et
                         const li = document.createElement('li');
-                        li.innerHTML = `<span>${rank}. ${data.username}</span><span>${data.points} Puan</span>`;
+                        li.innerHTML = `<span><i class="fa-solid fa-trophy"></i> ${rank}. ${data.username}</span><span>${data.points} Puan</span>`;
                         leaderboardList.appendChild(li);
                         rank++;
                     }
@@ -1189,6 +1307,7 @@
             }
             
             if (rpsPlayAgainButton) rpsPlayAgainButton.classList.remove('hidden');
+            Telegram.WebApp.HapticFeedback.impactOccurred('medium'); // Oyun sonunda titreşim
         }
 
 
@@ -1206,60 +1325,102 @@
 
             appWrapper = document.getElementById('app-wrapper');
             homePageContent = document.getElementById('home-page-content');
+            messageBoxHome = document.getElementById('message-box-home');
+            
+            // Tab navigasyonu elemanlarını al
+            tabButtons = document.querySelectorAll('#tab-navigation .tab-button');
+            tabContents = {
+                'games': document.getElementById('tab-content-games'),
+                'wheel': document.getElementById('tab-content-wheel'),
+                'leaderboard': document.getElementById('tab-content-leaderboard'),
+                'bonus-codes': document.getElementById('tab-content-bonus-codes')
+            };
+
+            // Sekme içerik elemanlarını al
+            miniGamesCarouselContainer = document.getElementById('mini-games-carousel-container');
+            miniGamesSection = document.getElementById('mini-games-section');
+            scrollLeftBtn = document.getElementById('scroll-left-btn');
+            scrollRightBtn = document.getElementById('scroll-right-btn');
+            wheelCardElement = document.getElementById('wheel-card'); // ID'si güncellendi
+            leaderboardSection = document.getElementById('leaderboard-section');
+            leaderboardList = document.getElementById('leaderboard-list');
             bonusCodesListSection = document.getElementById('bonus-codes-list-section');
             bonusCodesList = document.getElementById('bonus-codes-list');
-            messageBoxHome = document.getElementById('message-box-home');
-            leaderboardSection = document.getElementById('leaderboard-section'); // Yeni liderlik tablosu bölümü
-            leaderboardList = document.getElementById('leaderboard-list'); // Yeni liderlik tablosu listesi
 
             // Anasayfa oyun kartları
-            wheelCard = document.getElementById('wheel-card');
             fastClickCard = document.getElementById('fast-click-card');
             guessGameCard = document.getElementById('guess-game-card');
             rpsGameCard = document.getElementById('rps-game-card');
-            miniGamesSection = document.getElementById('mini-games-section'); // Yeni eleman
-            scrollLeftBtn = document.getElementById('scroll-left-btn'); // Yeni eleman
-            scrollRightBtn = document.getElementById('scroll-right-btn'); // Yeni eleman
 
             // Modallar ve içindeki elemanlar
             wheelModal = document.getElementById('wheel-modal');
             wheelModalCloseBtn = document.getElementById('wheel-modal-close-btn');
-            wheelElement = document.getElementById('wheel-element'); // Çarkın kendisi ID'si güncellendi
-            wheelSpinButton = document.getElementById('wheel-spin-button'); // ID güncellendi
+            wheelElement = document.getElementById('wheel-element');
+            wheelSpinButton = document.getElementById('wheel-spin-button');
             messageBoxWheelModal = document.getElementById('message-box-wheel-modal');
 
             fastClickModal = document.getElementById('fast-click-modal');
             fastClickModalCloseBtn = document.getElementById('fast-click-modal-close-btn');
             messageBoxFastClickModal = document.getElementById('message-box-fast-click-modal');
-            fastClickGameButton = document.getElementById('fast-click-game-button'); // ID güncellendi
+            fastClickGameButton = document.getElementById('fast-click-game-button');
 
             guessGameModal = document.getElementById('guess-game-modal');
             guessGameModalCloseBtn = document.getElementById('guess-game-modal-close-btn');
-            guessGameInput = document.getElementById('guess-game-input'); // ID güncellendi
-            guessGameSubmitButton = document.getElementById('guess-game-submit-button'); // ID güncellendi
-            guessGameFeedback = document.getElementById('guess-game-feedback'); // ID güncellendi
-            guessGameNewButton = document.getElementById('guess-game-new-button'); // ID güncellendi
+            guessGameInput = document.getElementById('guess-game-input');
+            guessGameSubmitButton = document.getElementById('guess-game-submit-button');
+            guessGameFeedback = document.getElementById('guess-game-feedback');
+            guessGameNewButton = document.getElementById('guess-game-new-button');
             messageBoxGuessGameModal = document.getElementById('message-box-guess-game-modal');
 
             rpsGameModal = document.getElementById('rps-game-modal');
             rpsGameModalCloseBtn = document.getElementById('rps-game-modal-close-btn');
-            rpsRockBtn = document.getElementById('rps-rock-btn'); // ID güncellendi
-            rpsPaperBtn = document.getElementById('rps-paper-btn'); // ID güncellendi
-            rpsScissorsBtn = document.getElementById('rps-scissors-btn'); // ID güncellendi
-            rpsPlayerChoiceDisplay = document.getElementById('rps-player-choice-display'); // ID güncellendi
-            rpsComputerChoiceDisplay = document.getElementById('rps-computer-choice-display'); // ID güncellendi
-            rpsResultDisplayText = document.getElementById('rps-result-display-text'); // ID güncellendi
-            rpsPlayAgainButton = document.getElementById('rps-play-again-button'); // ID güncellendi
+            rpsRockBtn = document.getElementById('rps-rock-btn');
+            rpsPaperBtn = document.getElementById('rps-paper-btn');
+            rpsScissorsBtn = document.getElementById('rps-scissors-btn');
+            rpsPlayerChoiceDisplay = document.getElementById('rps-player-choice-display');
+            rpsComputerChoiceDisplay = document.getElementById('rps-computer-choice-display');
+            rpsResultDisplayText = document.getElementById('rps-result-display-text');
+            rpsPlayAgainButton = document.getElementById('rps-play-again-button');
             messageBoxRpsGameModal = document.getElementById('message-box-rps-game-modal');
 
 
             // Kullanıcı adı kaydetme butonu için olay dinleyici
             if (saveUsernameBtn) {
-                saveUsernameBtn.addEventListener('click', saveUsername);
+                saveUsernameBtn.addEventListener('click', () => {
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                    saveUsername();
+                });
             } else {
                 console.error("Hata: saveUsernameBtn HTML elementi bulunamadı!");
                 showMessage("Uygulama yüklenirken bir sorun oluştu (Kullanıcı Adı Kaydet Butonu bulunamadı).", true, 'message-box-home');
             }
+
+            // Sekme butonları için olay dinleyicileri
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Sekme değişiminde titreşim
+                    const targetTab = button.dataset.tab;
+
+                    // Tüm butonlardan 'active' sınıfını kaldır
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    // Tıklanan butona 'active' sınıfını ekle
+                    button.classList.add('active');
+
+                    // Tüm içeriklerden 'active' sınıfını kaldır
+                    for (const key in tabContents) {
+                        tabContents[key].classList.remove('active');
+                    }
+                    // Hedef içeriğe 'active' sınıfını ekle
+                    if (tabContents[targetTab]) {
+                        tabContents[targetTab].classList.add('active');
+                    }
+                    
+                    // Liderlik tablosu sekmesi aktif olduğunda veriyi yeniden getir
+                    if (targetTab === 'leaderboard') {
+                        fetchLeaderboard();
+                    }
+                });
+            });
 
             // Hızlı Tıkla! kartına tıklama olayı (modalı açar)
             if (fastClickCard) {
@@ -1305,6 +1466,7 @@
             // Hızlı Tıkla! butonu için olay dinleyici (modal içinde)
             if (fastClickGameButton) { 
                 fastClickGameButton.addEventListener('click', async () => {
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
                     if (!userId) {
                         showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true, 'message-box-fast-click-modal');
                         return;
@@ -1337,12 +1499,12 @@
             }
 
             // Çarkıfelek kartına tıklama olayı (modalı açar)
-            if (wheelCard) {
-                wheelCard.addEventListener('click', () => {
+            if (wheelCardElement) { // ID'si güncellendi
+                wheelCardElement.addEventListener('click', () => {
                     if (wheelModal) openModal(wheelModal);
                 });
             } else {
-                console.error("Hata: wheelCard HTML elementi bulunamadı!");
+                console.error("Hata: wheelCardElement HTML elementi bulunamadı!");
             }
 
             // Çark modalındaki kapatma butonu
@@ -1357,6 +1519,7 @@
             // Çarkı çevir butonu (modal içinde)
             if (wheelSpinButton) { // ID güncellendi
                 wheelSpinButton.addEventListener('click', async () => {
+                    Telegram.WebApp.HapticFeedback.impactOccurred('heavy'); // Çark çevirme başlangıcında ağır titreşim
                     if (!userId) return;
                     isSpinning = true;
                     wheelSpinButton.disabled = true;
@@ -1392,8 +1555,10 @@
                                     bonusCodes: firebase.firestore.FieldValue.arrayUnion(newBonusCode)
                                 });
                                 showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`, false, 'message-box-wheel-modal');
+                                Telegram.WebApp.HapticFeedback.notificationOccurred('success'); // Başarılı titreşim
                             } else {
                                 showMessage("Maalesef, bir dahaki sefere!", false, 'message-box-wheel-modal');
+                                Telegram.WebApp.HapticFeedback.notificationOccurred('warning'); // Uyarı titreşim
                             }
                             
                             isSpinning = false;
@@ -1423,21 +1588,31 @@
 
             // Sayı Tahmin Oyunu Olay Dinleyicileri (modal içinde)
             if (guessGameSubmitButton) {
-                guessGameSubmitButton.addEventListener('click', checkGuess);
+                guessGameSubmitButton.addEventListener('click', () => {
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
+                    checkGuess();
+                });
             }
             if (guessGameNewButton) {
-                guessGameNewButton.addEventListener('click', startGame);
+                guessGameNewButton.addEventListener('click', () => {
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
+                    startGame();
+                });
             }
             
             // Taş-Kağıt-Makas Oyunu Olay Dinleyicileri (modal içinde)
             if (rpsRockBtn) rpsRockBtn.addEventListener('click', () => playRPSGame('taş'));
             if (rpsPaperBtn) rpsPaperBtn.addEventListener('click', () => playRPSGame('kağıt'));
             if (rpsScissorsBtn) rpsScissorsBtn.addEventListener('click', () => playRPSGame('makas'));
-            if (rpsPlayAgainButton) rpsPlayAgainButton.addEventListener('click', initializeRPSGame);
+            if (rpsPlayAgainButton) rpsPlayAgainButton.addEventListener('click', () => {
+                Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
+                initializeRPSGame();
+            });
             
             // Carousel kaydırma butonları olay dinleyicileri
             if (scrollLeftBtn && miniGamesSection) {
                 scrollLeftBtn.addEventListener('click', () => {
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
                     // İlk kartın genişliğini al ve sola kaydır
                     const firstCard = miniGamesSection.querySelector('.game-card-homepage');
                     if (firstCard) {
@@ -1450,6 +1625,7 @@
             }
             if (scrollRightBtn && miniGamesSection) {
                 scrollRightBtn.addEventListener('click', () => {
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
                     // İlk kartın genişliğini al ve sağa kaydır
                     const firstCard = miniGamesSection.querySelector('.game-card-homepage');
                     if (firstCard) {
