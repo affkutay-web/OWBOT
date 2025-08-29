@@ -74,8 +74,8 @@
         }
         /* Mesaj kutusu için stil */
         .message-box { /* Genel bir sınıf yapıldı */
-            position: fixed;
-            top: 20px;
+            position: absolute; /* Modalların içinde absolute olarak konumlandırılacak */
+            bottom: 1rem; /* Alttan boşluk */
             left: 50%;
             transform: translateX(-50%);
             background-color: #333; /* Mesaj kutusu için daha koyu bir arka plan */
@@ -86,6 +86,17 @@
             display: none;
             text-align: center;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            width: 90%; /* Genişliği ayarla */
+            max-width: 300px; /* Maksimum genişlik */
+            box-sizing: border-box;
+        }
+        #message-box-home { /* Anasayfa mesaj kutusu için özel konumlandırma */
+            position: relative; /* Anasayfa içeriğine göre konumlanır */
+            margin-top: 1.5rem; /* Üstten boşluk */
+            left: auto;
+            transform: none;
+            width: auto;
+            max-width: none;
         }
 
         /* Çark stili (modal içinde) */
@@ -276,17 +287,16 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7); /* Yarı saydam arka plan */
-            display: flex;
+            display: none; /* Varsayılan olarak gizli */
             align-items: center;
             justify-content: center;
             z-index: 10001;
             opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
+            transition: opacity 0.3s ease; /* Sadece opacity geçişi */
         }
         .game-modal.open {
             opacity: 1;
-            visibility: visible;
+            /* display: flex; JavaScript tarafından yönetilecek */
         }
         .game-modal-content {
             background-color: #1a1a1a;
@@ -296,7 +306,7 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
             max-width: 90%;
             width: 400px; /* Modal için sabit genişlik */
-            position: relative;
+            position: relative; /* Mesaj kutusu için göreceli konum */
         }
         .game-modal-close-btn { /* Modal kapatma butonu için genel sınıf */
             position: absolute;
@@ -369,14 +379,14 @@
             flex: 1; /* Eşit genişlik */
             max-width: 120px; /* Maksimum genişlik */
         }
-        #rps-result-display {
+        #rps-result-display-text {
             font-weight: bold;
             margin-bottom: 1rem;
         }
-        #rps-play-again-btn {
+        #rps-play-again-button {
             background-color: #555; /* Gri tonu */
         }
-        #rps-player-choice, #rps-computer-choice {
+        #rps-player-choice-display, #rps-computer-choice-display {
             font-weight: bold;
             color: #fcd34d; /* Sarımsı renk */
         }
@@ -466,7 +476,7 @@
     <!-- Tüm Oyun Modalları -->
 
     <!-- Çarkıfelek Modalı -->
-    <div id="wheel-modal" class="game-modal hidden">
+    <div id="wheel-modal" class="game-modal">
         <div class="game-modal-content">
             <button id="wheel-modal-close-btn" class="game-modal-close-btn">×</button>
             <h2 class="text-xl font-bold mb-4">Bonus Çarkı</h2>
@@ -477,7 +487,7 @@
                     <!-- Çark dilimleri ve metin etiketleri dinamik olarak eklenecek -->
                 </div>
             </div>
-            <button id="spin-button" class="telegram-btn w-full py-3 mt-6 transition duration-200 hover:opacity-80 disabled:opacity-50" disabled>
+            <button id="wheel-spin-button" class="telegram-btn w-full py-3 mt-6 transition duration-200 hover:opacity-80 disabled:opacity-50" disabled>
                 <span id="spin-button-text">Çarkı Çevir (100 Puan)</span>
             </button>
             <!-- Mesaj kutusu öğesi (modal içinde) -->
@@ -486,49 +496,49 @@
     </div>
 
     <!-- Hızlı Tıkla! Modalı -->
-    <div id="fast-click-modal" class="game-modal hidden">
+    <div id="fast-click-modal" class="game-modal">
         <div class="game-modal-content">
             <button id="fast-click-modal-close-btn" class="game-modal-close-btn">×</button>
             <h2 class="text-xl font-bold mb-4">Hızlı Tıkla!</h2>
             <p class="text-sm text-gray-600 mb-3">Butona her tıkladığınızda 10 puan kazanırsınız.</p>
-            <button id="game-button" class="telegram-btn w-full py-3 transition duration-200 hover:opacity-80">
-                <span id="game-button-text">Puan Kazan (+10)</span>
+            <button id="fast-click-game-button" class="telegram-btn w-full py-3 transition duration-200 hover:opacity-80">
+                <span id="fast-click-game-button-text">Puan Kazan (+10)</span>
             </button>
             <div id="message-box-fast-click-modal" class="message-box mt-4"></div>
         </div>
     </div>
 
     <!-- Sayı Tahmin Oyunu Modalı -->
-    <div id="guess-game-modal" class="game-modal hidden">
+    <div id="guess-game-modal" class="game-modal">
         <div class="game-modal-content">
             <button id="guess-game-modal-close-btn" class="game-modal-close-btn">×</button>
             <h2 class="text-xl font-bold mb-4">Sayı Tahmin Oyunu</h2>
             <p class="text-sm text-gray-600 mb-3">1 ile 100 arasında bir sayı tuttum. 7 tahmin hakkın var!</p>
-            <input type="number" id="guess-input" class="w-full p-2 mb-3 rounded-md bg-gray-700 text-white border-none text-center" placeholder="Tahminini gir (1-100)">
-            <button id="submit-guess-button" class="telegram-btn w-full py-2 mb-2 transition duration-200 hover:opacity-80">Tahmin Et</button>
-            <p id="guess-feedback" class="text-sm text-gray-400 mb-3"></p>
-            <button id="new-game-button" class="telegram-btn bg-gray-500 hover:bg-gray-600 w-full py-2 transition duration-200 hover:opacity-80 hidden">Yeni Oyun Başlat</button>
+            <input type="number" id="guess-game-input" class="w-full p-2 mb-3 rounded-md bg-gray-700 text-white border-none text-center" placeholder="Tahminini gir (1-100)">
+            <button id="guess-game-submit-button" class="telegram-btn w-full py-2 mb-2 transition duration-200 hover:opacity-80">Tahmin Et</button>
+            <p id="guess-game-feedback" class="text-sm text-gray-400 mb-3"></p>
+            <button id="guess-game-new-button" class="telegram-btn bg-gray-500 hover:bg-gray-600 w-full py-2 transition duration-200 hover:opacity-80 hidden">Yeni Oyun Başlat</button>
             <div id="message-box-guess-game-modal" class="message-box mt-4"></div>
         </div>
     </div>
 
     <!-- Taş, Kağıt, Makas Modalı -->
-    <div id="rps-game-modal" class="game-modal hidden">
+    <div id="rps-game-modal" class="game-modal">
         <div class="game-modal-content">
             <button id="rps-game-modal-close-btn" class="game-modal-close-btn">×</button>
             <h2 class="text-xl font-bold mb-4">Taş, Kağıt, Makas!</h2>
             <p class="text-sm text-gray-600 mb-3">Bilgisayarı yen, 20 puan kazan!</p>
             <div id="rps-choices" class="flex justify-center gap-3 mb-4">
-                <button id="rock-btn" class="rps-btn telegram-btn">Taş</button>
-                <button id="paper-btn" class="rps-btn telegram-btn">Kağıt</button>
-                <button id="scissors-btn" class="rps-btn telegram-btn">Makas</button>
+                <button id="rps-rock-btn" class="rps-btn telegram-btn">Taş</button>
+                <button id="rps-paper-btn" class="rps-btn telegram-btn">Kağıt</button>
+                <button id="rps-scissors-btn" class="rps-btn telegram-btn">Makas</button>
             </div>
             <div class="mb-3">
-                Senin seçimin: <span id="rps-player-choice" class="text-yellow-300"></span><br>
-                Bilgisayarın seçimi: <span id="rps-computer-choice" class="text-yellow-300"></span>
+                Senin seçimin: <span id="rps-player-choice-display" class="text-yellow-300"></span><br>
+                Bilgisayarın seçimi: <span id="rps-computer-choice-display" class="text-yellow-300"></span>
             </div>
-            <p id="rps-result-display" class="text-base text-white font-bold mb-3"></p>
-            <button id="rps-play-again-btn" class="telegram-btn bg-gray-500 hover:bg-gray-600 w-full py-2 transition duration-200 hover:opacity-80 hidden">Tekrar Oyna</button>
+            <p id="rps-result-display-text" class="text-base text-white font-bold mb-3"></p>
+            <button id="rps-play-again-button" class="telegram-btn bg-gray-500 hover:bg-gray-600 w-full py-2 transition duration-200 hover:opacity-80 hidden">Tekrar Oyna</button>
             <div id="message-box-rps-game-modal" class="message-box mt-4"></div>
         </div>
     </div>
@@ -572,10 +582,10 @@
         let wheelCard, fastClickCard, guessGameCard, rpsGameCard;
 
         // Modallar ve içindeki elemanlar
-        let wheelModal, wheelModalCloseBtn, wheelElement, spinButton, messageBoxWheelModal;
-        let fastClickModal, fastClickModalCloseBtn, gameButton, messageBoxFastClickModal; // Hızlı Tıkla
-        let guessGameModal, guessGameModalCloseBtn, guessInput, submitGuessButton, guessFeedback, newGameButton, messageBoxGuessGameModal; // Sayı Tahmin
-        let rpsGameModal, rpsGameModalCloseBtn, rockBtn, paperBtn, scissorsBtn, rpsPlayerChoiceDisplay, rpsComputerChoiceDisplay, rpsResultDisplay, rpsPlayAgainBtn, messageBoxRpsGameModal; // Taş, Kağıt, Makas
+        let wheelModal, wheelModalCloseBtn, wheelElement, wheelSpinButton, messageBoxWheelModal; // wheelSpinButton olarak güncellendi
+        let fastClickModal, fastClickModalCloseBtn, fastClickGameButton, messageBoxFastClickModal; // fastClickGameButton olarak güncellendi
+        let guessGameModal, guessGameModalCloseBtn, guessGameInput, guessGameSubmitButton, guessGameFeedback, guessGameNewButton, messageBoxGuessGameModal; // unique ID'ler
+        let rpsGameModal, rpsGameModalCloseBtn, rpsRockBtn, rpsPaperBtn, rpsScissorsBtn, rpsPlayerChoiceDisplay, rpsComputerChoiceDisplay, rpsResultDisplayText, rpsPlayAgainButton, messageBoxRpsGameModal; // unique ID'ler
 
         let messageBoxHome; // Anasayfa için genel mesaj kutusu
 
@@ -589,6 +599,23 @@
         // Taş-Kağıt-Makas Oyunu Değişkenleri
         const choices = ['taş', 'kağıt', 'makas'];
         const RPS_GAME_WIN_POINTS = 20;
+
+        // MODAL YÖNETİMİ BAŞLANGIÇ
+        function openModal(modalElement) {
+            modalElement.style.display = 'flex'; // Önce display'i ayarla
+            setTimeout(() => { // Geçişin tetiklenmesi için kısa bir gecikme
+                modalElement.classList.add('open');
+            }, 10);
+        }
+
+        function closeModal(modalElement) {
+            modalElement.classList.remove('open');
+            modalElement.addEventListener('transitionend', function handler() {
+                modalElement.style.display = 'none'; // Geçiş bittikten sonra display'i gizle
+                modalElement.removeEventListener('transitionend', handler); // Dinleyiciyi kaldır
+            }, { once: true });
+        }
+        // MODAL YÖNETİMİ BİTİŞ
 
         // Kullanıcıya mesaj göstermek için özel fonksiyon (hedef kutu ID'sine göre)
         function showMessage(text, isError = false, targetBoxId = 'message-box-home') {
@@ -614,7 +641,7 @@
             const numSegments = segments.length;
             const segmentAngle = 360 / numSegments;
             
-            wheelElement.innerHTML = ''; // Çarkı temizle
+            if (wheelElement) wheelElement.innerHTML = ''; // Çarkı temizle
             
             segments.forEach((segmentData, index) => {
                 const rotationAngle = index * segmentAngle; // Segmentin dönme açısı
@@ -639,7 +666,7 @@
                 labelEl.style.setProperty('--rotation-angle', `${rotationAngle}deg`); 
 
                 segmentEl.appendChild(labelEl);
-                wheelElement.appendChild(segmentEl);
+                if (wheelElement) wheelElement.appendChild(segmentEl);
             });
         }
 
@@ -677,13 +704,13 @@
                             });
                             // Kullanıcı adı modalını göster
                             loadingScreen.style.display = 'none';
-                            if (usernameModal) usernameModal.style.display = 'flex';
+                            if (usernameModal) openModal(usernameModal);
                         } else {
                             const userData = docSnap.data();
                             if (!userData.username) {
                                 // Kullanıcı var ama kullanıcı adı ayarlı değil
                                 loadingScreen.style.display = 'none';
-                                if (usernameModal) usernameModal.style.display = 'flex';
+                                if (usernameModal) openModal(usernameModal);
                             } else {
                                 // Kullanıcı adı zaten ayarlı, ana uygulamayı göster
                                 loadingScreen.style.display = 'none';
@@ -746,7 +773,7 @@
             }
 
             // Çarkı çevir butonunu etkinleştirme
-            if (spinButton) spinButton.disabled = data.points < 100 || isSpinning;
+            if (wheelSpinButton) wheelSpinButton.disabled = data.points < 100 || isSpinning;
         }
 
         // Kullanıcı adını kaydetme fonksiyonu
@@ -783,7 +810,7 @@
 
                 // UI elementlerinin varlığını kontrol et
                 if (usernameModal && homePageContent) {
-                    usernameModal.style.display = 'none';
+                    closeModal(usernameModal);
                     homePageContent.style.display = 'flex'; // 'block' yerine 'flex'
                     console.log("UI güncellendi: usernameModal gizlendi, homePageContent gösterildi.");
                 } else {
@@ -804,24 +831,24 @@
             targetNumber = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
             attemptsLeft = MAX_ATTEMPTS;
             gameOver = false;
-            if (guessInput) guessInput.value = '';
-            if (guessInput) guessInput.disabled = false;
-            if (submitGuessButton) submitGuessButton.disabled = false;
-            if (newGameButton) newGameButton.classList.add('hidden');
-            updateGuessFeedback(`Kalan tahmin hakkı: ${attemptsLeft}`, false, 'message-box-guess-game-modal');
+            if (guessGameInput) guessGameInput.value = '';
+            if (guessGameInput) guessGameInput.disabled = false;
+            if (guessGameSubmitButton) guessGameSubmitButton.disabled = false;
+            if (guessGameNewButton) guessGameNewButton.classList.add('hidden');
+            updateGuessFeedback(`Kalan tahmin hakkı: ${attemptsLeft}`, false); // Modala özel mesaj kutusu yok, genel kullanacak
         }
 
         function updateGuessFeedback(message, isError = false) {
-            if (guessFeedback) {
-                guessFeedback.textContent = message;
-                guessFeedback.style.color = isError ? '#dc3545' : '#ffffff';
+            if (guessGameFeedback) {
+                guessGameFeedback.textContent = message;
+                guessGameFeedback.style.color = isError ? '#dc3545' : '#ffffff';
             }
         }
 
         async function checkGuess() {
             if (gameOver) return;
 
-            const guess = parseInt(guessInput.value);
+            const guess = parseInt(guessGameInput.value);
 
             if (isNaN(guess) || guess < MIN_NUM || guess > MAX_NUM) {
                 updateGuessFeedback(`Lütfen ${MIN_NUM} ile ${MAX_NUM} arasında geçerli bir sayı girin.`, true);
@@ -833,9 +860,9 @@
             if (guess === targetNumber) {
                 updateGuessFeedback(`Tebrikler! Sayıyı ${MAX_ATTEMPTS - attemptsLeft} tahminde buldun! (+${GUESS_GAME_WIN_POINTS} Puan)`, false);
                 gameOver = true;
-                if (guessInput) guessInput.disabled = true;
-                if (submitGuessButton) submitGuessButton.disabled = true;
-                if (newGameButton) newGameButton.classList.remove('hidden');
+                if (guessGameInput) guessGameInput.disabled = true;
+                if (guessGameSubmitButton) guessGameSubmitButton.disabled = true;
+                if (guessGameNewButton) guessGameNewButton.classList.remove('hidden');
                 
                 // Puanı Firestore'a kaydet
                 try {
@@ -852,26 +879,26 @@
             } else if (attemptsLeft === 0) {
                 updateGuessFeedback(`Üzgünüm, tahmin hakkın kalmadı! Sayı ${targetNumber} idi.`, true);
                 gameOver = true;
-                if (guessInput) guessInput.disabled = true;
-                if (submitGuessButton) submitGuessButton.disabled = true;
-                if (newGameButton) newGameButton.classList.remove('hidden');
+                if (guessGameInput) guessGameInput.disabled = true;
+                if (guessGameSubmitButton) guessGameSubmitButton.disabled = true;
+                if (guessGameNewButton) guessGameNewButton.classList.remove('hidden');
             } else {
                 const hint = guess < targetNumber ? 'daha yüksek' : 'daha düşük';
                 updateGuessFeedback(`Yanlış! Sayı ${hint}. Kalan tahmin hakkı: ${attemptsLeft}`);
             }
-            if (guessInput) guessInput.value = ''; // Tahmin kutusunu temizle
+            if (guessGameInput) guessGameInput.value = ''; // Tahmin kutusunu temizle
         }
 
         // Taş-Kağıt-Makas Oyunu Mantığı
         function initializeRPSGame() {
             if (rpsPlayerChoiceDisplay) rpsPlayerChoiceDisplay.textContent = '';
             if (rpsComputerChoiceDisplay) rpsComputerChoiceDisplay.textContent = '';
-            if (rpsResultDisplay) rpsResultDisplay.textContent = 'Bir seçim yap!';
-            if (rockBtn) rockBtn.disabled = false;
-            if (paperBtn) paperBtn.disabled = false;
-            if (scissorsBtn) scissorsBtn.disabled = false;
-            if (rpsPlayAgainBtn) rpsPlayAgainBtn.classList.add('hidden');
-            if (rpsResultDisplay) rpsResultDisplay.style.color = '#ffffff'; // Varsayılan renk
+            if (rpsResultDisplayText) rpsResultDisplayText.textContent = 'Bir seçim yap!';
+            if (rpsRockBtn) rpsRockBtn.disabled = false;
+            if (rpsPaperBtn) rpsPaperBtn.disabled = false;
+            if (rpsScissorsBtn) rpsScissorsBtn.disabled = false;
+            if (rpsPlayAgainButton) rpsPlayAgainButton.classList.add('hidden');
+            if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#ffffff'; // Varsayılan renk
         }
 
         async function playRPSGame(playerChoice) {
@@ -881,9 +908,9 @@
             }
 
             // Seçim butonlarını devre dışı bırak
-            if (rockBtn) rockBtn.disabled = true;
-            if (paperBtn) paperBtn.disabled = true;
-            if (scissorsBtn) scissorsBtn.disabled = true;
+            if (rpsRockBtn) rpsRockBtn.disabled = true;
+            if (rpsPaperBtn) rpsPaperBtn.disabled = true;
+            if (rpsScissorsBtn) rpsScissorsBtn.disabled = true;
 
             const computerChoice = choices[Math.floor(Math.random() * choices.length)];
 
@@ -906,9 +933,9 @@
                 result = 'Kaybettin.';
             }
 
-            if (rpsResultDisplay) rpsResultDisplay.textContent = result;
+            if (rpsResultDisplayText) rpsResultDisplayText.textContent = result;
             if (isWin) {
-                if (rpsResultDisplay) rpsResultDisplay.style.color = '#a78bfa'; // Mor renk
+                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#a78bfa'; // Mor renk
                 try {
                     const docSnap = await userDocRef.get();
                     await userDocRef.update({
@@ -920,12 +947,12 @@
                     showMessage("Puan kaydedilirken bir hata oluştu.", true, 'message-box-rps-game-modal');
                 }
             } else if (result === 'Berabere!') {
-                if (rpsResultDisplay) rpsResultDisplay.style.color = '#fcd34d'; // Sarımsı
+                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#fcd34d'; // Sarımsı
             } else {
-                if (rpsResultDisplay) rpsResultDisplay.style.color = '#dc3545'; // Kırmızı
+                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#dc3545'; // Kırmızı
             }
             
-            if (rpsPlayAgainBtn) rpsPlayAgainBtn.classList.remove('hidden');
+            if (rpsPlayAgainButton) rpsPlayAgainButton.classList.remove('hidden');
         }
 
 
@@ -957,31 +984,31 @@
             wheelModal = document.getElementById('wheel-modal');
             wheelModalCloseBtn = document.getElementById('wheel-modal-close-btn');
             wheelElement = document.getElementById('wheel-element'); // Çarkın kendisi ID'si güncellendi
-            spinButton = document.getElementById('spin-button');
+            wheelSpinButton = document.getElementById('wheel-spin-button'); // ID güncellendi
             messageBoxWheelModal = document.getElementById('message-box-wheel-modal');
 
             fastClickModal = document.getElementById('fast-click-modal');
             fastClickModalCloseBtn = document.getElementById('fast-click-modal-close-btn');
-            gameButton = document.getElementById('game-button'); // Hızlı Tıkla butonu (modal içinde)
+            fastClickGameButton = document.getElementById('fast-click-game-button'); // ID güncellendi
             messageBoxFastClickModal = document.getElementById('message-box-fast-click-modal');
 
             guessGameModal = document.getElementById('guess-game-modal');
             guessGameModalCloseBtn = document.getElementById('guess-game-modal-close-btn');
-            guessInput = document.getElementById('guess-input');
-            submitGuessButton = document.getElementById('submit-guess-button');
-            guessFeedback = document.getElementById('guess-feedback');
-            newGameButton = document.getElementById('new-game-button');
+            guessGameInput = document.getElementById('guess-game-input'); // ID güncellendi
+            guessGameSubmitButton = document.getElementById('guess-game-submit-button'); // ID güncellendi
+            guessGameFeedback = document.getElementById('guess-game-feedback'); // ID güncellendi
+            guessGameNewButton = document.getElementById('guess-game-new-button'); // ID güncellendi
             messageBoxGuessGameModal = document.getElementById('message-box-guess-game-modal');
 
             rpsGameModal = document.getElementById('rps-game-modal');
             rpsGameModalCloseBtn = document.getElementById('rps-game-modal-close-btn');
-            rockBtn = document.getElementById('rock-btn');
-            paperBtn = document.getElementById('paper-btn');
-            scissorsBtn = document.getElementById('scissors-btn');
-            rpsPlayerChoiceDisplay = document.getElementById('rps-player-choice');
-            rpsComputerChoiceDisplay = document.getElementById('rps-computer-choice');
-            rpsResultDisplay = document.getElementById('rps-result-display');
-            rpsPlayAgainBtn = document.getElementById('rps-play-again-btn');
+            rpsRockBtn = document.getElementById('rps-rock-btn'); // ID güncellendi
+            rpsPaperBtn = document.getElementById('rps-paper-btn'); // ID güncellendi
+            rpsScissorsBtn = document.getElementById('rps-scissors-btn'); // ID güncellendi
+            rpsPlayerChoiceDisplay = document.getElementById('rps-player-choice-display'); // ID güncellendi
+            rpsComputerChoiceDisplay = document.getElementById('rps-computer-choice-display'); // ID güncellendi
+            rpsResultDisplayText = document.getElementById('rps-result-display-text'); // ID güncellendi
+            rpsPlayAgainButton = document.getElementById('rps-play-again-button'); // ID güncellendi
             messageBoxRpsGameModal = document.getElementById('message-box-rps-game-modal');
 
 
@@ -996,47 +1023,47 @@
             // Hızlı Tıkla! kartına tıklama olayı (modalı açar)
             if (fastClickCard) {
                 fastClickCard.addEventListener('click', () => {
-                    if (fastClickModal) fastClickModal.classList.add('open');
+                    if (fastClickModal) openModal(fastClickModal);
                 });
             }
             // Hızlı Tıkla! modalındaki kapatma butonu
             if (fastClickModalCloseBtn) {
                 fastClickModalCloseBtn.addEventListener('click', () => {
-                    if (fastClickModal) fastClickModal.classList.remove('open');
+                    if (fastClickModal) closeModal(fastClickModal);
                 });
             }
 
             // Sayı Tahmin Oyunu kartına tıklama olayı (modalı açar)
             if (guessGameCard) {
                 guessGameCard.addEventListener('click', () => {
-                    if (guessGameModal) guessGameModal.classList.add('open');
+                    if (guessGameModal) openModal(guessGameModal);
                     startGame(); // Modalı açtığında oyunu başlat
                 });
             }
             // Sayı Tahmin Oyunu modalındaki kapatma butonu
             if (guessGameModalCloseBtn) {
                 guessGameModalCloseBtn.addEventListener('click', () => {
-                    if (guessGameModal) guessGameModal.classList.remove('open');
+                    if (guessGameModal) closeModal(guessGameModal);
                 });
             }
 
             // Taş, Kağıt, Makas kartına tıklama olayı (modalı açar)
             if (rpsGameCard) {
                 rpsGameCard.addEventListener('click', () => {
-                    if (rpsGameModal) rpsGameModal.classList.add('open');
+                    if (rpsGameModal) openModal(rpsGameModal);
                     initializeRPSGame(); // Modalı açtığında oyunu başlat
                 });
             }
             // Taş, Kağıt, Makas modalındaki kapatma butonu
             if (rpsGameModalCloseBtn) {
                 rpsGameModalCloseBtn.addEventListener('click', () => {
-                    if (rpsGameModal) rpsGameModal.classList.remove('open');
+                    if (rpsGameModal) closeModal(rpsGameModal);
                 });
             }
 
             // Hızlı Tıkla! butonu için olay dinleyici (modal içinde)
-            if (gameButton) { 
-                gameButton.addEventListener('click', async () => {
+            if (fastClickGameButton) { 
+                fastClickGameButton.addEventListener('click', async () => {
                     if (!userId) {
                         showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true, 'message-box-fast-click-modal');
                         return;
@@ -1064,14 +1091,14 @@
                     }
                 });
             } else {
-                console.error("Hata: gameButton HTML elementi bulunamadı!");
+                console.error("Hata: fastClickGameButton HTML elementi bulunamadı!");
                 showMessage("Uygulama yüklenirken bir sorun oluştu (Oyun Butonu bulunamadı).", true, 'message-box-home');
             }
 
             // Çarkıfelek kartına tıklama olayı (modalı açar)
             if (wheelCard) {
                 wheelCard.addEventListener('click', () => {
-                    if (wheelModal) wheelModal.classList.add('open');
+                    if (wheelModal) openModal(wheelModal);
                 });
             } else {
                 console.error("Hata: wheelCard HTML elementi bulunamadı!");
@@ -1080,19 +1107,19 @@
             // Çark modalındaki kapatma butonu
             if (wheelModalCloseBtn) {
                 wheelModalCloseBtn.addEventListener('click', () => {
-                    if (wheelModal) wheelModal.classList.remove('open');
+                    if (wheelModal) closeModal(wheelModal);
                 });
             } else {
                 console.error("Hata: wheelModalCloseBtn HTML elementi bulunamadı!");
             }
 
             // Çarkı çevir butonu (modal içinde)
-            if (spinButton) { 
-                spinButton.addEventListener('click', async () => {
+            if (wheelSpinButton) { // ID güncellendi
+                wheelSpinButton.addEventListener('click', async () => {
                     if (!userId) return;
                     isSpinning = true;
-                    spinButton.disabled = true;
-                    spinButton.textContent = "Çevriliyor...";
+                    wheelSpinButton.disabled = true;
+                    wheelSpinButton.textContent = "Çevriliyor...";
 
                     try {
                         const docSnap = await userDocRef.get();
@@ -1101,8 +1128,8 @@
                         if (currentPoints < 100) {
                             showMessage("Yeterli puanın yok!", true, 'message-box-wheel-modal');
                             isSpinning = false;
-                            spinButton.disabled = false;
-                            spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                            wheelSpinButton.disabled = false;
+                            wheelSpinButton.textContent = "Çarkı Çevir (100 Puan)";
                             return;
                         }
 
@@ -1129,20 +1156,20 @@
                             }
                             
                             isSpinning = false;
-                            spinButton.disabled = false;
-                            spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                            wheelSpinButton.disabled = false;
+                            wheelSpinButton.textContent = "Çarkı Çevir (100 Puan)";
                             wheelElement.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
                         }, 5000); // 5 saniye animasyon süresi
                     } catch (e) {
                         console.error("Çark çevrilirken bir hata oluştu: ", e);
                         showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true, 'message-box-wheel-modal');
                         isSpinning = false;
-                        spinButton.disabled = false;
-                        spinButton.textContent = "Çarkı Çevir (100 Puan)";
+                        wheelSpinButton.disabled = false;
+                        wheelSpinButton.textContent = "Çarkı Çevir (100 Puan)";
                     }
                 });
             } else {
-                console.error("Hata: spinButton HTML elementi bulunamadı!");
+                console.error("Hata: wheelSpinButton HTML elementi bulunamadı!");
                 showMessage("Uygulama yüklenirken bir sorun oluştu (Çark Butonu bulunamadı).", true, 'message-box-home');
             }
             
@@ -1154,18 +1181,18 @@
             }
 
             // Sayı Tahmin Oyunu Olay Dinleyicileri (modal içinde)
-            if (submitGuessButton) {
-                submitGuessButton.addEventListener('click', checkGuess);
+            if (guessGameSubmitButton) {
+                guessGameSubmitButton.addEventListener('click', checkGuess);
             }
-            if (newGameButton) {
-                newGameButton.addEventListener('click', startGame);
+            if (guessGameNewButton) {
+                guessGameNewButton.addEventListener('click', startGame);
             }
             
             // Taş-Kağıt-Makas Oyunu Olay Dinleyicileri (modal içinde)
-            if (rockBtn) rockBtn.addEventListener('click', () => playRPSGame('taş'));
-            if (paperBtn) paperBtn.addEventListener('click', () => playRPSGame('kağıt'));
-            if (scissorsBtn) scissorsBtn.addEventListener('click', () => playRPSGame('makas'));
-            if (rpsPlayAgainBtn) rpsPlayAgainBtn.addEventListener('click', initializeRPSGame);
+            if (rpsRockBtn) rpsRockBtn.addEventListener('click', () => playRPSGame('taş'));
+            if (rpsPaperBtn) rpsPaperBtn.addEventListener('click', () => playRPSGame('kağıt'));
+            if (rpsScissorsBtn) rpsScissorsBtn.addEventListener('click', () => playRPSGame('makas'));
+            if (rpsPlayAgainButton) rpsPlayAgainButton.addEventListener('click', initializeRPSGame);
             
             initializeFirebase();
         });
