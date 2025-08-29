@@ -807,33 +807,28 @@
                         // Firestore collection ve doc referanslarını düzeltme
                         userDocRef = db.collection(`artifacts/${appId}/public/data/game_data`).doc(userId);
                         
-                        // Kullanıcı verilerini Firestore'dan al veya oluştur
                         const docSnap = await userDocRef.get();
-                        
-                        if (!docSnap.exists) {
-                            // Yeni kullanıcı, varsayılan verileri ayarla
-                            await userDocRef.set({
-                                username: null, // Kullanıcı adı boş olarak başla
-                                points: 0,
-                                bonusCodes: [],
-                                lastClick: 0
-                            });
-                            // Kullanıcı adı modalını göster
-                            loadingScreen.style.display = 'none';
-                            if (usernameModal) openModal(usernameModal);
-                        } else {
-                            const userData = docSnap.data();
-                            if (!userData.username) {
-                                // Kullanıcı var ama kullanıcı adı ayarlı değil
-                                loadingScreen.style.display = 'none';
-                                if (usernameModal) openModal(usernameModal);
-                            } else {
-                                // Kullanıcı adı zaten ayarlı, ana uygulamayı göster
-                                loadingScreen.style.display = 'none'; // Düzeltme: yükleme ekranını gizle
-                                if (homePageContent) homePageContent.style.display = 'flex';
-                                listenForDataChanges();
-                                fetchLeaderboard(); // Liderlik tablosunu yükle
+                        console.log("Firestore docSnap exists:", docSnap.exists, "Data:", docSnap.data()); // Debug logu eklendi
+
+                        // Kullanıcı adı kontrolü
+                        if (!docSnap.exists || !docSnap.data().username) { 
+                            // Belge yoksa veya kullanıcı adı ayarlı değilse
+                            if (!docSnap.exists) { // Belge yoksa oluştur
+                                await userDocRef.set({
+                                    username: null,
+                                    points: 0,
+                                    bonusCodes: [],
+                                    lastClick: 0
+                                });
                             }
+                            loadingScreen.style.display = 'none'; // Yükleme ekranını gizle
+                            if (usernameModal) openModal(usernameModal); // Kullanıcı adı modalını göster
+                        } else {
+                            // Kullanıcı adı zaten ayarlı, ana uygulamayı göster
+                            loadingScreen.style.display = 'none'; // Yükleme ekranını gizle
+                            if (homePageContent) homePageContent.style.display = 'flex'; // Ana içeriği göster
+                            listenForDataChanges(); // Gerçek zamanlı veri dinlemeye başla
+                            fetchLeaderboard(); // Liderlik tablosunu yükle
                         }
                     } else {
                         // Eğer kimlik doğrulama başarısız olursa, bir hata mesajı göster
