@@ -425,7 +425,13 @@
             -ms-overflow-style: none;  /* IE and Edge kaydırma çubuğunu gizle */
             margin-bottom: 1rem; /* Oklar ile oyunlar arasına boşluk */
             border: 1px solid rgba(255, 255, 255, 0.1);
+            /* Dokunmatik/sürükleme kaydırması için varsayılan cursor */
+            cursor: grab;
         }
+        #mini-games-section.grabbing {
+            cursor: grabbing; /* Sürükleme anında el işareti */
+        }
+
 
         /* Webkit tabanlı tarayıcılar için kaydırma çubuğunu gizle */
         #mini-games-section::-webkit-scrollbar {
@@ -772,6 +778,10 @@
         let wheelCard, fastClickCard, guessGameCard, rpsGameCard;
         let miniGamesSection, scrollLeftBtn, scrollRightBtn; // Yeni elemanlar
         
+        // Kaydırma (sürükleme) için değişkenler
+        let isDragging = false;
+        let startX;
+        let scrollLeftStart;
 
         // Modallar ve içindeki elemanlar
         let wheelModal, wheelModalCloseBtn, wheelElement, wheelSpinButton, messageBoxWheelModal; // wheelSpinButton olarak güncellendi
@@ -1448,6 +1458,54 @@
                             behavior: 'smooth'
                         });
                     }
+                });
+            }
+            
+            // Mini Oyunlar Bölümü için dokunmatik ve fare ile sürükleme olayları
+            if (miniGamesSection) {
+                miniGamesSection.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    miniGamesSection.classList.add('grabbing'); // Sürüklerken cursor değişimi
+                    startX = e.pageX - miniGamesSection.offsetLeft;
+                    scrollLeftStart = miniGamesSection.scrollLeft;
+                    e.preventDefault(); // Metin seçilmesini veya varsayılan sürüklemeyi engelle
+                });
+
+                miniGamesSection.addEventListener('mouseleave', () => {
+                    isDragging = false;
+                    miniGamesSection.classList.remove('grabbing');
+                });
+
+                miniGamesSection.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    miniGamesSection.classList.remove('grabbing');
+                });
+
+                miniGamesSection.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    const x = e.pageX - miniGamesSection.offsetLeft;
+                    const walk = (x - startX) * 1.5; // Kaydırma hızını ayarla
+                    miniGamesSection.scrollLeft = scrollLeftStart - walk;
+                });
+
+                // Dokunmatik olaylar (mobil için)
+                miniGamesSection.addEventListener('touchstart', (e) => {
+                    isDragging = true;
+                    startX = e.touches[0].pageX - miniGamesSection.offsetLeft;
+                    scrollLeftStart = miniGamesSection.scrollLeft;
+                });
+
+                miniGamesSection.addEventListener('touchend', () => {
+                    isDragging = false;
+                });
+
+                miniGamesSection.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault(); // Mobil cihazlarda varsayılan kaydırmayı engelle
+                    const x = e.touches[0].pageX - miniGamesSection.offsetLeft;
+                    const walk = (x - startX) * 1.5; // Kaydırma hızını ayarla
+                    miniGamesSection.scrollLeft = scrollLeftStart - walk;
                 });
             }
 
