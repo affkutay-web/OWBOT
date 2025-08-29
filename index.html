@@ -25,20 +25,19 @@
         html, body {
             margin: 0;
             padding: 0;
-            height: 100%; /* Ensure they take full height */
+            height: 100%; /* Tüm yüksekliği kaplamalarını sağla */
             width: 100%;
-            box-sizing: border-box; /* Include padding/border in total width/height */
+            box-sizing: border-box; /* Padding/border'ı toplam genişlik/yüksekliğe dahil et */
+            overflow: hidden; /* Body'nin kaydırmasını engelle, kaydırma app-container'da olacak */
         }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #4b0082; /* Ana tema arkaplanı mor */
             color: #ffffff; /* Varsayılan yazılar beyaz */
             display: flex;
-            flex-direction: column; /* Stack children vertically */
-            align-items: center; /* Center children horizontally */
-            justify-content: flex-start; /* Start content from the top */
-            overflow-y: auto; /* Allow vertical scrolling */
-            overflow-x: hidden; /* Crucial: hide horizontal overflow */
+            flex-direction: column; /* İçeriği dikeyde sırala */
+            align-items: center; /* Yatayda ortala */
+            justify-content: flex-start; /* İçeriği dikeyde yukarıdan başlat */
         }
         .telegram-btn {
             background-color: var(--tg-theme-button-color, #a78bfa); /* Telegram tema butonu veya mor bir ton */
@@ -98,7 +97,6 @@
             border-radius: 50%;
             overflow: hidden; /* Dilimlerin dışarı taşmasını engelle */
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            /* margin-bottom burada kaldırıldı, boşluk space-y-6 ile yönetilecek */
         }
         .wheel {
             position: relative; /* Dilimler için konteyner */
@@ -158,12 +156,43 @@
             z-index: 10;
         }
 
+        /* Sabit başlık stili */
+        #app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #2a0045; /* Koyu mor başlık arkaplanı */
+            color: #ffffff;
+            padding: 1rem 1.5rem; /* Yanlara ve dikeyde boşluk */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            z-index: 10000; /* Diğer her şeyin üstünde olsun */
+            display: flex;
+            justify-content: space-between; /* İçeriği iki yana yasla */
+            align-items: center; /* Dikeyde ortala */
+            box-sizing: border-box;
+        }
+        #app-header .title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        #app-header .user-info-display {
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        #app-header .points-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #fcd34d; /* Sarımsı renk puanlar için */
+        }
+
         .app-container {
             flex-shrink: 0; /* İçeriğin büyümesini engelleme */
             width: 100%;
             max-width: 600px; /* Daha geniş cihazlarda daha iyi görünüm */
-            margin: 1.5rem auto; /* Üstte ve altta boşluk bırak, yatayda ortala */
+            margin: 0 auto; /* Yatayda ortala */
             padding: 1.5rem; /* İç padding */
+            padding-top: calc(1.5rem + 60px); /* Sabit başlık için ekstra padding */
             box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
             background-color: #1a1a1a; /* Uygulama kapsayıcısı için koyu siyah */
             color: #ffffff; /* Kapsayıcıdaki yazılar beyaz */
@@ -171,6 +200,8 @@
             display: flex; /* İçeriği dikeyde düzenlemek için flex kullan */
             flex-direction: column; /* İçeriği sütun olarak sırala */
             flex-grow: 1; /* Mevcut alanı doldurmasını sağla */
+            overflow-y: auto; /* Kendi içinde kaydırmaya izin ver */
+            -webkit-overflow-scrolling: touch; /* iOS'ta daha akıcı kaydırma */
         }
 
         /* Başlıklar için renk güncellemesi */
@@ -263,28 +294,8 @@
         #side-menu button:hover {
             background-color: rgba(255, 255, 255, 0.1);
         }
-        #menu-toggle-btn {
-            position: fixed;
-            top: 1.5rem;
-            left: 1.5rem;
-            background-color: #a78bfa; /* Mor tonunda buton */
-            color: #ffffff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5em;
-            cursor: pointer;
-            z-index: 10500;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-            transition: background-color 0.2s;
-        }
-        #menu-toggle-btn:hover {
-            background-color: #8b5cf6;
-        }
-        #menu-close-btn {
+        /* Menü içindeki kapat butonu, header'daki ile karışmaması için farklı ID */
+        #menu-close-btn-side {
             align-self: flex-end; /* Sağ üst köşeye hizala */
             background-color: transparent;
             border: none;
@@ -322,27 +333,29 @@
         </div>
     </div>
 
-    <!-- Hamburger Menü Butonu -->
-    <button id="menu-toggle-btn" class="fixed top-6 left-6 z-10500">☰</button>
+    <!-- Sabit Uygulama Başlığı -->
+    <header id="app-header">
+        <div class="flex items-center">
+            <button id="menu-toggle-btn-header" class="text-white text-xl mr-2">☰</button>
+            <span class="title">Çarkıfelek Uygulaması</span>
+        </div>
+        <div class="user-info-display">
+            <p id="user-info-header" class="text-sm font-semibold">Yükleniyor...</p>
+            <p id="points-display-header" class="points-display">Puan: 0</p>
+        </div>
+    </header>
 
     <!-- Yan Menü (Side Menu) -->
     <div id="side-menu">
-        <button id="menu-close-btn">×</button>
+        <button id="menu-close-btn-side">×</button>
         <h2 class="text-2xl font-bold mb-6">Menü</h2>
         <button id="show-mini-games" class="mb-3">Oyunlar</button>
         <button id="show-wheel">Bonus Çarkı</button>
         <!-- Gelecekteki menü öğeleri buraya eklenebilir -->
     </div>
 
-    <div id="app-container" class="rounded-lg shadow-xl p-8 text-center hidden space-y-6">
-        <h1 class="text-3xl font-bold mb-2">Bonus Çarkı Uygulaması</h1>
-        <p class="text-sm text-gray-600 mb-6">Puan kazanmak ve bonus kodları almak için oyna!</p>
-        
-        <!-- Kullanıcı Bilgisi -->
-        <div class="bg-gray-100 p-4 rounded-lg">
-            <p id="user-info" class="text-sm font-semibold mb-2">Yükleniyor...</p>
-            <p id="points-display" class="text-2xl font-bold">Puan: 0</p>
-        </div>
+    <div id="app-container" class="rounded-lg shadow-xl text-center hidden space-y-6">
+        <!-- Başlık ve açıklama artık header'da -->
         
         <!-- Mini Oyunlar Bölümü -->
         <section id="mini-games-section">
@@ -428,9 +441,10 @@
         ];
 
         // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
-        let loadingScreen, appContainer, userInfoElement, pointsDisplay, gameButton, spinButton, bonusCodesList, messageBox, wheel, closeButton;
+        let loadingScreen, appContainer, messageBox, wheel, closeButton;
         let usernameModal, usernameInput, saveUsernameBtn; // Kullanıcı adı modalı elementleri
-        let sideMenu, menuToggleBtn, menuCloseBtn, showMiniGamesBtn, showWheelBtn; // Yeni menü elementleri
+        let appHeader, userInfoHeader, pointsDisplayHeader, menuToggleBtnHeader; // Yeni header elementleri
+        let sideMenu, menuCloseBtnSide, showMiniGamesBtn, showWheelBtn; // Yeni menü elementleri
         let miniGamesSection, wheelSection; // Yeni bölüm elementleri
 
 
@@ -561,13 +575,15 @@
         
         // UI'ı verilerle güncelleme
         function updateUI(data) {
-            pointsDisplay.textContent = `Puan: ${data.points}`;
+            // Header'daki puan ve kullanıcı adını güncelle
+            if (pointsDisplayHeader) pointsDisplayHeader.textContent = `Puan: ${data.points}`;
             
-            // Kullanıcı adını göster
-            if (data.username) {
-                userInfoElement.textContent = `Kullanıcı: ${data.username}`;
-            } else {
-                userInfoElement.textContent = `Kullanıcı Kimliği: ${userId}`;
+            if (userInfoHeader) {
+                if (data.username) {
+                    userInfoHeader.textContent = `Kullanıcı: ${data.username}`;
+                } else {
+                    userInfoHeader.textContent = `Kullanıcı Kimliği: ${userId}`;
+                }
             }
             
             // Bonus kodlarını listele
@@ -659,11 +675,6 @@
             // HTML elemanlarını DOM yüklendikten sonra al ve global değişkenlere ata
             loadingScreen = document.getElementById('loading-screen');
             appContainer = document.getElementById('app-container');
-            userInfoElement = document.getElementById('user-info');
-            pointsDisplay = document.getElementById('points-display');
-            gameButton = document.getElementById('game-button');
-            spinButton = document.getElementById('spin-button');
-            bonusCodesList = document.getElementById('bonus-codes-list');
             messageBox = document.getElementById('message-box');
             wheel = document.getElementById('wheel');
             closeButton = document.getElementById('close-button');
@@ -671,17 +682,36 @@
             usernameInput = document.getElementById('username-input'); // Yeni input
             saveUsernameBtn = document.getElementById('save-username-btn'); // Yeni buton
 
+            // Yeni header elementlerini ata
+            appHeader = document.getElementById('app-header');
+            userInfoHeader = document.getElementById('user-info-header');
+            pointsDisplayHeader = document.getElementById('points-display-header');
+            menuToggleBtnHeader = document.getElementById('menu-toggle-btn-header'); // Header içindeki menü butonu
+
             // Yeni menü elementlerini ata
             sideMenu = document.getElementById('side-menu');
-            menuToggleBtn = document.getElementById('menu-toggle-btn');
-            menuCloseBtn = document.getElementById('menu-close-btn');
+            menuCloseBtnSide = document.getElementById('menu-close-btn-side'); // Yan menüdeki kapat butonu
             showMiniGamesBtn = document.getElementById('show-mini-games');
             showWheelBtn = document.getElementById('show-wheel');
             miniGamesSection = document.getElementById('mini-games-section');
             wheelSection = document.getElementById('wheel-section');
 
+            // Header içindeki menü butonu için olay dinleyici
+            if (menuToggleBtnHeader) {
+                menuToggleBtnHeader.addEventListener('click', () => {
+                    if (sideMenu) sideMenu.classList.toggle('open');
+                });
+            } else {
+                console.error("Hata: menuToggleBtnHeader HTML elementi bulunamadı!");
+            }
 
             // DOM elemanları atandıktan sonra olay dinleyicilerini ekle
+            // gameButton ve spinButton tanımlamalarını güncelleyelim, bunlar app-container içinde olduğu için
+            // document.getElementById ile doğrudan alınabilir, veya daha sonra section'lar görünür olduğunda.
+            // Bu sefer appContainer içinde oldukları için direkt alabiliyoruz.
+            const gameButton = document.getElementById('game-button');
+            const spinButton = document.getElementById('spin-button');
+
             if (gameButton) { 
                 gameButton.addEventListener('click', async () => {
                     if (!userId) {
@@ -789,14 +819,9 @@
                 console.error("Hata: saveUsernameBtn HTML elementi bulunamadı!");
             }
 
-            // Menü olay dinleyicileri
-            if (menuToggleBtn) {
-                menuToggleBtn.addEventListener('click', () => {
-                    if (sideMenu) sideMenu.classList.toggle('open');
-                });
-            }
-            if (menuCloseBtn) {
-                menuCloseBtn.addEventListener('click', () => {
+            // Yan menüdeki kapat butonu için olay dinleyici
+            if (menuCloseBtnSide) {
+                menuCloseBtnSide.addEventListener('click', () => {
                     if (sideMenu) sideMenu.classList.remove('open');
                 });
             }
@@ -809,7 +834,8 @@
 
             // Dışarı tıklayınca menüyü kapatma
             document.addEventListener('click', (event) => {
-                if (sideMenu && menuToggleBtn && !sideMenu.contains(event.target) && !menuToggleBtn.contains(event.target) && sideMenu.classList.contains('open')) {
+                // Sadece sideMenu ve menuToggleBtnHeader tanımlıysa ve menü açıksa kontrol et
+                if (sideMenu && menuToggleBtnHeader && !sideMenu.contains(event.target) && !menuToggleBtnHeader.contains(event.target) && sideMenu.classList.contains('open')) {
                     sideMenu.classList.remove('open');
                 }
             });
