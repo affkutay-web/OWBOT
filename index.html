@@ -829,7 +829,7 @@
                                 if (usernameModal) openModal(usernameModal);
                             } else {
                                 // Kullanıcı adı zaten ayarlı, ana uygulamayı göster
-                                loadingScreen.style.display = 'none';
+                                loadingScreen.style.display = 'flex'; // 'none' yerine 'flex'
                                 if (homePageContent) homePageContent.style.display = 'flex';
                                 listenForDataChanges();
                                 fetchLeaderboard(); // Liderlik tablosunu yükle
@@ -953,8 +953,7 @@
                 // Sadece kullanıcı adı olan ve en yüksek puana sahip ilk 10 kullanıcıyı getir
                 const leaderboardSnapshot = await db.collection(`artifacts/${appId}/public/data/game_data`)
                     .where('username', '!=', null) // Kullanıcı adı olmayanları filtrele
-                    .orderBy('username') // Firestore orderBy kısıtlaması için (eğer 'points' ile birlikte kullanılırsa index gerekir)
-                    .orderBy('points', 'desc')
+                    .orderBy('points', 'desc') // Sadece puanlara göre azalan sırada sırala
                     .limit(10)
                     .get();
 
