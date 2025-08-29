@@ -22,24 +22,23 @@
     <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
     <style>
         /* Varsayılan fontu ayarlama */
-        html {
-            height: 100%; /* HTML'in tam yüksekliği almasını sağlar */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%; /* Ensure they take full height */
+            width: 100%;
+            box-sizing: border-box; /* Include padding/border in total width/height */
         }
         body {
-            height: 100%; /* Body'nin tam yüksekliği almasını sağlar */
-            width: 100%;
-            margin: 0;
-            padding: 1.5rem; /* Genel padding ekle */
             font-family: 'Inter', sans-serif;
             background-color: #4b0082; /* Ana tema arkaplanı mor */
             color: #ffffff; /* Varsayılan yazılar beyaz */
             display: flex;
-            flex-direction: column; /* İçeriği dikeyde sırala */
-            align-items: center; /* Yatayda ortala */
-            justify-content: flex-start; /* İçeriği dikeyde yukarıdan başlat */
-            overflow-y: auto; /* Dikeyde kaydırmaya izin ver */
-            overflow-x: hidden; /* Yatayda kaydırmayı engelle */
-            box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
+            flex-direction: column; /* Stack children vertically */
+            align-items: center; /* Center children horizontally */
+            justify-content: flex-start; /* Start content from the top */
+            overflow-y: auto; /* Allow vertical scrolling */
+            overflow-x: hidden; /* Crucial: hide horizontal overflow */
         }
         .telegram-btn {
             background-color: var(--tg-theme-button-color, #a78bfa); /* Telegram tema butonu veya mor bir ton */
@@ -163,7 +162,7 @@
             flex-shrink: 0; /* İçeriğin büyümesini engelleme */
             width: 100%;
             max-width: 600px; /* Daha geniş cihazlarda daha iyi görünüm */
-            margin: auto; /* Yatayda ortala, dikey margin body padding'i tarafından yönetiliyor */
+            margin: 1.5rem auto; /* Üstte ve altta boşluk bırak, yatayda ortala */
             padding: 1.5rem; /* İç padding */
             box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
             background-color: #1a1a1a; /* Uygulama kapsayıcısı için koyu siyah */
@@ -172,11 +171,6 @@
             display: flex; /* İçeriği dikeyde düzenlemek için flex kullan */
             flex-direction: column; /* İçeriği sütun olarak sırala */
             flex-grow: 1; /* Mevcut alanı doldurmasını sağla */
-        }
-
-        /* Puan göstergesi için renk güncellemesi */
-        #points-display {
-            color: #fcd34d; /* Sarımsı bir renk seçildi, mor/siyah ile iyi kontrast sağlar */
         }
 
         /* Başlıklar için renk güncellemesi */
@@ -303,6 +297,11 @@
         /* Bölümler arası boşluk için Tailwind yardımcı sınıfı */
         .space-y-6 > :not([hidden]) ~ :not([hidden]) {
             margin-top: 1.5rem; /* 24px */
+        }
+
+        /* Section'lar için ek stil - Tam genişliği kaplamalarını sağlar */
+        section {
+            width: 100%;
         }
     </style>
 </head>
@@ -825,3 +824,17 @@
     </script>
 </body>
 </html>
+```
+
+---
+
+### Nasıl Devam Etmelisiniz?
+
+1.  **Canvas'ı Güncelleyin:** Yukarıdaki **tüm kodu** kopyalayıp Canvas'taki `telegram_web_app_example` belgesinin içeriğiyle değiştirin.
+2.  **TARAYICI ÖNBELLEĞİNİ TEMİZLEYİN VE SERT YENİLEME YAPIN!** Bu, güncel CSS ve JavaScript dosyalarının yüklendiğinden emin olmak için **KRİTİK BİR ADIMDIR.**
+    * **Windows/Linux:** `Ctrl + Shift + R` veya `Ctrl + F5`
+    * **Mac:** `Cmd + Shift + R`
+    * Gizli (Incognito) modda denemek de iyi bir çözümdür.
+3.  **Uygulamayı Test Edin:** Yeni düzenlemelerle birlikte uygulamanızı farklı ekran boyutlarında (mobil ve masaüstü tarayıcıda pencere boyutunu değiştirerek) test edin. İçeriklerin hala yan yana kayıp kaymadığını ve dikeyde düzgün kaydırılıp kaydırılamadığını kontrol edin.
+
+Bu değişiklikler, sorunu çözmeli ve uygulamanızın beklediğiniz gibi görünmesini sağlamalıdır. Eğer hala bir sorunla karşılaşırsanız, lütfen tarayıcı konsolundaki **en yeni hata mesajlarının tamamını** ve uygulamanın anlık ekran görüntüsünü benimle paylaş
