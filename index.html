@@ -341,6 +341,17 @@
             padding: 1.5rem;
             border-radius: 0.75rem;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            display: flex; /* İçindeki oyunları da flex ile sırala */
+            flex-direction: column;
+            gap: 1.5rem; /* Oyunlar arası boşluk */
+        }
+        /* Tekil oyun divleri için stil */
+        .game-card {
+            background-color: #4a007a; /* Daha açık mor arkaplan */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px -1px rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+            text-align: center;
         }
 
         /* Bonus Kodları bölümü stili */
@@ -373,7 +384,6 @@
     <!-- Sabit Uygulama Başlığı -->
     <header id="app-header">
         <div class="flex items-center">
-            <!-- Menü butonu kaldırıldı, ana sayfa üzerinden yönlendirme -->
             <span class="title">Çarkıfelek Uygulaması</span>
         </div>
         <div class="user-info-display">
@@ -394,12 +404,22 @@
                 <p class="text-sm text-gray-600 mb-4">Puan toplamak için farklı oyun seçenekleri.</p>
                 
                 <!-- Mevcut Mini Oyun: Hızlı Tıkla! -->
-                <div class="mb-4">
+                <div class="game-card">
                     <h3 class="text-lg font-semibold text-white mb-2">Hızlı Tıkla!</h3>
                     <p class="text-sm text-gray-600 mb-3">Butona her tıkladığınızda 10 puan kazanırsınız.</p>
                     <button id="game-button" class="telegram-btn w-full py-3 transition duration-200 hover:opacity-80">
                         <span id="game-button-text">Puan Kazan (+10)</span>
                     </button>
+                </div>
+
+                <!-- Yeni Mini Oyun: Sayı Tahmin Oyunu -->
+                <div class="game-card">
+                    <h3 class="text-lg font-semibold text-white mb-2">Sayı Tahmin Oyunu</h3>
+                    <p class="text-sm text-gray-600 mb-3">1 ile 100 arasında bir sayı tuttum. 7 tahmin hakkın var!</p>
+                    <input type="number" id="guess-input" class="w-full p-2 mb-3 rounded-md bg-gray-700 text-white border-none text-center" placeholder="Tahminini gir (1-100)">
+                    <button id="submit-guess-button" class="telegram-btn w-full py-2 mb-2 transition duration-200 hover:opacity-80">Tahmin Et</button>
+                    <p id="guess-feedback" class="text-sm text-gray-400 mb-3"></p>
+                    <button id="new-game-button" class="telegram-btn bg-gray-500 hover:bg-gray-600 w-full py-2 transition duration-200 hover:opacity-80 hidden">Yeni Oyun Başlat</button>
                 </div>
             </section>
             
@@ -480,6 +500,14 @@
         let appWrapper, homePageContent, wheelCard, gameButton, bonusCodesListSection, bonusCodesList;
         let wheelModal, wheelModalCloseBtn, wheelElement, spinButton;
         let messageBoxHome, messageBoxModal;
+
+        // Sayı Tahmin Oyunu Elemanları ve Değişkenleri
+        let guessInput, submitGuessButton, guessFeedback, newGameButton;
+        let targetNumber, attemptsLeft, gameOver;
+        const MAX_ATTEMPTS = 7;
+        const MIN_NUM = 1;
+        const MAX_NUM = 100;
+        const GUESS_GAME_WIN_POINTS = 50;
 
 
         // Kullanıcıya mesaj göstermek için özel fonksiyon (iki ayrı mesaj kutusu için)
@@ -692,6 +720,68 @@
             }
         }
 
+        // Sayı Tahmin Oyunu Mantığı
+        function startGame() {
+            targetNumber = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
+            attemptsLeft = MAX_ATTEMPTS;
+            gameOver = false;
+            guessInput.value = '';
+            guessInput.disabled = false;
+            submitGuessButton.disabled = false;
+            newGameButton.classList.add('hidden');
+            updateGuessFeedback(`Kalan tahmin hakkı: ${attemptsLeft}`);
+            console.log("Yeni oyun başladı. Hedef sayı:", targetNumber); // Sadece geliştirme için
+        }
+
+        function updateGuessFeedback(message, isError = false) {
+            guessFeedback.textContent = message;
+            guessFeedback.style.color = isError ? '#dc3545' : '#ffffff';
+        }
+
+        async function checkGuess() {
+            if (gameOver) return;
+
+            const guess = parseInt(guessInput.value);
+
+            if (isNaN(guess) || guess < MIN_NUM || guess > MAX_NUM) {
+                updateGuessFeedback(`Lütfen ${MIN_NUM} ile ${MAX_NUM} arasında geçerli bir sayı girin.`, true);
+                return;
+            }
+
+            attemptsLeft--;
+
+            if (guess === targetNumber) {
+                updateGuessFeedback(`Tebrikler! Sayıyı ${MAX_ATTEMPTS - attemptsLeft} tahminde buldun! (+${GUESS_GAME_WIN_POINTS} Puan)`, false);
+                gameOver = true;
+                guessInput.disabled = true;
+                submitGuessButton.disabled = true;
+                newGameButton.classList.remove('hidden');
+                
+                // Puanı Firestore'a kaydet
+                try {
+                    const docSnap = await userDocRef.get();
+                    await userDocRef.update({
+                        points: (docSnap.data().points || 0) + GUESS_GAME_WIN_POINTS
+                    });
+                    showMessage(`${GUESS_GAME_WIN_POINTS} puan kazandın!`, false, 'message-box-home');
+                } catch (e) {
+                    console.error("Puan güncellenirken hata oluştu: ", e);
+                    showMessage("Puan kaydedilirken bir hata oluştu.", true, 'message-box-home');
+                }
+
+            } else if (attemptsLeft === 0) {
+                updateGuessFeedback(`Üzgünüm, tahmin hakkın kalmadı! Sayı ${targetNumber} idi.`, true);
+                gameOver = true;
+                guessInput.disabled = true;
+                submitGuessButton.disabled = true;
+                newGameButton.classList.remove('hidden');
+            } else {
+                const hint = guess < targetNumber ? 'daha yüksek' : 'daha düşük';
+                updateGuessFeedback(`Yanlış! Sayı ${hint}. Kalan tahmin hakkı: ${attemptsLeft}`);
+            }
+            guessInput.value = ''; // Tahmin kutusunu temizle
+        }
+
 
         // Uygulama yüklendiğinde başlat
         document.addEventListener('DOMContentLoaded', () => { 
@@ -704,12 +794,11 @@
             appHeader = document.getElementById('app-header');
             userInfoHeader = document.getElementById('user-info-header');
             pointsDisplayHeader = document.getElementById('points-display-header');
-            // menuToggleBtnHeader kaldırıldı
 
             appWrapper = document.getElementById('app-wrapper');
             homePageContent = document.getElementById('home-page-content');
             wheelCard = document.getElementById('wheel-card');
-            gameButton = document.getElementById('game-button');
+            gameButton = document.getElementById('game-button'); // Hızlı Tıkla! butonu
             bonusCodesListSection = document.getElementById('bonus-codes-list-section');
             bonusCodesList = document.getElementById('bonus-codes-list');
             messageBoxHome = document.getElementById('message-box-home');
@@ -719,6 +808,12 @@
             wheelElement = document.getElementById('wheel'); // Çarkın kendisi
             spinButton = document.getElementById('spin-button');
             messageBoxModal = document.getElementById('message-box-modal'); // Modal içindeki mesaj kutusu
+
+            // Sayı Tahmin Oyunu Elemanlarını ata
+            guessInput = document.getElementById('guess-input');
+            submitGuessButton = document.getElementById('submit-guess-button');
+            guessFeedback = document.getElementById('guess-feedback');
+            newGameButton = document.getElementById('new-game-button');
 
 
             // Kullanıcı adı kaydetme butonu için olay dinleyici
@@ -847,6 +942,16 @@
             } else {
                 console.error("Hata: wheelElement HTML elementi bulunamadı!");
             }
+
+            // Sayı Tahmin Oyunu Olay Dinleyicileri
+            if (submitGuessButton) {
+                submitGuessButton.addEventListener('click', checkGuess);
+            }
+            if (newGameButton) {
+                newGameButton.addEventListener('click', startGame);
+            }
+            // Oyunu başlat
+            startGame();
             
             initializeFirebase();
         });
