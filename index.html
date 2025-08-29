@@ -372,7 +372,7 @@
             <button id="spin-button" class="telegram-btn w-full py-3 mt-6 transition duration-200 hover:opacity-80 disabled:opacity-50" disabled>
                 <span id="spin-button-text">Çarkı Çevir (100 Puan)</span>
             </button>
-        </section>
+        </div>
         
         <!-- Bonus Kodları Bölümü -->
         <div>
@@ -515,16 +515,18 @@
                             // Kullanıcı adı modalını göster
                             loadingScreen.style.display = 'none';
                             if (usernameModal) usernameModal.style.display = 'flex';
-                        } else if (!docSnap.data().username) {
-                            // Kullanıcı var ama kullanıcı adı ayarlı değil
-                            loadingScreen.style.display = 'none';
-                            if (usernameModal) usernameModal.style.display = 'flex';
-                        }
-                        else {
-                            // Kullanıcı adı zaten ayarlı, ana uygulamayı göster
-                            loadingScreen.style.display = 'none';
-                            if (appContainer) appContainer.style.display = 'flex'; // 'block' yerine 'flex'
-                            listenForDataChanges();
+                        } else {
+                            const userData = docSnap.data();
+                            if (!userData.username) {
+                                // Kullanıcı var ama kullanıcı adı ayarlı değil
+                                loadingScreen.style.display = 'none';
+                                if (usernameModal) usernameModal.style.display = 'flex';
+                            } else {
+                                // Kullanıcı adı zaten ayarlı, ana uygulamayı göster
+                                loadingScreen.style.display = 'none';
+                                if (appContainer) appContainer.style.display = 'flex'; // 'block' yerine 'flex'
+                                listenForDataChanges();
+                            }
                         }
                     } else {
                         // Eğer kimlik doğrulama başarısız olursa, bir hata mesajı göster
@@ -592,14 +594,22 @@
             console.log("Kullanıcı adı doğrulama başarılı:", username);
 
             try {
-                // Kullanıcı adının benzersizliğini kontrol et (basit bir yaklaşım)
+                // Kullanıcı adının benzersizliğini kontrol et (ve mevcut kullanıcının kendi adı olup olmadığını)
                 const usernameQuery = await db.collection(`artifacts/${appId}/public/data/game_data`).where('username', '==', username).get();
+                
                 if (!usernameQuery.empty) {
-                    showMessage("Bu kullanıcı adı zaten alınmış, lütfen başka bir tane dene.", true);
-                    console.log("Kullanıcı adı benzersizlik kontrolü başarısız.");
-                    return;
+                    // Bu kullanıcı adını kullanan bir belge bulundu
+                    const existingUserDoc = usernameQuery.docs[0];
+                    if (existingUserDoc.id !== userId) {
+                        // Eğer bu kullanıcı adı başka bir kullanıcıya aitse
+                        showMessage("Bu kullanıcı adı zaten alınmış, lütfen başka bir tane dene.", true);
+                        console.log("Kullanıcı adı başka bir kullanıcı tarafından alınmış.");
+                        return;
+                    }
+                    // Eğer bu kullanıcı adı mevcut kullanıcının kendisiyse, devam et.
+                    console.log("Kullanıcı adı mevcut kullanıcının kendi adı.");
                 }
-                console.log("Kullanıcı adı benzersizlik kontrolü başarılı.");
+                console.log("Kullanıcı adı benzersizlik kontrolü başarılı veya mevcut kullanıcıya ait.");
 
                 await userDocRef.update({ username: username });
                 console.log("Firestore'a kullanıcı adı başarıyla güncellendi.");
@@ -798,7 +808,12 @@
                 }
             });
 
-            createWheel(); // createWheel çağrısı wheel elementi atandıktan sonra yapılmalı
+            // createWheel çağrısı wheel elementi atandıktan sonra yapılmalı
+            // createWheel çağrılmadan önce wheel elementinin DOM'da mevcut olması gerekir.
+            // Bu nedenle, initializeFirebase'in içindeki onAuthStateChanged bloğunda veya
+            // uygulamanın ilk açılışında çağrılmalıdır.
+            // Şu anki yerinde sorun olmaması için DOMContentLoaded içinde kalabilir.
+            createWheel(); 
             initializeFirebase();
 
             // Uygulama yüklendiğinde varsayılan olarak Mini Oyunlar bölümünü göster
