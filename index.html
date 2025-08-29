@@ -213,6 +213,14 @@
         #app-header .user-info-display {
             text-align: right;
             font-size: 0.9rem;
+            display: flex; /* İçindeki öğeleri yatayda sıralamak için */
+            align-items: center; /* Dikeyde ortala */
+            gap: 0.75rem; /* Resim ve metin arasına boşluk */
+        }
+        #app-header .user-info-text { /* Kullanıcı adı ve puan için yeni kapsayıcı */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; /* Metni sağa yasla */
         }
         #app-header .points-display {
             font-size: 1.25rem; /* Daha büyük puan yazısı */
@@ -224,6 +232,18 @@
             color: #fcd34d;
             margin-right: 0.4rem;
         }
+        #user-profile-pic { /* Kullanıcı profil resmi için stil */
+            width: 40px;
+            height: 40px;
+            border-radius: 50%; /* Yuvarlak profil resmi */
+            background-color: #555; /* Varsayılan arka plan */
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #a78bfa; /* Mor çerçeve */
+            box-shadow: 0 0 8px rgba(167, 139, 250, 0.6); /* Hafif parlama */
+            flex-shrink: 0; /* Küçülmesini engelle */
+        }
+
 
         #app-wrapper {
             flex-grow: 1; /* Kalan tüm dikey boşluğu doldur */
@@ -614,16 +634,17 @@
         <p class="text-sm">Bağlanıyor...</p>
     </div>
 
-    <!-- Kullanıcı Adı Belirleme Modalı (Artık kullanılmıyor, kaldırıldı) -->
-
     <!-- Sabit Uygulama Başlığı -->
     <header id="app-header">
         <div class="flex items-center">
             <span class="title">Çarkıfelek Uygulaması</span>
         </div>
         <div class="user-info-display">
-            <p id="user-info-header" class="text-sm font-semibold">Yükleniyor...</p>
-            <p id="points-display-header" class="points-display"><i class="fa-solid fa-coins"></i> Puan: 0</p>
+            <div id="user-profile-pic"></div> <!-- Kullanıcı profil resmi -->
+            <div class="user-info-text">
+                <p id="user-info-header" class="text-sm font-semibold">Yükleniyor...</p>
+                <p id="points-display-header" class="points-display"><i class="fa-solid fa-coins"></i> Puan: 0</p>
+            </div>
         </div>
     </header>
 
@@ -809,6 +830,7 @@
 
         let db, auth, userId, userDocRef;
         let isSpinning = false;
+        let userProfilePicUrl = null; // Kullanıcının profil resmi URL'si için yeni değişken
         
         // Bonus çarkı için bölümler - Mor ve siyah tonlarında güncellendi
         const segments = [
@@ -824,8 +846,7 @@
 
         // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
         let loadingScreen;
-        // Kullanıcı adı modali kaldırıldığı için bu değişkenler artık yok: usernameModal, usernameInput, saveUsernameBtn;
-        let appHeader, userInfoHeader, pointsDisplayHeader;
+        let appHeader, userInfoHeader, pointsDisplayHeader, userProfilePic; // userProfilePic eklendi
         let appWrapper, homePageContent, messageBoxHome;
         
         // Tab navigasyonu elemanları
@@ -965,6 +986,10 @@
                             } else {
                                 telegramUsername = `Kullanıcı_${tgUser.id}`; 
                             }
+                            // Kullanıcının profil resmini al
+                            if (tgUser.photo_url) {
+                                userProfilePicUrl = tgUser.photo_url;
+                            }
                         }
 
                         if (!docSnap.exists) { 
@@ -1024,6 +1049,16 @@
                 }
             }
             
+            // Profil resmini güncelle
+            if (userProfilePic) {
+                if (userProfilePicUrl) {
+                    userProfilePic.style.backgroundImage = `url('${userProfilePicUrl}')`;
+                } else {
+                    userProfilePic.style.backgroundImage = 'none'; // Resim yoksa temizle
+                    userProfilePic.style.backgroundColor = '#555'; // Varsayılan gri arkaplan
+                }
+            }
+
             // Bonus kodlarını listele
             if (bonusCodesList) {
                 bonusCodesList.innerHTML = '';
@@ -1214,11 +1249,11 @@
         document.addEventListener('DOMContentLoaded', () => { 
             // HTML elemanlarını DOM yüklendikten sonra al ve global değişkenlere ata
             loadingScreen = document.getElementById('loading-screen');
-            // usernameModal, usernameInput, saveUsernameBtn artık kullanılmıyor.
 
             appHeader = document.getElementById('app-header');
             userInfoHeader = document.getElementById('user-info-header');
             pointsDisplayHeader = document.getElementById('points-display-header');
+            userProfilePic = document.getElementById('user-profile-pic'); // Yeni profil resmi elemanı
 
             appWrapper = document.getElementById('app-wrapper');
             homePageContent = document.getElementById('home-page-content');
@@ -1279,8 +1314,6 @@
             rpsResultDisplayText = document.getElementById('rps-result-display-text');
             rpsPlayAgainButton = document.getElementById('rps-play-again-button');
             messageBoxRpsGameModal = document.getElementById('message-box-rps-game-modal');
-
-            // Kullanıcı adı kaydetme butonu için olay dinleyici (Kaldırıldı)
 
             // Sekme butonları için olay dinleyicileri
             tabButtons.forEach(button => {
