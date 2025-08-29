@@ -28,7 +28,7 @@
             height: 100%; /* Tüm yüksekliği kaplamalarını sağla */
             width: 100%;
             box-sizing: border-box; /* Padding/border'ı toplam genişlik/yüksekliğe dahil et */
-            overflow: hidden; /* Body'nin kaydırmasını engelle, kaydırma app-wrapper'da olacak */
+            overflow-x: hidden; /* Sadece yatay kaydırmayı engelle, dikey kaydırmaya izin ver */
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -44,13 +44,13 @@
             background-color: var(--tg-theme-button-color, #a78bfa); /* Telegram tema butonu veya mor bir ton */
             color: var(--tg-theme-button-text-color, #ffffff);
             /* Daha dinamik bir düğme görünümü için gölge ve hafif kabartma */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), 0 2px 5px rgba(0, 0, 0, 0.1), inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 3px 8px rgba(0, 0, 0, 0.15), inset 0 -3px 0 rgba(0, 0, 0, 0.2); /* Daha güçlü gölge */
             border-radius: 0.75rem; /* Daha yuvarlak köşeler */
             transition: all 0.2s ease-in-out; /* Yumuşak geçişler */
         }
         .telegram-btn:hover {
-            transform: translateY(-2px); /* Hafif yukarı kalkma efekti */
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 3px 8px rgba(0, 0, 0, 0.15), inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px); /* Hafif yukarı kalkma efekti */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 -4px 0 rgba(0, 0, 0, 0.25); /* Daha da güçlü gölge */
         }
         .telegram-btn:disabled {
             background-color: #555; /* Gri tonu */
@@ -203,20 +203,20 @@
             height: 60px; /* Başlık için sabit yükseklik */
         }
         #app-header .title {
-            font-size: 1.6rem; /* Biraz daha büyük başlık */
+            font-size: 1.7rem; /* Biraz daha büyük başlık */
             font-weight: 900;
-            letter-spacing: 0.05em; /* Harf aralığı */
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            letter-spacing: 0.08em; /* Harf aralığı */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.7); /* Daha belirgin gölge */
         }
         #app-header .user-info-display {
             text-align: right;
             font-size: 0.9rem;
         }
         #app-header .points-display {
-            font-size: 1.2rem; /* Daha büyük puan yazısı */
+            font-size: 1.25rem; /* Daha büyük puan yazısı */
             font-weight: bold;
             color: #fcd34d; /* Sarımsı renk puanlar için */
-            text-shadow: 0 0 5px rgba(252, 211, 77, 0.5); /* Hafif parlama */
+            text-shadow: 0 0 8px rgba(252, 211, 77, 0.7); /* Hafif parlama */
         }
 
         #app-wrapper {
@@ -233,30 +233,34 @@
         }
 
         #home-page-content {
-            padding: 1.5rem; /* İç padding */
+            padding: 1.5rem 1rem; /* İç padding: dikey 1.5rem, yatay 1rem */
             background-color: rgba(26, 26, 26, 0.8); /* Uygulama kapsayıcısı için koyu şeffaf */
-            border-radius: 0.75rem; /* Daha belirgin yuvarlak köşeler */
-            margin: 1.5rem; /* app-wrapper içinde üstten alttan boşluk */
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5); /* Daha büyük ve derin gölge */
+            border-radius: 1rem; /* Daha belirgin yuvarlak köşeler */
+            margin: 0; /* Artık dış margin yok, app-wrapper yönetecek */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); /* Daha büyük ve derin gölge */
             display: flex;
             flex-direction: column;
             gap: 1.5rem; /* Bölümler arası boşluk */
             align-items: center; /* İçerikleri yatayda ortala */
             flex-grow: 1; /* Home page içeriğinin de kendi içinde büyümesini sağlar */
-            backdrop-filter: blur(8px); /* Hafif bulanıklık efekti */
-            border: 1px solid rgba(255, 255, 255, 0.1); /* İnce beyaz kenarlık */
+            backdrop-filter: blur(10px); /* Hafif bulanıklık efekti */
+            border: 1px solid rgba(255, 255, 255, 0.15); /* İnce beyaz kenarlık */
         }
         
         /* Başlıklar için renk güncellemesi */
         h1, h2 {
             color: #fcd34d; /* Başlıklar sarımsı olsun */
             font-weight: 900; /* Daha kalın ve etkileyici */
-            text-shadow: 0 0 8px rgba(252, 211, 77, 0.6); /* Hafif parlama */
+            text-shadow: 0 0 10px rgba(252, 211, 77, 0.8); /* Hafif parlama */
+            font-size: 2.5rem; /* H1 için daha büyük */
+        }
+        h2 {
+            font-size: 2rem; /* H2 için daha büyük */
         }
 
         /* Tüm küçük yazıları beyaz yapalım */
         .text-gray-600 {
-            color: #e0e0e0; /* Daha açık gri tonu, daha okunabilir */
+            color: #e8e8e8; /* Daha açık gri tonu, daha okunabilir */
         }
 
         /* Kullanıcı adı giriş modal stili */
@@ -338,7 +342,7 @@
             text-align: center;
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); /* Daha büyük gölge */
             max-width: 90%;
-            width: 400px; /* Modal için sabit genişlik */
+            width: min(400px, 95vw); /* Responsive genişlik */
             position: relative; /* Mesaj kutusu için göreceli konum */
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
@@ -367,12 +371,12 @@
             transition: all 0.3s ease-in-out; /* Yumuşak geçişler */
             max-width: 300px; /* Orta boyutlu kart */
             width: 100%; /* Mobil uyumluluk */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), inset 0 2px 5px rgba(255, 255, 255, 0.1); /* Daha belirgin ve iç gölge */
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4), inset 0 3px 8px rgba(255, 255, 255, 0.15); /* Daha belirgin ve iç gölge */
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
         .game-card-homepage:hover {
-            transform: translateY(-8px) scale(1.02); /* Daha belirgin büyüme ve kalkma */
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), inset 0 2px 8px rgba(255, 255, 255, 0.2);
+            transform: translateY(-10px) scale(1.03); /* Daha belirgin büyüme ve kalkma */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 3px 10px rgba(255, 255, 255, 0.25);
         }
         .game-card-homepage img {
             width: 100px; /* Resim boyutu */
@@ -381,12 +385,12 @@
             border-radius: 50%; /* Yuvarlak resim */
             object-fit: cover;
             border: 3px solid #fcd34d; /* Sarımsı çerçeve */
-            box-shadow: 0 0 15px rgba(252, 211, 77, 0.5); /* Resme parlama efekti */
+            box-shadow: 0 0 18px rgba(252, 211, 77, 0.7); /* Resme parlama efekti */
             transition: all 0.3s ease-in-out;
         }
         .game-card-homepage:hover img {
-            transform: scale(1.05); /* Hover'da resmin de büyümesi */
-            box-shadow: 0 0 20px rgba(252, 211, 77, 0.8);
+            transform: scale(1.07); /* Hover'da resmin de büyümesi */
+            box-shadow: 0 0 25px rgba(252, 211, 77, 0.9);
         }
         
         /* Mini Oyunlar bölümü stili */
@@ -1141,7 +1145,47 @@
             messageBoxWheelModal = document.getElementById('message-box-wheel-modal');
 
             fastClickModal = document.getElementById('fast-click-modal');
-            fastClickModalCloseBtn = document => {
+            fastClickModalCloseBtn = document.getElementById('fast-click-modal-close-btn');
+            messageBoxFastClickModal = document.getElementById('message-box-fast-click-modal');
+            fastClickGameButton = document.getElementById('fast-click-game-button'); // ID güncellendi
+
+            guessGameModal = document.getElementById('guess-game-modal');
+            guessGameModalCloseBtn = document.getElementById('guess-game-modal-close-btn');
+            guessGameInput = document.getElementById('guess-game-input'); // ID güncellendi
+            guessGameSubmitButton = document.getElementById('guess-game-submit-button'); // ID güncellendi
+            guessGameFeedback = document.getElementById('guess-game-feedback'); // ID güncellendi
+            guessGameNewButton = document.getElementById('guess-game-new-button'); // ID güncellendi
+            messageBoxGuessGameModal = document.getElementById('message-box-guess-game-modal');
+
+            rpsGameModal = document.getElementById('rps-game-modal');
+            rpsGameModalCloseBtn = document.getElementById('rps-game-modal-close-btn');
+            rpsRockBtn = document.getElementById('rps-rock-btn'); // ID güncellendi
+            rpsPaperBtn = document.getElementById('rps-paper-btn'); // ID güncellendi
+            rpsScissorsBtn = document.getElementById('rps-scissors-btn'); // ID güncellendi
+            rpsPlayerChoiceDisplay = document.getElementById('rps-player-choice-display'); // ID güncellendi
+            rpsComputerChoiceDisplay = document.getElementById('rps-computer-choice-display'); // ID güncellendi
+            rpsResultDisplayText = document.getElementById('rps-result-display-text'); // ID güncellendi
+            rpsPlayAgainButton = document.getElementById('rps-play-again-button'); // ID güncellendi
+            messageBoxRpsGameModal = document.getElementById('message-box-rps-game-modal');
+
+
+            // Kullanıcı adı kaydetme butonu için olay dinleyici
+            if (saveUsernameBtn) {
+                saveUsernameBtn.addEventListener('click', saveUsername);
+            } else {
+                console.error("Hata: saveUsernameBtn HTML elementi bulunamadı!");
+                showMessage("Uygulama yüklenirken bir sorun oluştu (Kullanıcı Adı Kaydet Butonu bulunamadı).", true, 'message-box-home');
+            }
+
+            // Hızlı Tıkla! kartına tıklama olayı (modalı açar)
+            if (fastClickCard) {
+                fastClickCard.addEventListener('click', () => {
+                    if (fastClickModal) openModal(fastClickModal);
+                });
+            }
+            // Hızlı Tıkla! modalındaki kapatma butonu
+            if (fastClickModalCloseBtn) {
+                fastClickModalCloseBtn.addEventListener('click', () => {
                     if (fastClickModal) closeModal(fastClickModal);
                 });
             }
