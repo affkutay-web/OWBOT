@@ -28,7 +28,7 @@
             height: 100%; /* Tüm yüksekliği kaplamalarını sağla */
             width: 100%;
             box-sizing: border-box; /* Padding/border'ı toplam genişlik/yüksekliğe dahil et */
-            overflow: hidden; /* Body'nin kaydırmasını engelle, kaydırma app-container'da olacak */
+            overflow: hidden; /* Body'nin kaydırmasını engelle, kaydırma app-wrapper'da olacak */
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -88,7 +88,7 @@
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
-        /* Çark stili */
+        /* Çark stili (modal içinde) */
         .wheel-container {
             position: relative;
             width: min(280px, 90vw); /* Ekran genişliğine göre boyutlandır, max 280px */
@@ -171,6 +171,7 @@
             justify-content: space-between; /* İçeriği iki yana yasla */
             align-items: center; /* Dikeyde ortala */
             box-sizing: border-box;
+            height: 60px; /* Başlık için sabit yükseklik */
         }
         #app-header .title {
             font-size: 1.5rem;
@@ -186,24 +187,30 @@
             color: #fcd34d; /* Sarımsı renk puanlar için */
         }
 
-        .app-container {
-            flex-shrink: 0; /* İçeriğin büyümesini engelleme */
+        #app-wrapper {
+            flex-grow: 1; /* Kalan tüm dikey boşluğu doldur */
             width: 100%;
-            max-width: 600px; /* Daha geniş cihazlarda daha iyi görünüm */
-            margin: 0 auto; /* Yatayda ortala */
-            padding: 1.5rem; /* İç padding */
-            padding-top: calc(1.5rem + 60px); /* Sabit başlık için ekstra padding */
-            box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
-            background-color: #1a1a1a; /* Uygulama kapsayıcısı için koyu siyah */
-            color: #ffffff; /* Kapsayıcıdaki yazılar beyaz */
-            border-radius: 0.75rem; /* Daha belirgin yuvarlak köşeler */
-            display: flex; /* İçeriği dikeyde düzenlemek için flex kullan */
-            flex-direction: column; /* İçeriği sütun olarak sırala */
-            flex-grow: 1; /* Mevcut alanı doldurmasını sağla */
-            overflow-y: auto; /* Kendi içinde kaydırmaya izin ver */
+            max-width: 600px; /* Genel içerik için maksimum genişlik */
+            margin-top: 60px; /* Sabit başlığın altından başla */
+            overflow-y: auto; /* Kendi içinde dikey kaydırma */
             -webkit-overflow-scrolling: touch; /* iOS'ta daha akıcı kaydırma */
+            display: flex; /* İçeriğini dikeyde sıralamak için */
+            flex-direction: column;
         }
 
+        #home-page-content {
+            padding: 1.5rem; /* İç padding */
+            background-color: #1a1a1a; /* Uygulama kapsayıcısı için koyu siyah */
+            border-radius: 0.75rem; /* Daha belirgin yuvarlak köşeler */
+            margin: 1.5rem; /* app-wrapper içinde üstten alttan boşluk */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Bölümler arası boşluk */
+            align-items: center; /* İçerikleri yatayda ortala */
+            flex-grow: 1; /* Home page içeriğinin de kendi içinde büyümesini sağlar */
+        }
+        
         /* Başlıklar için renk güncellemesi */
         h1, h2 {
             color: #ffffff; /* Başlıklar beyaz */
@@ -261,58 +268,88 @@
             opacity: 0.8;
         }
 
-        /* Yan menü (Side Menu) stilleri */
-        #side-menu {
+        /* Çark Modalı Stili */
+        #wheel-modal {
             position: fixed;
             top: 0;
-            left: -250px; /* Başlangıçta gizli */
-            width: 250px;
+            left: 0;
+            width: 100%;
             height: 100%;
-            background-color: #2a0045; /* Koyu mor menü arkaplanı */
-            color: #ffffff;
-            padding: 1.5rem;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
-            transition: left 0.3s ease-in-out;
-            z-index: 11000;
+            background-color: rgba(0, 0, 0, 0.7); /* Yarı saydam arka plan */
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001; /* username-modal'dan daha yüksek */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-        #side-menu.open {
-            left: 0; /* Açıkken görünür */
+        #wheel-modal.open {
+            opacity: 1;
+            visibility: visible;
         }
-        #side-menu button {
-            background-color: transparent;
-            border: none;
-            color: #ffffff;
-            text-align: left;
-            padding: 0.75rem 1rem;
-            font-size: 1.1em;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            border-radius: 0.5rem;
+        .wheel-modal-content {
+            background-color: #1a1a1a;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 400px; /* Modal için sabit genişlik */
+            position: relative;
         }
-        #side-menu button:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        /* Menü içindeki kapat butonu, header'daki ile karışmaması için farklı ID */
-        #menu-close-btn-side {
-            align-self: flex-end; /* Sağ üst köşeye hizala */
-            background-color: transparent;
+        #wheel-modal-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
             border: none;
             color: #ffffff;
             font-size: 2em;
             cursor: pointer;
-            margin-bottom: 1rem;
         }
 
-        /* Bölümler arası boşluk için Tailwind yardımcı sınıfı */
-        .space-y-6 > :not([hidden]) ~ :not([hidden]) {
-            margin-top: 1.5rem; /* 24px */
+        /* Çark kartı stili (Ana sayfadaki görsel) */
+        #wheel-card {
+            background-color: #2a0045; /* Koyu mor arkaplan */
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            max-width: 300px; /* Orta boyutlu kart */
+            width: 100%; /* Mobil uyumluluk */
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
-
-        /* Section'lar için ek stil - Tam genişliği kaplamalarını sağlar */
-        section {
+        #wheel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        #wheel-card img {
+            width: 100px; /* Resim boyutu */
+            height: 100px;
+            margin: 0 auto 1rem auto;
+            border-radius: 50%; /* Yuvarlak resim */
+            object-fit: cover;
+            border: 2px solid #a78bfa; /* Mor çerçeve */
+        }
+        
+        /* Mini Oyunlar bölümü stili */
+        #mini-games-section {
             width: 100%;
+            background-color: #2a0045;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        /* Bonus Kodları bölümü stili */
+        #bonus-codes-list-section {
+            width: 100%;
+            background-color: #2a0045;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
     </style>
 </head>
@@ -336,7 +373,7 @@
     <!-- Sabit Uygulama Başlığı -->
     <header id="app-header">
         <div class="flex items-center">
-            <button id="menu-toggle-btn-header" class="text-white text-xl mr-2">☰</button>
+            <!-- Menü butonu kaldırıldı, ana sayfa üzerinden yönlendirme -->
             <span class="title">Çarkıfelek Uygulaması</span>
         </div>
         <div class="user-info-display">
@@ -345,41 +382,51 @@
         </div>
     </header>
 
-    <!-- Yan Menü (Side Menu) -->
-    <div id="side-menu">
-        <button id="menu-close-btn-side">×</button>
-        <h2 class="text-2xl font-bold mb-6">Menü</h2>
-        <button id="show-mini-games" class="mb-3">Oyunlar</button>
-        <button id="show-wheel">Bonus Çarkı</button>
-        <!-- Gelecekteki menü öğeleri buraya eklenebilir -->
+    <!-- Ana Uygulama İçeriği (Kaydırılabilir Alan) -->
+    <div id="app-wrapper">
+        <div id="home-page-content" class="text-center hidden">
+            <h1 class="text-3xl font-bold mb-4">Hoş Geldin!</h1>
+            <p class="text-sm text-gray-600 mb-6">Puan kazanmak ve bonus kodları almak için oyna!</p>
+
+            <!-- Mini Oyunlar Bölümü -->
+            <section id="mini-games-section" class="w-full">
+                <h2 class="text-xl font-bold mb-4">Mini Oyunlar</h2>
+                <p class="text-sm text-gray-600 mb-4">Puan toplamak için farklı oyun seçenekleri.</p>
+                
+                <!-- Mevcut Mini Oyun: Hızlı Tıkla! -->
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-white mb-2">Hızlı Tıkla!</h3>
+                    <p class="text-sm text-gray-600 mb-3">Butona her tıkladığınızda 10 puan kazanırsınız.</p>
+                    <button id="game-button" class="telegram-btn w-full py-3 transition duration-200 hover:opacity-80">
+                        <span id="game-button-text">Puan Kazan (+10)</span>
+                    </button>
+                </div>
+            </section>
+            
+            <!-- Çarkıfelek Kartı -->
+            <div id="wheel-card" class="w-full">
+                <img src="https://placehold.co/100x100/A78BFA/FFFFFF?text=ÇARK" alt="Çarkıfelek" class="mx-auto mb-4">
+                <h3 class="text-xl font-bold mb-2">Bonus Çarkı</h3>
+                <p class="text-sm text-gray-600">Çevirmek için tıkla ve bonus kazan!</p>
+            </div>
+
+            <!-- Bonus Kodları Bölümü -->
+            <section id="bonus-codes-list-section" class="w-full">
+                <h2 class="text-xl font-bold mb-4">Kazanılan Bonus Kodları</h2>
+                <ul id="bonus-codes-list" class="text-sm text-gray-600 space-y-2">
+                    <!-- Bonus kodları buraya eklenecek -->
+                </ul>
+            </section>
+
+            <!-- Mesaj kutusu öğesi -->
+            <div id="message-box-home"></div>
+        </div>
     </div>
 
-    <div id="app-container" class="rounded-lg shadow-xl text-center hidden space-y-6">
-        <!-- Başlık ve açıklama artık header'da -->
-        
-        <!-- Mini Oyunlar Bölümü -->
-        <section id="mini-games-section">
-            <h2 class="text-xl font-bold mb-4">Mini Oyunlar</h2>
-            <p class="text-sm text-gray-600 mb-4">Puan toplamak için farklı oyun seçenekleri.</p>
-            
-            <!-- Mevcut Mini Oyun -->
-            <div class="mb-4">
-                <h3 class="text-lg font-semibold text-white mb-2">Hızlı Tıkla!</h3>
-                <p class="text-sm text-gray-600 mb-3">Butona her tıkladığınızda 10 puan kazanırsınız.</p>
-                <button id="game-button" class="telegram-btn w-full py-3 transition duration-200 hover:opacity-80">
-                    <span id="game-button-text">Puan Kazan (+10)</span>
-                </button>
-            </div>
-
-            <!-- Yeni Mini Oyun Seçenekleri Buraya Gelecek -->
-            <div class="mt-8">
-                <h3 class="text-lg font-semibold text-white mb-2">Daha Fazla Oyun Yakında!</h3>
-                <p class="text-sm text-gray-600">Uygulamaya yeni ve heyecan verici mini oyunlar eklemeye devam edeceğiz. Takipte kalın!</p>
-            </div>
-        </section>
-        
-        <!-- Çarkıfelek Bölümü -->
-        <section id="wheel-section" class="hidden"> <!-- Başlangıçta gizli -->
+    <!-- Çarkıfelek Modalı -->
+    <div id="wheel-modal" class="hidden">
+        <div class="wheel-modal-content">
+            <button id="wheel-modal-close-btn">×</button>
             <h2 class="text-xl font-bold mb-4">Bonus Çarkı</h2>
             <p class="text-sm text-gray-600 mb-4">Çarkı çevirmek için 100 puana ihtiyacın var.</p>
             <div class="wheel-container">
@@ -391,24 +438,11 @@
             <button id="spin-button" class="telegram-btn w-full py-3 mt-6 transition duration-200 hover:opacity-80 disabled:opacity-50" disabled>
                 <span id="spin-button-text">Çarkı Çevir (100 Puan)</span>
             </button>
-        </section>
-        
-        <!-- Bonus Kodları Bölümü -->
-        <div>
-            <h2 class="text-xl font-bold mb-4">Kazanılan Bonus Kodları</h2>
-            <ul id="bonus-codes-list" class="text-sm text-gray-600 space-y-2">
-                <!-- Bonus kodları buraya eklenecek -->
-            </ul>
+            <!-- Mesaj kutusu öğesi (modal içinde) -->
+            <div id="message-box-modal" class="mt-4"></div>
         </div>
-        
-        <!-- Mesaj kutusu öğesi -->
-        <div id="message-box"></div>
-
-        <!-- Uygulamayı kapatma butonu -->
-        <button id="close-button" class="telegram-btn w-full py-3 mt-6 transition duration-200 hover:opacity-80">
-            Uygulamayı Kapat
-        </button>
     </div>
+
 
     <script>
         // Firebase ve Uygulama Ayarlarını Global Değişkenlerden Alın
@@ -441,28 +475,29 @@
         ];
 
         // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
-        let loadingScreen, appContainer, messageBox, wheel, closeButton;
-        let usernameModal, usernameInput, saveUsernameBtn; // Kullanıcı adı modalı elementleri
-        let appHeader, userInfoHeader, pointsDisplayHeader, menuToggleBtnHeader; // Yeni header elementleri
-        let sideMenu, menuCloseBtnSide, showMiniGamesBtn, showWheelBtn; // Yeni menü elementleri
-        let miniGamesSection, wheelSection; // Yeni bölüm elementleri
+        let loadingScreen, usernameModal, usernameInput, saveUsernameBtn;
+        let appHeader, userInfoHeader, pointsDisplayHeader;
+        let appWrapper, homePageContent, wheelCard, gameButton, bonusCodesListSection, bonusCodesList;
+        let wheelModal, wheelModalCloseBtn, wheelElement, spinButton;
+        let messageBoxHome, messageBoxModal;
 
 
-        // Kullanıcıya mesaj göstermek için özel fonksiyon
-        function showMessage(text, isError = false) {
-            if (!messageBox) { 
-                console.error("Hata: messageBox HTML elementi henüz bulunamadı. Mesaj:", text);
+        // Kullanıcıya mesaj göstermek için özel fonksiyon (iki ayrı mesaj kutusu için)
+        function showMessage(text, isError = false, targetBoxId = 'message-box-home') {
+            let targetBox = document.getElementById(targetBoxId);
+            if (!targetBox) { 
+                console.error(`Hata: ${targetBoxId} HTML elementi henüz bulunamadı. Mesaj:`, text);
                 return;
             }
-            messageBox.textContent = text;
+            targetBox.textContent = text;
             if (isError) {
-                messageBox.style.backgroundColor = '#dc3545'; // Kırmızı arka plan
+                targetBox.style.backgroundColor = '#dc3545'; // Kırmızı arka plan
             } else {
-                messageBox.style.backgroundColor = '#333'; // Varsayılan arka plan
+                targetBox.style.backgroundColor = '#333'; // Varsayılan arka plan
             }
-            messageBox.style.display = 'block';
+            targetBox.style.display = 'block';
             setTimeout(() => {
-                messageBox.style.display = 'none';
+                targetBox.style.display = 'none';
             }, 3000); // 3 saniye sonra gizle
         }
 
@@ -471,7 +506,7 @@
             const numSegments = segments.length;
             const segmentAngle = 360 / numSegments;
             
-            wheel.innerHTML = ''; // Çarkı temizle
+            wheelElement.innerHTML = ''; // Çarkı temizle
             
             segments.forEach((segmentData, index) => {
                 const rotationAngle = index * segmentAngle; // Segmentin dönme açısı
@@ -496,7 +531,7 @@
                 labelEl.style.setProperty('--rotation-angle', `${rotationAngle}deg`); 
 
                 segmentEl.appendChild(labelEl);
-                wheel.appendChild(segmentEl);
+                wheelElement.appendChild(segmentEl);
             });
         }
 
@@ -544,7 +579,7 @@
                             } else {
                                 // Kullanıcı adı zaten ayarlı, ana uygulamayı göster
                                 loadingScreen.style.display = 'none';
-                                if (appContainer) appContainer.style.display = 'flex'; // 'block' yerine 'flex'
+                                if (homePageContent) homePageContent.style.display = 'flex';
                                 listenForDataChanges();
                             }
                         }
@@ -587,21 +622,24 @@
             }
             
             // Bonus kodlarını listele
-            bonusCodesList.innerHTML = '';
-            if (data.bonusCodes && data.bonusCodes.length > 0) {
-                data.bonusCodes.forEach(code => {
+            if (bonusCodesList) {
+                bonusCodesList.innerHTML = '';
+                if (data.bonusCodes && data.bonusCodes.length > 0) {
+                    data.bonusCodes.forEach(code => {
+                        const li = document.createElement('li');
+                        li.textContent = `• ${code}`;
+                        bonusCodesList.appendChild(li);
+                    });
+                } else {
                     const li = document.createElement('li');
-                    li.textContent = `• ${code}`;
+                    li.textContent = "Henüz kazanılmış bonus kodunuz yok.";
                     bonusCodesList.appendChild(li);
-                });
-            } else {
-                const li = document.createElement('li');
-                li.textContent = "Henüz kazanılmış bonus kodunuz yok.";
-                bonusCodesList.appendChild(li);
+                }
             }
 
+
             // Çarkı çevir butonunu etkinleştirme
-            spinButton.disabled = data.points < 100 || isSpinning;
+            if (spinButton) spinButton.disabled = data.points < 100 || isSpinning;
         }
 
         // Kullanıcı adını kaydetme fonksiyonu
@@ -609,7 +647,7 @@
             console.log("saveUsername çağrıldı.");
             const username = usernameInput.value.trim();
             if (username.length < 3 || username.length > 20) {
-                showMessage("Kullanıcı adı 3 ile 20 karakter arasında olmalıdır.", true);
+                showMessage("Kullanıcı adı 3 ile 20 karakter arasında olmalıdır.", true, 'message-box-home');
                 console.log("Kullanıcı adı doğrulama başarısız.");
                 return;
             }
@@ -624,7 +662,7 @@
                     const existingUserDoc = usernameQuery.docs[0];
                     if (existingUserDoc.id !== userId) {
                         // Eğer bu kullanıcı adı başka bir kullanıcıya aitse
-                        showMessage("Bu kullanıcı adı zaten alınmış, lütfen başka bir tane dene.", true);
+                        showMessage("Bu kullanıcı adı zaten alınmış, lütfen başka bir tane dene.", true, 'message-box-home');
                         console.log("Kullanıcı adı başka bir kullanıcı tarafından alınmış.");
                         return;
                     }
@@ -637,36 +675,21 @@
                 console.log("Firestore'a kullanıcı adı başarıyla güncellendi.");
 
                 // UI elementlerinin varlığını kontrol et
-                if (usernameModal && appContainer) {
+                if (usernameModal && homePageContent) {
                     usernameModal.style.display = 'none';
-                    appContainer.style.display = 'flex'; // 'block' yerine 'flex'
-                    console.log("UI güncellendi: usernameModal gizlendi, appContainer gösterildi.");
+                    homePageContent.style.display = 'flex'; // 'block' yerine 'flex'
+                    console.log("UI güncellendi: usernameModal gizlendi, homePageContent gösterildi.");
                 } else {
-                    console.error("Hata: usernameModal veya appContainer bulunamadı. UI güncellenemedi.");
-                    showMessage("Uygulama arayüzü güncellenemedi, lütfen tekrar deneyin.", true);
+                    console.error("Hata: usernameModal veya homePageContent bulunamadı. UI güncellenemedi.");
+                    showMessage("Uygulama arayüzü güncellenemedi, lütfen tekrar deneyin.", true, 'message-box-home');
                 }
 
-                showMessage(`Hoş geldin, ${username}!`);
+                showMessage(`Hoş geldin, ${username}!`, false, 'message-box-home');
                 listenForDataChanges(); // Kullanıcı adı kaydedildikten sonra UI'ı güncelle
             } catch (e) {
                 console.error("Kullanıcı adı kaydedilirken hata oluştu: ", e);
-                showMessage("Kullanıcı adı kaydedilirken bir hata oluştu, lütfen tekrar deneyin. Detay: " + e.message, true);
+                showMessage("Kullanıcı adı kaydedilirken bir hata oluştu, lütfen tekrar deneyin. Detay: " + e.message, true, 'message-box-home');
             }
-        }
-
-        // Sayfa bölümlerini göster/gizle
-        function showSection(sectionId) {
-            // Tüm bölümleri gizle
-            document.querySelectorAll('section').forEach(section => {
-                section.style.display = 'none';
-            });
-            // İstenen bölümü göster
-            const targetSection = document.getElementById(sectionId);
-            if (targetSection) {
-                targetSection.style.display = 'block';
-            }
-            // Menüyü kapat
-            sideMenu.classList.remove('open');
         }
 
 
@@ -674,48 +697,43 @@
         document.addEventListener('DOMContentLoaded', () => { 
             // HTML elemanlarını DOM yüklendikten sonra al ve global değişkenlere ata
             loadingScreen = document.getElementById('loading-screen');
-            appContainer = document.getElementById('app-container');
-            messageBox = document.getElementById('message-box');
-            wheel = document.getElementById('wheel');
-            closeButton = document.getElementById('close-button');
-            usernameModal = document.getElementById('username-modal'); // Yeni modal
-            usernameInput = document.getElementById('username-input'); // Yeni input
-            saveUsernameBtn = document.getElementById('save-username-btn'); // Yeni buton
+            usernameModal = document.getElementById('username-modal');
+            usernameInput = document.getElementById('username-input');
+            saveUsernameBtn = document.getElementById('save-username-btn');
 
-            // Yeni header elementlerini ata
             appHeader = document.getElementById('app-header');
             userInfoHeader = document.getElementById('user-info-header');
             pointsDisplayHeader = document.getElementById('points-display-header');
-            menuToggleBtnHeader = document.getElementById('menu-toggle-btn-header'); // Header içindeki menü butonu
+            // menuToggleBtnHeader kaldırıldı
 
-            // Yeni menü elementlerini ata
-            sideMenu = document.getElementById('side-menu');
-            menuCloseBtnSide = document.getElementById('menu-close-btn-side'); // Yan menüdeki kapat butonu
-            showMiniGamesBtn = document.getElementById('show-mini-games');
-            showWheelBtn = document.getElementById('show-wheel');
-            miniGamesSection = document.getElementById('mini-games-section');
-            wheelSection = document.getElementById('wheel-section');
+            appWrapper = document.getElementById('app-wrapper');
+            homePageContent = document.getElementById('home-page-content');
+            wheelCard = document.getElementById('wheel-card');
+            gameButton = document.getElementById('game-button');
+            bonusCodesListSection = document.getElementById('bonus-codes-list-section');
+            bonusCodesList = document.getElementById('bonus-codes-list');
+            messageBoxHome = document.getElementById('message-box-home');
 
-            // Header içindeki menü butonu için olay dinleyici
-            if (menuToggleBtnHeader) {
-                menuToggleBtnHeader.addEventListener('click', () => {
-                    if (sideMenu) sideMenu.classList.toggle('open');
-                });
+            wheelModal = document.getElementById('wheel-modal');
+            wheelModalCloseBtn = document.getElementById('wheel-modal-close-btn');
+            wheelElement = document.getElementById('wheel'); // Çarkın kendisi
+            spinButton = document.getElementById('spin-button');
+            messageBoxModal = document.getElementById('message-box-modal'); // Modal içindeki mesaj kutusu
+
+
+            // Kullanıcı adı kaydetme butonu için olay dinleyici
+            if (saveUsernameBtn) {
+                saveUsernameBtn.addEventListener('click', saveUsername);
             } else {
-                console.error("Hata: menuToggleBtnHeader HTML elementi bulunamadı!");
+                console.error("Hata: saveUsernameBtn HTML elementi bulunamadı!");
+                showMessage("Uygulama yüklenirken bir sorun oluştu (Kullanıcı Adı Kaydet Butonu bulunamadı).", true, 'message-box-home');
             }
 
-            // DOM elemanları atandıktan sonra olay dinleyicilerini ekle
-            // gameButton ve spinButton tanımlamalarını güncelleyelim, bunlar app-container içinde olduğu için
-            // document.getElementById ile doğrudan alınabilir, veya daha sonra section'lar görünür olduğunda.
-            // Bu sefer appContainer içinde oldukları için direkt alabiliyoruz.
-            const gameButton = document.getElementById('game-button');
-            const spinButton = document.getElementById('spin-button');
-
+            // Hızlı Tıkla! butonu için olay dinleyici
             if (gameButton) { 
                 gameButton.addEventListener('click', async () => {
                     if (!userId) {
-                        showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true);
+                        showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true, 'message-box-home');
                         return;
                     }
 
@@ -724,7 +742,7 @@
                     if (docSnap.exists) {
                         const lastClick = docSnap.data().lastClick || 0;
                         if (now - lastClick < 500) { 
-                            showMessage("Çok hızlısın! Lütfen biraz bekle.");
+                            showMessage("Çok hızlısın! Lütfen biraz bekle.", false, 'message-box-home');
                             return;
                         }
                     }
@@ -734,17 +752,36 @@
                             points: (docSnap.data().points || 0) + 10,
                             lastClick: now
                         });
-                        showMessage("Puan kazandın!");
+                        showMessage("Puan kazandın!", false, 'message-box-home');
                     } catch (e) {
                         console.error("Puan güncellenirken hata oluştu: ", e);
-                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
+                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true, 'message-box-home');
                     }
                 });
             } else {
                 console.error("Hata: gameButton HTML elementi bulunamadı!");
-                showMessage("Uygulama yüklenirken bir sorun oluştu (Oyun Butonu bulunamadı).", true);
+                showMessage("Uygulama yüklenirken bir sorun oluştu (Oyun Butonu bulunamadı).", true, 'message-box-home');
             }
 
+            // Çarkıfelek kartına tıklama olayı (modalı açar)
+            if (wheelCard) {
+                wheelCard.addEventListener('click', () => {
+                    if (wheelModal) wheelModal.classList.add('open');
+                });
+            } else {
+                console.error("Hata: wheelCard HTML elementi bulunamadı!");
+            }
+
+            // Çark modalındaki kapatma butonu
+            if (wheelModalCloseBtn) {
+                wheelModalCloseBtn.addEventListener('click', () => {
+                    if (wheelModal) wheelModal.classList.remove('open');
+                });
+            } else {
+                console.error("Hata: wheelModalCloseBtn HTML elementi bulunamadı!");
+            }
+
+            // Çarkı çevir butonu (modal içinde)
             if (spinButton) { 
                 spinButton.addEventListener('click', async () => {
                     if (!userId) return;
@@ -757,7 +794,7 @@
                         const currentPoints = docSnap.data().points || 0;
 
                         if (currentPoints < 100) {
-                            showMessage("Yeterli puanın yok!", true);
+                            showMessage("Yeterli puanın yok!", true, 'message-box-modal');
                             isSpinning = false;
                             spinButton.disabled = false;
                             spinButton.textContent = "Çarkı Çevir (100 Puan)";
@@ -772,7 +809,7 @@
                         const segmentAngle = 360 / segments.length;
                         const totalAngle = 360 * 5 + (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2));
                         
-                        wheel.style.transform = `rotate(${totalAngle}deg)`;
+                        wheelElement.style.transform = `rotate(${totalAngle}deg)`;
                         
                         setTimeout(async () => {
                             const result = segments[targetSegmentIndex];
@@ -781,19 +818,19 @@
                                 await userDocRef.update({
                                     bonusCodes: firebase.firestore.FieldValue.arrayUnion(newBonusCode)
                                 });
-                                showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`);
+                                showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`, false, 'message-box-modal');
                             } else {
-                                showMessage("Maalesef, bir dahaki sefere!");
+                                showMessage("Maalesef, bir dahaki sefere!", false, 'message-box-modal');
                             }
                             
                             isSpinning = false;
                             spinButton.disabled = false;
                             spinButton.textContent = "Çarkı Çevir (100 Puan)";
-                            wheel.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
+                            wheelElement.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
                         }, 5000); // 5 saniye animasyon süresi
                     } catch (e) {
                         console.error("Çark çevrilirken bir hata oluştu: ", e);
-                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true);
+                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true, 'message-box-modal');
                         isSpinning = false;
                         spinButton.disabled = false;
                         spinButton.textContent = "Çarkı Çevir (100 Puan)";
@@ -801,51 +838,17 @@
                 });
             } else {
                 console.error("Hata: spinButton HTML elementi bulunamadı!");
-                showMessage("Uygulama yüklenirken bir sorun oluştu (Çark Butonu bulunamadı).", true);
+                showMessage("Uygulama yüklenirken bir sorun oluştu (Çark Butonu bulunamadı).", true, 'message-box-modal');
             }
             
-            if (closeButton) { 
-                closeButton.addEventListener('click', () => {
-                    window.Telegram.WebApp.close();
-                });
+            // createWheel çağrısı wheelElement atandıktan sonra yapılmalı
+            if (wheelElement) {
+                createWheel(); 
             } else {
-                console.error("Hata: closeButton HTML elementi bulunamadı!");
-                showMessage("Uygulama yüklenirken bir sorun oluştu (Kapat Butonu bulunamadı).", true);
+                console.error("Hata: wheelElement HTML elementi bulunamadı!");
             }
-
-            if (saveUsernameBtn) {
-                saveUsernameBtn.addEventListener('click', saveUsername);
-            } else {
-                console.error("Hata: saveUsernameBtn HTML elementi bulunamadı!");
-            }
-
-            // Yan menüdeki kapat butonu için olay dinleyici
-            if (menuCloseBtnSide) {
-                menuCloseBtnSide.addEventListener('click', () => {
-                    if (sideMenu) sideMenu.classList.remove('open');
-                });
-            }
-            if (showMiniGamesBtn) {
-                showMiniGamesBtn.addEventListener('click', () => showSection('mini-games-section'));
-            }
-            if (showWheelBtn) {
-                showWheelBtn.addEventListener('click', () => showSection('wheel-section'));
-            }
-
-            // Dışarı tıklayınca menüyü kapatma
-            document.addEventListener('click', (event) => {
-                // Sadece sideMenu ve menuToggleBtnHeader tanımlıysa ve menü açıksa kontrol et
-                if (sideMenu && menuToggleBtnHeader && !sideMenu.contains(event.target) && !menuToggleBtnHeader.contains(event.target) && sideMenu.classList.contains('open')) {
-                    sideMenu.classList.remove('open');
-                }
-            });
-
-            // createWheel çağrısı wheel elementi atandıktan sonra yapılmalı
-            createWheel(); 
+            
             initializeFirebase();
-
-            // Uygulama yüklendiğinde varsayılan olarak Mini Oyunlar bölümünü göster
-            showSection('mini-games-section');
         });
     </script>
 </body>
