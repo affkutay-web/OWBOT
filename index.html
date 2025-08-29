@@ -369,11 +369,19 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease-in-out; /* Yumuşak geçişler */
-            max-width: 300px; /* Orta boyutlu kart */
-            width: 100%; /* Mobil uyumluluk */
+            min-width: 250px; /* Her kartın minimum genişliği */
+            flex-shrink: 0; /* Kartların küçülmesini engelle */
             box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4), inset 0 3px 8px rgba(255, 255, 255, 0.15); /* Daha belirgin ve iç gölge */
             border: 1px solid rgba(255, 255, 255, 0.15);
+            scroll-snap-align: start; /* Kaydırma hizalaması */
         }
+        .game-card-homepage + .game-card-homepage { /* Kartlar arasına boşluk */
+            margin-left: 1.5rem;
+        }
+        .game-card-homepage:last-child { /* Son karttan sonraki boşluğu kapat */
+            margin-right: 1.5rem;
+        }
+
         .game-card-homepage:hover {
             transform: translateY(-10px) scale(1.03); /* Daha belirgin büyüme ve kalkma */
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 3px 10px rgba(255, 255, 255, 0.25);
@@ -394,17 +402,62 @@
         }
         
         /* Mini Oyunlar bölümü stili */
+        #mini-games-carousel-container { /* Carousel için dış konteyner */
+            width: 100%;
+            position: relative; /* Ok butonları için */
+            margin-bottom: 1.5rem; /* Alt boşluk */
+        }
+
         #mini-games-section {
             width: 100%;
             background: linear-gradient(160deg, #2a0045 0%, #3a005f 100%); /* Degradeli arka plan */
-            padding: 2rem; /* Daha fazla padding */
+            padding: 2rem 1rem; /* Dikey padding, yatay 1rem */
             border-radius: 1rem; /* Daha yuvarlak köşeler */
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            display: flex; /* İçindeki oyunları da flex ile sırala */
-            flex-direction: column;
-            gap: 1.5rem; /* Oyunlar arası boşluk */
+            display: flex; /* İçindeki oyunları yatayda sırala */
+            flex-direction: row; /* Yatay düzen */
+            flex-wrap: nowrap; /* Alt satıra geçme */
+            gap: 0; /* İç elemanlar arasındaki boşluğu manuel ayarla */
+            overflow-x: auto; /* Yatay kaydırma */
+            -webkit-overflow-scrolling: touch; /* iOS için akıcı kaydırma */
+            scroll-snap-type: x mandatory; /* Kaydırma hizalaması */
+            scrollbar-width: none; /* Firefox kaydırma çubuğunu gizle */
+            -ms-overflow-style: none;  /* IE and Edge kaydırma çubuğunu gizle */
+            margin-bottom: 1rem; /* Oklar ile oyunlar arasına boşluk */
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+
+        /* Webkit tabanlı tarayıcılar için kaydırma çubuğunu gizle */
+        #mini-games-section::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scroll-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(75, 0, 130, 0.7); /* Mor yarı şeffaf */
+            color: #fcd34d; /* Sarımsı ok */
+            border: none;
+            padding: 0.5rem 0.8rem;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .scroll-button:hover {
+            background-color: rgba(75, 0, 130, 0.9);
+            transform: translateY(-50%) scale(1.1);
+        }
+        #scroll-left-btn {
+            left: 5px;
+        }
+        #scroll-right-btn {
+            right: 5px;
+        }
+
 
         /* Bonus Kodları bölümü stili */
         #bonus-codes-list-section {
@@ -540,30 +593,46 @@
             <p class="text-sm text-gray-600 mb-6">Puan kazanmak ve bonus kodları almak için oyna!</p>
 
             <!-- Mini Oyunlar Bölümü -->
-            <section id="mini-games-section" class="w-full">
+            <section id="mini-games-carousel-container" class="w-full relative">
                 <h2 class="text-xl font-bold mb-4">Mini Oyunlar</h2>
-                <p class="text-sm text-gray-600 mb-4">Puan toplamak için farklı oyun seçenekleri.</p>
+                <p class="text-sm text-gray-600 mb-4">Yatay kaydırarak farklı oyunları keşfet ve puan topla!</p>
                 
-                <!-- Mini Oyun Kartı: Hızlı Tıkla! -->
-                <div id="fast-click-card" class="game-card-homepage">
-                    <img src="https://placehold.co/100x100/6f2da8/FFFFFF?text=TIKLA" alt="Hızlı Tıkla!" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
-                    <h3 class="text-xl font-bold mb-2">Hızlı Tıkla!</h3>
-                    <p class="text-sm text-gray-600">Butona basarak puan kazan.</p>
-                </div>
+                <button id="scroll-left-btn" class="scroll-button -ml-2">‹</button>
+                <div id="mini-games-section">
+                    <!-- Mini Oyun Kartı: Hızlı Tıkla! -->
+                    <div id="fast-click-card" class="game-card-homepage">
+                        <img src="https://placehold.co/100x100/6f2da8/FFFFFF?text=TIKLA" alt="Hızlı Tıkla!" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
+                        <h3 class="text-xl font-bold mb-2">Hızlı Tıkla!</h3>
+                        <p class="text-sm text-gray-600">Butona basarak puan kazan.</p>
+                    </div>
 
-                <!-- Mini Oyun Kartı: Sayı Tahmin Oyunu -->
-                <div id="guess-game-card" class="game-card-homepage">
-                    <img src="https://placehold.co/100x100/8a2be2/FFFFFF?text=SAYI" alt="Sayı Tahmin Oyunu" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
-                    <h3 class="text-xl font-bold mb-2">Sayı Tahmin Oyunu</h3>
-                    <p class="text-sm text-gray-600">Sayıyı tahmin et, puanı kap!</p>
-                </div>
+                    <!-- Mini Oyun Kartı: Sayı Tahmin Oyunu -->
+                    <div id="guess-game-card" class="game-card-homepage">
+                        <img src="https://placehold.co/100x100/8a2be2/FFFFFF?text=SAYI" alt="Sayı Tahmin Oyunu" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
+                        <h3 class="text-xl font-bold mb-2">Sayı Tahmin Oyunu</h3>
+                        <p class="text-sm text-gray-600">Sayıyı tahmin et, puanı kap!</p>
+                    </div>
 
-                <!-- Mini Oyun Kartı: Taş, Kağıt, Makas -->
-                <div id="rps-game-card" class="game-card-homepage">
-                    <img src="https://placehold.co/100x100/b19cd9/FFFFFF?text=RPS" alt="Taş, Kağıt, Makas" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
-                    <h3 class="text-xl font-bold mb-2">Taş, Kağıt, Makas!</h3>
-                    <p class="text-sm text-gray-600">Bilgisayarı yen ve puan kazan.</p>
+                    <!-- Mini Oyun Kartı: Taş, Kağıt, Makas -->
+                    <div id="rps-game-card" class="game-card-homepage">
+                        <img src="https://placehold.co/100x100/b19cd9/FFFFFF?text=RPS" alt="Taş, Kağıt, Makas" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
+                        <h3 class="text-xl font-bold mb-2">Taş, Kağıt, Makas!</h3>
+                        <p class="text-sm text-gray-600">Bilgisayarı yen ve puan kazan.</p>
+                    </div>
+
+                    <!-- Daha fazla oyun kartı eklenebilir -->
+                    <div class="game-card-homepage">
+                        <img src="https://placehold.co/100x100/5a2a8a/FFFFFF?text=OYUN4" alt="Yeni Oyun" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
+                        <h3 class="text-xl font-bold mb-2">Yeni Oyun 1</h3>
+                        <p class="text-sm text-gray-600">Çok yakında!</p>
+                    </div>
+                    <div class="game-card-homepage">
+                        <img src="https://placehold.co/100x100/7c4da8/FFFFFF?text=OYUN5" alt="Yeni Oyun" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
+                        <h3 class="text-xl font-bold mb-2">Yeni Oyun 2</h3>
+                        <p class="text-sm text-gray-600">Geliyor!</p>
+                    </div>
                 </div>
+                <button id="scroll-right-btn" class="scroll-button -mr-2">›</button>
             </section>
             
             <!-- Çarkıfelek Kartı -->
@@ -701,6 +770,8 @@
         let appWrapper, homePageContent, bonusCodesListSection, bonusCodesList, leaderboardSection, leaderboardList;
         // Anasayfa oyun kartları
         let wheelCard, fastClickCard, guessGameCard, rpsGameCard;
+        let miniGamesSection, scrollLeftBtn, scrollRightBtn; // Yeni elemanlar
+        
 
         // Modallar ve içindeki elemanlar
         let wheelModal, wheelModalCloseBtn, wheelElement, wheelSpinButton, messageBoxWheelModal; // wheelSpinButton olarak güncellendi
@@ -1136,6 +1207,9 @@
             fastClickCard = document.getElementById('fast-click-card');
             guessGameCard = document.getElementById('guess-game-card');
             rpsGameCard = document.getElementById('rps-game-card');
+            miniGamesSection = document.getElementById('mini-games-section'); // Yeni eleman
+            scrollLeftBtn = document.getElementById('scroll-left-btn'); // Yeni eleman
+            scrollRightBtn = document.getElementById('scroll-right-btn'); // Yeni eleman
 
             // Modallar ve içindeki elemanlar
             wheelModal = document.getElementById('wheel-modal');
@@ -1351,6 +1425,33 @@
             if (rpsScissorsBtn) rpsScissorsBtn.addEventListener('click', () => playRPSGame('makas'));
             if (rpsPlayAgainButton) rpsPlayAgainButton.addEventListener('click', initializeRPSGame);
             
+            // Carousel kaydırma butonları olay dinleyicileri
+            if (scrollLeftBtn && miniGamesSection) {
+                scrollLeftBtn.addEventListener('click', () => {
+                    // İlk kartın genişliğini al ve sola kaydır
+                    const firstCard = miniGamesSection.querySelector('.game-card-homepage');
+                    if (firstCard) {
+                        miniGamesSection.scrollBy({
+                            left: -firstCard.offsetWidth - 24, // Kart genişliği + margin-left (1.5rem = 24px)
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            }
+            if (scrollRightBtn && miniGamesSection) {
+                scrollRightBtn.addEventListener('click', () => {
+                    // İlk kartın genişliğini al ve sağa kaydır
+                    const firstCard = miniGamesSection.querySelector('.game-card-homepage');
+                    if (firstCard) {
+                        miniGamesSection.scrollBy({
+                            left: firstCard.offsetWidth + 24, // Kart genişliği + margin-left (1.5rem = 24px)
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            }
+
+
             initializeFirebase();
         });
     </script>
