@@ -362,6 +362,32 @@
             border-radius: 0.75rem;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
+
+        /* Taş-Kağıt-Makas butonları için düzen */
+        #rps-choices {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem; /* Butonlar arasında boşluk */
+            margin-bottom: 1rem;
+        }
+        #rps-choices .rps-btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 1.1em;
+            font-weight: bold;
+            flex: 1; /* Eşit genişlik */
+            max-width: 120px; /* Maksimum genişlik */
+        }
+        #rps-result-display {
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        #rps-play-again-btn {
+            background-color: #555; /* Gri tonu */
+        }
+        #rps-player-choice, #rps-computer-choice {
+            font-weight: bold;
+            color: #fcd34d; /* Sarımsı renk */
+        }
     </style>
 </head>
 <body>
@@ -403,7 +429,7 @@
                 <h2 class="text-xl font-bold mb-4">Mini Oyunlar</h2>
                 <p class="text-sm text-gray-600 mb-4">Puan toplamak için farklı oyun seçenekleri.</p>
                 
-                <!-- Mevcut Mini Oyun: Hızlı Tıkla! -->
+                <!-- Mini Oyun: Hızlı Tıkla! -->
                 <div class="game-card">
                     <h3 class="text-lg font-semibold text-white mb-2">Hızlı Tıkla!</h3>
                     <p class="text-sm text-gray-600 mb-3">Butona her tıkladığınızda 10 puan kazanırsınız.</p>
@@ -412,7 +438,7 @@
                     </button>
                 </div>
 
-                <!-- Yeni Mini Oyun: Sayı Tahmin Oyunu -->
+                <!-- Mini Oyun: Sayı Tahmin Oyunu -->
                 <div class="game-card">
                     <h3 class="text-lg font-semibold text-white mb-2">Sayı Tahmin Oyunu</h3>
                     <p class="text-sm text-gray-600 mb-3">1 ile 100 arasında bir sayı tuttum. 7 tahmin hakkın var!</p>
@@ -420,6 +446,23 @@
                     <button id="submit-guess-button" class="telegram-btn w-full py-2 mb-2 transition duration-200 hover:opacity-80">Tahmin Et</button>
                     <p id="guess-feedback" class="text-sm text-gray-400 mb-3"></p>
                     <button id="new-game-button" class="telegram-btn bg-gray-500 hover:bg-gray-600 w-full py-2 transition duration-200 hover:opacity-80 hidden">Yeni Oyun Başlat</button>
+                </div>
+
+                <!-- Yeni Mini Oyun: Taş, Kağıt, Makas -->
+                <div class="game-card">
+                    <h3 class="text-lg font-semibold text-white mb-2">Taş, Kağıt, Makas!</h3>
+                    <p class="text-sm text-gray-600 mb-3">Bilgisayarı yen, 20 puan kazan!</p>
+                    <div id="rps-choices" class="flex justify-center gap-3 mb-4">
+                        <button id="rock-btn" class="rps-btn telegram-btn">Taş</button>
+                        <button id="paper-btn" class="rps-btn telegram-btn">Kağıt</button>
+                        <button id="scissors-btn" class="rps-btn telegram-btn">Makas</button>
+                    </div>
+                    <div class="mb-3">
+                        Senin seçimin: <span id="rps-player-choice" class="text-yellow-300"></span><br>
+                        Bilgisayarın seçimi: <span id="rps-computer-choice" class="text-yellow-300"></span>
+                    </div>
+                    <p id="rps-result-display" class="text-base text-white font-bold mb-3"></p>
+                    <button id="rps-play-again-btn" class="telegram-btn bg-gray-500 hover:bg-gray-600 w-full py-2 transition duration-200 hover:opacity-80 hidden">Tekrar Oyna</button>
                 </div>
             </section>
             
@@ -509,6 +552,10 @@
         const MAX_NUM = 100;
         const GUESS_GAME_WIN_POINTS = 50;
 
+        // Taş-Kağıt-Makas Oyunu Elemanları ve Değişkenleri
+        let rockBtn, paperBtn, scissorsBtn, rpsPlayerChoiceDisplay, rpsComputerChoiceDisplay, rpsResultDisplay, rpsPlayAgainBtn;
+        const choices = ['taş', 'kağıt', 'makas'];
+        const RPS_GAME_WIN_POINTS = 20;
 
         // Kullanıcıya mesaj göstermek için özel fonksiyon (iki ayrı mesaj kutusu için)
         function showMessage(text, isError = false, targetBoxId = 'message-box-home') {
@@ -730,7 +777,6 @@
             submitGuessButton.disabled = false;
             newGameButton.classList.add('hidden');
             updateGuessFeedback(`Kalan tahmin hakkı: ${attemptsLeft}`);
-            // console.log("Yeni oyun başladı. Hedef sayı:", targetNumber); // Bu satır kaldırıldı
         }
 
         function updateGuessFeedback(message, isError = false) {
@@ -782,6 +828,72 @@
             guessInput.value = ''; // Tahmin kutusunu temizle
         }
 
+        // Taş-Kağıt-Makas Oyunu Mantığı
+        function initializeRPSGame() {
+            rpsPlayerChoiceDisplay.textContent = '';
+            rpsComputerChoiceDisplay.textContent = '';
+            rpsResultDisplay.textContent = 'Bir seçim yap!';
+            rockBtn.disabled = false;
+            paperBtn.disabled = false;
+            scissorsBtn.disabled = false;
+            rpsPlayAgainBtn.classList.add('hidden');
+            rpsResultDisplay.style.color = '#ffffff'; // Varsayılan renk
+        }
+
+        async function playRPSGame(playerChoice) {
+            if (!userId) {
+                showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true, 'message-box-home');
+                return;
+            }
+
+            // Seçim butonlarını devre dışı bırak
+            rockBtn.disabled = true;
+            paperBtn.disabled = true;
+            scissorsBtn.disabled = true;
+
+            const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+
+            rpsPlayerChoiceDisplay.textContent = playerChoice.charAt(0).toUpperCase() + playerChoice.slice(1);
+            rpsComputerChoiceDisplay.textContent = computerChoice.charAt(0).toUpperCase() + computerChoice.slice(1);
+
+            let result;
+            let isWin = false;
+
+            if (playerChoice === computerChoice) {
+                result = 'Berabere!';
+            } else if (
+                (playerChoice === 'taş' && computerChoice === 'makas') ||
+                (playerChoice === 'kağıt' && computerChoice === 'taş') ||
+                (playerChoice === 'makas' && computerChoice === 'kağıt')
+            ) {
+                result = 'Kazandın! (+20 Puan)';
+                isWin = true;
+            } else {
+                result = 'Kaybettin.';
+            }
+
+            rpsResultDisplay.textContent = result;
+            if (isWin) {
+                rpsResultDisplay.style.color = '#a78bfa'; // Mor renk
+                try {
+                    const docSnap = await userDocRef.get();
+                    await userDocRef.update({
+                        points: (docSnap.data().points || 0) + RPS_GAME_WIN_POINTS
+                    });
+                    showMessage(`${RPS_GAME_WIN_POINTS} puan kazandın!`, false, 'message-box-home');
+                } catch (e) {
+                    console.error("RPS puanı güncellenirken hata oluştu: ", e);
+                    showMessage("Puan kaydedilirken bir hata oluştu.", true, 'message-box-home');
+                }
+            } else if (result === 'Berabere!') {
+                rpsResultDisplay.style.color = '#fcd34d'; // Sarımsı
+            } else {
+                rpsResultDisplay.style.color = '#dc3545'; // Kırmızı
+            }
+            
+            rpsPlayAgainBtn.classList.remove('hidden');
+        }
+
 
         // Uygulama yüklendiğinde başlat
         document.addEventListener('DOMContentLoaded', () => { 
@@ -814,6 +926,15 @@
             submitGuessButton = document.getElementById('submit-guess-button');
             guessFeedback = document.getElementById('guess-feedback');
             newGameButton = document.getElementById('new-game-button');
+
+            // Taş-Kağıt-Makas Oyunu Elemanlarını ata
+            rockBtn = document.getElementById('rock-btn');
+            paperBtn = document.getElementById('paper-btn');
+            scissorsBtn = document.getElementById('scissors-btn');
+            rpsPlayerChoiceDisplay = document.getElementById('rps-player-choice');
+            rpsComputerChoiceDisplay = document.getElementById('rps-computer-choice');
+            rpsResultDisplay = document.getElementById('rps-result-display');
+            rpsPlayAgainBtn = document.getElementById('rps-play-again-btn');
 
 
             // Kullanıcı adı kaydetme butonu için olay dinleyici
@@ -950,8 +1071,16 @@
             if (newGameButton) {
                 newGameButton.addEventListener('click', startGame);
             }
-            // Oyunu başlat
+            // Sayı Tahmin Oyunu'nu başlat
             startGame();
+
+            // Taş-Kağıt-Makas Oyunu Olay Dinleyicileri
+            if (rockBtn) rockBtn.addEventListener('click', () => playRPSGame('taş'));
+            if (paperBtn) paperBtn.addEventListener('click', () => playRPSGame('kağıt'));
+            if (scissorsBtn) scissorsBtn.addEventListener('click', () => playRPSGame('makas'));
+            if (rpsPlayAgainBtn) rpsPlayAgainBtn.addEventListener('click', initializeRPSGame);
+            // Taş-Kağıt-Makas Oyunu'nu başlat
+            initializeRPSGame();
             
             initializeFirebase();
         });
