@@ -670,7 +670,7 @@
             projectId: "onwingiris-afccf",
             storageBucket: "onwingiris-afccf.firebasestorage.app",
             messagingSenderId: "1059998132611",
-            appId: "1:1059998132611:web:7f415159c54936cc796eb6",
+            appId: "1:1059998132611:web:7f415159c549366cc796eb6",
             measurementId: "G-RE79PDJSJX"
         };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -829,7 +829,7 @@
                                 if (usernameModal) openModal(usernameModal);
                             } else {
                                 // Kullanıcı adı zaten ayarlı, ana uygulamayı göster
-                                loadingScreen.style.display = 'flex'; // 'none' yerine 'flex'
+                                loadingScreen.style.display = 'none'; // Düzeltme: yükleme ekranını gizle
                                 if (homePageContent) homePageContent.style.display = 'flex';
                                 listenForDataChanges();
                                 fetchLeaderboard(); // Liderlik tablosunu yükle
@@ -936,7 +936,7 @@
                     showMessage("Uygulama arayüzü güncellenemedi, lütfen tekrar deneyin.", true, 'message-box-home');
                 }
 
-                showMessage(`Hoş geldin, ${username}!`, false, 'message-box-home');
+                showMessage(`Hoş geldin, ${username}! Kullanıcı adın kaydedildi, tekrar sorulmayacak.`, false, 'message-box-home'); // Mesaj güncellendi
                 listenForDataChanges(); // Kullanıcı adı kaydedildikten sonra UI'ı güncelle
                 fetchLeaderboard(); // Kullanıcı adı güncellendiğinde liderlik tablosunu yenile
             } catch (e) {
