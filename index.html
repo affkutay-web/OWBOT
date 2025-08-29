@@ -730,7 +730,7 @@
             submitGuessButton.disabled = false;
             newGameButton.classList.add('hidden');
             updateGuessFeedback(`Kalan tahmin hakkı: ${attemptsLeft}`);
-            console.log("Yeni oyun başladı. Hedef sayı:", targetNumber); // Sadece geliştirme için
+            // console.log("Yeni oyun başladı. Hedef sayı:", targetNumber); // Bu satır kaldırıldı
         }
 
         function updateGuessFeedback(message, isError = false) {
