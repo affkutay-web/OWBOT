@@ -26,8 +26,7 @@
             height: 100%; /* HTML'in tam yüksekliği almasını sağlar */
         }
         body {
-            height: auto; /* İçeriğe göre yüksekliği ayarlar */
-            min-height: 100%; /* En az HTML yüksekliği kadar olmasını sağlar */
+            height: 100%; /* Body'nin tam yüksekliği almasını sağlar */
             width: 100%;
             margin: 0;
             padding: 1.5rem; /* Genel padding ekle */
@@ -100,7 +99,7 @@
             border-radius: 50%;
             overflow: hidden; /* Dilimlerin dışarı taşmasını engelle */
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            margin-bottom: 1.5rem; /* Altına boşluk bırak */
+            /* margin-bottom burada kaldırıldı, boşluk space-y-6 ile yönetilecek */
         }
         .wheel {
             position: relative; /* Dilimler için konteyner */
@@ -164,7 +163,7 @@
             flex-shrink: 0; /* İçeriğin büyümesini engelleme */
             width: 100%;
             max-width: 600px; /* Daha geniş cihazlarda daha iyi görünüm */
-            margin: 1.5rem auto; /* Üstte ve altta boşluk bırak, yatayda ortala */
+            margin: auto; /* Yatayda ortala, dikey margin body padding'i tarafından yönetiliyor */
             padding: 1.5rem; /* İç padding */
             box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağla */
             background-color: #1a1a1a; /* Uygulama kapsayıcısı için koyu siyah */
