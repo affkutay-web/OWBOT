@@ -270,62 +270,14 @@
         }
 
         /* Kullanıcı adı giriş modal stili */
+        /* Bu kısım artık kullanılmıyor, ancak stil referansı olarak duruyor */
         #username-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* Daha koyu arka plan */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            backdrop-filter: blur(8px); /* Bulanıklık efekti */
-        }
-        .username-modal-content {
-            background: linear-gradient(180deg, #1a1a1a 0%, #333333 100%); /* Degradeli arka plan */
-            padding: 2.5rem; /* Daha fazla padding */
-            border-radius: 1rem; /* Daha yuvarlak köşeler */
-            text-align: center;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); /* Daha büyük gölge */
-            max-width: 90%;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .username-modal-content input {
-            width: 100%;
-            padding: 0.75rem;
-            margin-top: 1rem;
-            margin-bottom: 1.5rem;
-            border-radius: 0.5rem;
-            border: 1px solid #555; /* Daha belirgin kenarlık */
-            background-color: #2a2a2a;
-            color: #ffffff;
-            font-size: 1em;
-            text-align: center;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* İç gölge */
-            transition: all 0.2s ease-in-out; /* Animasyon ekle */
+            display: none; /* Bu modal artık tamamen gizli */
         }
         .username-modal-content input:focus {
             border-color: #a78bfa; /* Odaklandığında mor kenarlık */
             box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.4); /* Hafif dış gölge */
             outline: none;
-        }
-
-        .username-modal-content button {
-            width: 100%;
-            padding: 0.9rem; /* Daha büyük padding */
-            border-radius: 0.75rem; /* Daha yuvarlak köşeler */
-            background-color: #a78bfa;
-            color: #ffffff;
-            font-weight: bold;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 -2px 0 rgba(0, 0, 0, 0.1);
-        }
-        .username-modal-content button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3), inset 0 -2px 0 rgba(0, 0, 0, 0.1);
         }
 
         /* Genel Modal Stili (Çark, Hızlı Tıkla, Sayı Tahmin, Taş Kağıt Makas) */
@@ -662,15 +614,7 @@
         <p class="text-sm">Bağlanıyor...</p>
     </div>
 
-    <!-- Kullanıcı Adı Belirleme Modalı -->
-    <div id="username-modal" class="hidden">
-        <div class="username-modal-content">
-            <h2 class="text-xl font-bold mb-4">Hoş Geldin!</h2>
-            <p class="text-sm text-gray-600">Devam etmek için bir kullanıcı adı belirle.</p>
-            <input type="text" id="username-input" placeholder="Kullanıcı adını gir..." maxlength="20">
-            <button id="save-username-btn" class="telegram-btn">Kullanıcı Adını Kaydet</button>
-        </div>
-    </div>
+    <!-- Kullanıcı Adı Belirleme Modalı (Artık kullanılmıyor, kaldırıldı) -->
 
     <!-- Sabit Uygulama Başlığı -->
     <header id="app-header">
@@ -879,7 +823,8 @@
         ];
 
         // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
-        let loadingScreen, usernameModal, usernameInput, saveUsernameBtn;
+        let loadingScreen;
+        // Kullanıcı adı modali kaldırıldığı için bu değişkenler artık yok: usernameModal, usernameInput, saveUsernameBtn;
         let appHeader, userInfoHeader, pointsDisplayHeader;
         let appWrapper, homePageContent, messageBoxHome;
         
@@ -888,11 +833,11 @@
 
         // Sekme içerik elemanları
         let miniGamesCarouselContainer, miniGamesSection, scrollLeftBtn, scrollRightBtn;
-        let wheelCardElement; // Çarkıfelek kartı elemanı, karışmaması için ID'si güncellendi
+        let wheelCardElement; 
         let leaderboardSection, leaderboardList;
         let bonusCodesListSection, bonusCodesList;
         
-        // Anasayfa oyun kartları (Artık sekmeler içinde)
+        // Anasayfa oyun kartları
         let fastClickCard, guessGameCard, rpsGameCard;
         
         // Kaydırma (sürükleme) için değişkenler
@@ -901,10 +846,10 @@
         let scrollLeftStart;
 
         // Modallar ve içindeki elemanlar
-        let wheelModal, wheelModalCloseBtn, wheelElement, wheelSpinButton, messageBoxWheelModal; // wheelSpinButton olarak güncellendi
-        let fastClickModal, fastClickModalCloseBtn, fastClickGameButton, messageBoxFastClickModal; // fastClickGameButton olarak güncellendi
-        let guessGameModal, guessGameModalCloseBtn, guessGameInput, guessGameSubmitButton, guessGameFeedback, guessGameNewButton, messageBoxGuessGameModal; // unique ID'ler
-        let rpsGameModal, rpsGameModalCloseBtn, rpsRockBtn, rpsPaperBtn, rpsScissorsBtn, rpsPlayerChoiceDisplay, rpsComputerChoiceDisplay, rpsResultDisplayText, rpsPlayAgainButton, messageBoxRpsGameModal; // unique ID'ler
+        let wheelModal, wheelModalCloseBtn, wheelElement, wheelSpinButton, messageBoxWheelModal; 
+        let fastClickModal, fastClickModalCloseBtn, fastClickGameButton, messageBoxFastClickModal; 
+        let guessGameModal, guessGameModalCloseBtn, guessGameInput, guessGameSubmitButton, guessGameFeedback, guessGameNewButton, messageBoxGuessGameModal; 
+        let rpsGameModal, rpsGameModalCloseBtn, rpsRockBtn, rpsPaperBtn, rpsScissorsBtn, rpsPlayerChoiceDisplay, rpsComputerChoiceDisplay, rpsResultDisplayText, rpsPlayAgainButton, messageBoxRpsGameModal; 
 
         // Sayı Tahmin Oyunu Değişkenleri
         let targetNumber, attemptsLeft, gameOver;
@@ -919,20 +864,20 @@
 
         // MODAL YÖNETİMİ BAŞLANGIÇ
         function openModal(modalElement) {
-            modalElement.style.display = 'flex'; // Önce display'i ayarla
-            setTimeout(() => { // Geçişin tetiklenmesi için kısa bir gecikme
+            modalElement.style.display = 'flex'; 
+            setTimeout(() => { 
                 modalElement.classList.add('open');
             }, 10);
-            Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Modal açılışında hafif titreşim
+            Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
         }
 
         function closeModal(modalElement) {
             modalElement.classList.remove('open');
             modalElement.addEventListener('transitionend', function handler() {
-                modalElement.style.display = 'none'; // Geçiş bittikten sonra display'i gizle
-                modalElement.removeEventListener('transitionend', handler); // Dinleyiciyi kaldır
+                modalElement.style.display = 'none'; 
+                modalElement.removeEventListener('transitionend', handler); 
             }, { once: true });
-            Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Modal kapanışında hafif titreşim
+            Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
         }
         // MODAL YÖNETİMİ BİTİŞ
 
@@ -945,15 +890,15 @@
             }
             targetBox.textContent = text;
             if (isError) {
-                targetBox.style.backgroundColor = '#dc3545'; // Kırmızı arka plan
+                targetBox.style.backgroundColor = '#dc3545'; 
             } else {
-                targetBox.style.backgroundColor = '#333'; // Varsayılan arka plan
+                targetBox.style.backgroundColor = '#333'; 
             }
             targetBox.style.display = 'block';
             setTimeout(() => {
                 targetBox.style.display = 'none';
-            }, 3000); // 3 saniye sonra gizle
-            Telegram.WebApp.HapticFeedback.notificationOccurred(isError ? 'error' : 'success'); // Mesaj türüne göre titreşim
+            }, 3000); 
+            Telegram.WebApp.HapticFeedback.notificationOccurred(isError ? 'error' : 'success'); 
         }
 
         // Çarkı dinamik olarak oluşturma
@@ -961,28 +906,24 @@
             const numSegments = segments.length;
             const segmentAngle = 360 / numSegments;
             
-            if (wheelElement) wheelElement.innerHTML = ''; // Çarkı temizle
+            if (wheelElement) wheelElement.innerHTML = ''; 
             
             segments.forEach((segmentData, index) => {
-                const rotationAngle = index * segmentAngle; // Segmentin dönme açısı
+                const rotationAngle = index * segmentAngle; 
 
-                // Her bir dilim için kapsayıcı div
                 const segmentEl = document.createElement('div');
                 segmentEl.className = 'segment';
                 segmentEl.style.setProperty('--rotation-angle', `${rotationAngle}deg`);
                 segmentEl.style.setProperty('--segment-color', segmentData.color);
-                segmentEl.style.setProperty('--segment-sweep-angle', `${segmentAngle}deg`); // Dilim yay açısı
+                segmentEl.style.setProperty('--segment-sweep-angle', `${segmentAngle}deg`); 
 
-                // Renkli kısmın kendisi
                 const colorFillEl = document.createElement('div');
                 colorFillEl.className = 'segment-color-fill';
                 segmentEl.appendChild(colorFillEl);
 
-                // Segmentin içindeki metin etiketi
                 const labelEl = document.createElement('div');
                 labelEl.className = 'segment-label';
                 labelEl.textContent = segmentData.text;
-                // Metni yatay tutmak için karşıt dönüş
                 labelEl.style.setProperty('--rotation-angle', `${rotationAngle}deg`); 
 
                 segmentEl.appendChild(labelEl);
@@ -995,8 +936,8 @@
             try {
                 // Firebase'i başlatma
                 const app = firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth(); // compat versiyonunda bu şekilde
-                db = firebase.firestore(); // compat versiyonunda bu şekilde
+                auth = firebase.auth(); 
+                db = firebase.firestore(); 
 
                 // Kullanıcı yetkilendirmesi
                 if (initialAuthToken) {
@@ -1008,41 +949,51 @@
                 auth.onAuthStateChanged(async (user) => {
                     if (user) {
                         userId = user.uid;
-                        // Firestore collection ve doc referanslarını düzeltme
                         userDocRef = db.collection(`artifacts/${appId}/public/data/game_data`).doc(userId);
                         
                         const docSnap = await userDocRef.get();
-                        console.log("Firestore docSnap exists:", docSnap.exists, "Data:", docSnap.data()); // Debug logu eklendi
+                        console.log("Firestore docSnap exists:", docSnap.exists, "Data:", docSnap.data()); 
 
-                        // Kullanıcı adı kontrolü
-                        if (!docSnap.exists || !docSnap.data().username) { 
-                            // Belge yoksa veya kullanıcı adı ayarlı değilse
-                            if (!docSnap.exists) { // Belge yoksa oluştur
-                                await userDocRef.set({
-                                    username: null,
-                                    points: 0,
-                                    bonusCodes: [],
-                                    lastClick: 0
-                                });
+                        let telegramUsername = 'Misafir'; // Varsayılan kullanıcı adı
+                        if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
+                            const tgUser = Telegram.WebApp.initDataUnsafe.user;
+                            if (tgUser.first_name) {
+                                telegramUsername = tgUser.first_name;
+                                if (tgUser.last_name) {
+                                    telegramUsername += ` ${tgUser.last_name}`;
+                                }
+                            } else {
+                                telegramUsername = `Kullanıcı_${tgUser.id}`; 
                             }
-                            loadingScreen.style.display = 'none'; // Yükleme ekranını gizle
-                            if (usernameModal) openModal(usernameModal); // Kullanıcı adı modalını göster
-                        } else {
-                            // Kullanıcı adı zaten ayarlı, ana uygulamayı göster
-                            loadingScreen.style.display = 'none'; // Yükleme ekranını gizle
-                            if (homePageContent) homePageContent.style.display = 'flex'; // Ana içeriği göster
-                            listenForDataChanges(); // Gerçek zamanlı veri dinlemeye başla
-                            fetchLeaderboard(); // Liderlik tablosunu yükle
                         }
+
+                        if (!docSnap.exists) { 
+                            await userDocRef.set({
+                                username: telegramUsername, 
+                                points: 0,
+                                bonusCodes: [],
+                                lastClick: 0
+                            });
+                            console.log("Yeni kullanıcı belgesi Telegram verileriyle oluşturuldu.");
+                        } else if (!docSnap.data().username) { 
+                            await userDocRef.update({
+                                username: telegramUsername 
+                            });
+                            console.log("Mevcut kullanıcının kullanıcı adı Telegram verileriyle güncellendi.");
+                        }
+                        
+                        // Kullanıcı adı ayarlı olduğu için ana uygulamayı göster
+                        loadingScreen.style.display = 'none';
+                        if (homePageContent) homePageContent.style.display = 'flex';
+                        listenForDataChanges();
+                        fetchLeaderboard();
                     } else {
-                        // Eğer kimlik doğrulama başarısız olursa, bir hata mesajı göster
                         console.error("Kimlik doğrulama başarısız oldu, kullanıcı nesnesi boş.");
                         loadingScreen.style.display = 'none';
                         showMessage('Kimlik doğrulama başarısız oldu, lütfen uygulamayı tekrar açın.', true, 'message-box-home');
                     }
                 });
             } catch (error) {
-                // Firebase başlatılırken veya kimlik doğrulanırken oluşan hataları yakala
                 console.error("Firebase başlatılırken bir hata oluştu:", error);
                 loadingScreen.style.display = 'none';
                 showMessage(`Uygulama başlatılırken bir hata oluştu: ${error.message}`, true, 'message-box-home');
@@ -1055,7 +1006,7 @@
                 if (doc.exists) {
                     const data = doc.data();
                     updateUI(data);
-                    fetchLeaderboard(); // Kendi puanları değiştiğinde liderlik tablosunu güncelle
+                    fetchLeaderboard(); 
                 }
             });
         }
@@ -1063,7 +1014,7 @@
         // UI'ı verilerle güncelleme
         function updateUI(data) {
             // Header'daki puan ve kullanıcı adını güncelle
-            if (pointsDisplayHeader) pointsDisplayHeader.textContent = `Puan: ${data.points}`;
+            if (pointsDisplayHeader) pointsDisplayHeader.innerHTML = `<i class="fa-solid fa-coins"></i> Puan: ${data.points}`;
             
             if (userInfoHeader) {
                 if (data.username) {
@@ -1093,57 +1044,6 @@
             if (wheelSpinButton) wheelSpinButton.disabled = data.points < 100 || isSpinning;
         }
 
-        // Kullanıcı adını kaydetme fonksiyonu
-        async function saveUsername() {
-            console.log("saveUsername çağrıldı.");
-            const username = usernameInput.value.trim();
-            if (username.length < 3 || username.length > 20) {
-                showMessage("Kullanıcı adı 3 ile 20 karakter arasında olmalıdır.", true, 'message-box-home');
-                console.log("Kullanıcı adı doğrulama başarısız.");
-                return;
-            }
-            console.log("Kullanıcı adı doğrulama başarılı:", username);
-
-            try {
-                // Kullanıcı adının benzersizliğini kontrol et (ve mevcut kullanıcının kendi adı olup olmadığını)
-                const usernameQuery = await db.collection(`artifacts/${appId}/public/data/game_data`).where('username', '==', username).get();
-                
-                if (!usernameQuery.empty) {
-                    // Bu kullanıcı adını kullanan bir belge bulundu
-                    const existingUserDoc = usernameQuery.docs[0];
-                    if (existingUserDoc.id !== userId) {
-                        // Eğer bu kullanıcı adı başka bir kullanıcıya aitse
-                        showMessage("Bu kullanıcı adı zaten alınmış, lütfen başka bir tane dene.", true, 'message-box-home');
-                        console.log("Kullanıcı adı başka bir kullanıcı tarafından alınmış.");
-                        return;
-                    }
-                    // Eğer bu kullanıcı adı mevcut kullanıcının kendisiyse, devam et.
-                    console.log("Kullanıcı adı mevcut kullanıcının kendi adı.");
-                }
-                console.log("Kullanıcı adı benzersizlik kontrolü başarılı veya mevcut kullanıcıya ait.");
-
-                await userDocRef.update({ username: username });
-                console.log("Firestore'a kullanıcı adı başarıyla güncellendi.");
-
-                // UI elementlerinin varlığını kontrol et
-                if (usernameModal && homePageContent) {
-                    closeModal(usernameModal);
-                    homePageContent.style.display = 'flex'; // 'block' yerine 'flex'
-                    console.log("UI güncellendi: usernameModal gizlendi, homePageContent gösterildi.");
-                } else {
-                    console.error("Hata: usernameModal veya homePageContent bulunamadı. UI güncellenemedi.");
-                    showMessage("Uygulama arayüzü güncellenemedi, lütfen tekrar deneyin.", true, 'message-box-home');
-                }
-
-                showMessage(`Hoş geldin, ${username}! Kullanıcı adın kaydedildi, tekrar sorulmayacak.`, false, 'message-box-home'); // Mesaj güncellendi
-                listenForDataChanges(); // Kullanıcı adı kaydedildikten sonra UI'ı güncelle
-                fetchLeaderboard(); // Kullanıcı adı güncellendiğinde liderlik tablosunu yenile
-            } catch (e) {
-                console.error("Kullanıcı adı kaydedilirken hata oluştu: ", e);
-                showMessage("Kullanıcı adı kaydedilirken bir hata oluştu, lütfen tekrar deneyin. Detay: " + e.message, true, 'message-box-home');
-            }
-        }
-
         // Liderlik Tablosunu getirme fonksiyonu
         async function fetchLeaderboard() {
             if (!db || !leaderboardList) return;
@@ -1151,12 +1051,12 @@
             try {
                 // Sadece kullanıcı adı olan ve en yüksek puana sahip ilk 10 kullanıcıyı getir
                 const leaderboardSnapshot = await db.collection(`artifacts/${appId}/public/data/game_data`)
-                    .where('username', '!=', null) // Kullanıcı adı olmayanları filtrele
-                    .orderBy('points', 'desc') // Sadece puanlara göre azalan sırada sırala
+                    .where('username', '!=', null) 
+                    .orderBy('points', 'desc') 
                     .limit(10)
                     .get();
 
-                leaderboardList.innerHTML = ''; // Listeyi temizle
+                leaderboardList.innerHTML = ''; 
                 if (leaderboardSnapshot.empty) {
                     const li = document.createElement('li');
                     li.textContent = "Liderlik tablosu henüz boş.";
@@ -1167,7 +1067,7 @@
                 let rank = 1;
                 leaderboardSnapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.username && data.points !== undefined) { // Hem kullanıcı adı hem de puanı kontrol et
+                    if (data.username && data.points !== undefined) { 
                         const li = document.createElement('li');
                         li.innerHTML = `<span><i class="fa-solid fa-trophy"></i> ${rank}. ${data.username}</span><span>${data.points} Puan</span>`;
                         leaderboardList.appendChild(li);
@@ -1189,7 +1089,7 @@
             if (guessGameInput) guessGameInput.disabled = false;
             if (guessGameSubmitButton) guessGameSubmitButton.disabled = false;
             if (guessGameNewButton) guessGameNewButton.classList.add('hidden');
-            updateGuessFeedback(`Kalan tahmin hakkı: ${attemptsLeft}`, false); // Modala özel mesaj kutusu yok, genel kullanacak
+            updateGuessFeedback(`Kalan tahmin hakkı: ${attemptsLeft}`, false); 
         }
 
         function updateGuessFeedback(message, isError = false) {
@@ -1240,7 +1140,7 @@
                 const hint = guess < targetNumber ? 'daha yüksek' : 'daha düşük';
                 updateGuessFeedback(`Yanlış! Sayı ${hint}. Kalan tahmin hakkı: ${attemptsLeft}`);
             }
-            if (guessGameInput) guessGameInput.value = ''; // Tahmin kutusunu temizle
+            if (guessGameInput) guessGameInput.value = ''; 
         }
 
         // Taş-Kağıt-Makas Oyunu Mantığı
@@ -1252,7 +1152,7 @@
             if (rpsPaperBtn) rpsPaperBtn.disabled = false;
             if (rpsScissorsBtn) rpsScissorsBtn.disabled = false;
             if (rpsPlayAgainButton) rpsPlayAgainButton.classList.add('hidden');
-            if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#ffffff'; // Varsayılan renk
+            if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#ffffff'; 
         }
 
         async function playRPSGame(playerChoice) {
@@ -1261,7 +1161,6 @@
                 return;
             }
 
-            // Seçim butonlarını devre dışı bırak
             if (rpsRockBtn) rpsRockBtn.disabled = true;
             if (rpsPaperBtn) rpsPaperBtn.disabled = true;
             if (rpsScissorsBtn) rpsScissorsBtn.disabled = true;
@@ -1289,7 +1188,7 @@
 
             if (rpsResultDisplayText) rpsResultDisplayText.textContent = result;
             if (isWin) {
-                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#a78bfa'; // Mor renk
+                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#a78bfa'; 
                 try {
                     const docSnap = await userDocRef.get();
                     await userDocRef.update({
@@ -1301,13 +1200,13 @@
                     showMessage("Puan kaydedilirken bir hata oluştu.", true, 'message-box-rps-game-modal');
                 }
             } else if (result === 'Berabere!') {
-                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#fcd34d'; // Sarımsı
+                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#fcd34d'; 
             } else {
-                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#dc3545'; // Kırmızı
+                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#dc3545'; 
             }
             
             if (rpsPlayAgainButton) rpsPlayAgainButton.classList.remove('hidden');
-            Telegram.WebApp.HapticFeedback.impactOccurred('medium'); // Oyun sonunda titreşim
+            Telegram.WebApp.HapticFeedback.impactOccurred('medium'); 
         }
 
 
@@ -1315,9 +1214,7 @@
         document.addEventListener('DOMContentLoaded', () => { 
             // HTML elemanlarını DOM yüklendikten sonra al ve global değişkenlere ata
             loadingScreen = document.getElementById('loading-screen');
-            usernameModal = document.getElementById('username-modal');
-            usernameInput = document.getElementById('username-input');
-            saveUsernameBtn = document.getElementById('save-username-btn');
+            // usernameModal, usernameInput, saveUsernameBtn artık kullanılmıyor.
 
             appHeader = document.getElementById('app-header');
             userInfoHeader = document.getElementById('user-info-header');
@@ -1341,7 +1238,7 @@
             miniGamesSection = document.getElementById('mini-games-section');
             scrollLeftBtn = document.getElementById('scroll-left-btn');
             scrollRightBtn = document.getElementById('scroll-right-btn');
-            wheelCardElement = document.getElementById('wheel-card'); // ID'si güncellendi
+            wheelCardElement = document.getElementById('wheel-card'); 
             leaderboardSection = document.getElementById('leaderboard-section');
             leaderboardList = document.getElementById('leaderboard-list');
             bonusCodesListSection = document.getElementById('bonus-codes-list-section');
@@ -1383,39 +1280,24 @@
             rpsPlayAgainButton = document.getElementById('rps-play-again-button');
             messageBoxRpsGameModal = document.getElementById('message-box-rps-game-modal');
 
-
-            // Kullanıcı adı kaydetme butonu için olay dinleyici
-            if (saveUsernameBtn) {
-                saveUsernameBtn.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light');
-                    saveUsername();
-                });
-            } else {
-                console.error("Hata: saveUsernameBtn HTML elementi bulunamadı!");
-                showMessage("Uygulama yüklenirken bir sorun oluştu (Kullanıcı Adı Kaydet Butonu bulunamadı).", true, 'message-box-home');
-            }
+            // Kullanıcı adı kaydetme butonu için olay dinleyici (Kaldırıldı)
 
             // Sekme butonları için olay dinleyicileri
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Sekme değişiminde titreşim
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
                     const targetTab = button.dataset.tab;
 
-                    // Tüm butonlardan 'active' sınıfını kaldır
                     tabButtons.forEach(btn => btn.classList.remove('active'));
-                    // Tıklanan butona 'active' sınıfını ekle
                     button.classList.add('active');
 
-                    // Tüm içeriklerden 'active' sınıfını kaldır
                     for (const key in tabContents) {
                         tabContents[key].classList.remove('active');
                     }
-                    // Hedef içeriğe 'active' sınıfını ekle
                     if (tabContents[targetTab]) {
                         tabContents[targetTab].classList.add('active');
                     }
                     
-                    // Liderlik tablosu sekmesi aktif olduğunda veriyi yeniden getir
                     if (targetTab === 'leaderboard') {
                         fetchLeaderboard();
                     }
@@ -1439,7 +1321,7 @@
             if (guessGameCard) {
                 guessGameCard.addEventListener('click', () => {
                     if (guessGameModal) openModal(guessGameModal);
-                    startGame(); // Modalı açtığında oyunu başlat
+                    startGame(); 
                 });
             }
             // Sayı Tahmin Oyunu modalındaki kapatma butonu
@@ -1453,7 +1335,7 @@
             if (rpsGameCard) {
                 rpsGameCard.addEventListener('click', () => {
                     if (rpsGameModal) openModal(rpsGameModal);
-                    initializeRPSGame(); // Modalı açtığında oyunu başlat
+                    initializeRPSGame(); 
                 });
             }
             // Taş, Kağıt, Makas modalındaki kapatma butonu
@@ -1466,7 +1348,7 @@
             // Hızlı Tıkla! butonu için olay dinleyici (modal içinde)
             if (fastClickGameButton) { 
                 fastClickGameButton.addEventListener('click', async () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
                     if (!userId) {
                         showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true, 'message-box-fast-click-modal');
                         return;
@@ -1499,7 +1381,7 @@
             }
 
             // Çarkıfelek kartına tıklama olayı (modalı açar)
-            if (wheelCardElement) { // ID'si güncellendi
+            if (wheelCardElement) { 
                 wheelCardElement.addEventListener('click', () => {
                     if (wheelModal) openModal(wheelModal);
                 });
@@ -1517,9 +1399,9 @@
             }
 
             // Çarkı çevir butonu (modal içinde)
-            if (wheelSpinButton) { // ID güncellendi
+            if (wheelSpinButton) { 
                 wheelSpinButton.addEventListener('click', async () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('heavy'); // Çark çevirme başlangıcında ağır titreşim
+                    Telegram.WebApp.HapticFeedback.impactOccurred('heavy'); 
                     if (!userId) return;
                     isSpinning = true;
                     wheelSpinButton.disabled = true;
@@ -1555,17 +1437,17 @@
                                     bonusCodes: firebase.firestore.FieldValue.arrayUnion(newBonusCode)
                                 });
                                 showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`, false, 'message-box-wheel-modal');
-                                Telegram.WebApp.HapticFeedback.notificationOccurred('success'); // Başarılı titreşim
+                                Telegram.WebApp.HapticFeedback.notificationOccurred('success'); 
                             } else {
                                 showMessage("Maalesef, bir dahaki sefere!", false, 'message-box-wheel-modal');
-                                Telegram.WebApp.HapticFeedback.notificationOccurred('warning'); // Uyarı titreşim
+                                Telegram.WebApp.HapticFeedback.notificationOccurred('warning'); 
                             }
                             
                             isSpinning = false;
                             wheelSpinButton.disabled = false;
                             wheelSpinButton.textContent = "Çarkı Çevir (100 Puan)";
-                            wheelElement.style.transform = 'rotate(0deg)'; // Çarkı başlangıç konumuna döndür
-                        }, 5000); // 5 saniye animasyon süresi
+                            wheelElement.style.transform = 'rotate(0deg)'; 
+                        }, 5000); 
                     } catch (e) {
                         console.error("Çark çevrilirken bir hata oluştu: ", e);
                         showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true, 'message-box-wheel-modal');
@@ -1579,45 +1461,40 @@
                 showMessage("Uygulama yüklenirken bir sorun oluştu (Çark Butonu bulunamadı).", true, 'message-box-home');
             }
             
-            // createWheel çağrısı wheelElement atandıktan sonra yapılmalı
             if (wheelElement) {
                 createWheel(); 
             } else {
                 console.error("Hata: wheelElement HTML elementi bulunamadı!");
             }
 
-            // Sayı Tahmin Oyunu Olay Dinleyicileri (modal içinde)
             if (guessGameSubmitButton) {
                 guessGameSubmitButton.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
                     checkGuess();
                 });
             }
             if (guessGameNewButton) {
                 guessGameNewButton.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
                     startGame();
                 });
             }
             
-            // Taş-Kağıt-Makas Oyunu Olay Dinleyicileri (modal içinde)
             if (rpsRockBtn) rpsRockBtn.addEventListener('click', () => playRPSGame('taş'));
             if (rpsPaperBtn) rpsPaperBtn.addEventListener('click', () => playRPSGame('kağıt'));
             if (rpsScissorsBtn) rpsScissorsBtn.addEventListener('click', () => playRPSGame('makas'));
             if (rpsPlayAgainButton) rpsPlayAgainButton.addEventListener('click', () => {
-                Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
+                Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
                 initializeRPSGame();
             });
             
-            // Carousel kaydırma butonları olay dinleyicileri
             if (scrollLeftBtn && miniGamesSection) {
                 scrollLeftBtn.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
-                    // İlk kartın genişliğini al ve sola kaydır
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
                     const firstCard = miniGamesSection.querySelector('.game-card-homepage');
                     if (firstCard) {
                         miniGamesSection.scrollBy({
-                            left: -firstCard.offsetWidth - 24, // Kart genişliği + margin-left (1.5rem = 24px)
+                            left: -firstCard.offsetWidth - 24, 
                             behavior: 'smooth'
                         });
                     }
@@ -1625,26 +1502,24 @@
             }
             if (scrollRightBtn && miniGamesSection) {
                 scrollRightBtn.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); // Buton tıklamasında titreşim
-                    // İlk kartın genişliğini al ve sağa kaydır
+                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
                     const firstCard = miniGamesSection.querySelector('.game-card-homepage');
                     if (firstCard) {
                         miniGamesSection.scrollBy({
-                            left: firstCard.offsetWidth + 24, // Kart genişliği + margin-left (1.5rem = 24px)
+                            left: firstCard.offsetWidth + 24, 
                             behavior: 'smooth'
                         });
                     }
                 });
             }
             
-            // Mini Oyunlar Bölümü için dokunmatik ve fare ile sürükleme olayları
             if (miniGamesSection) {
                 miniGamesSection.addEventListener('mousedown', (e) => {
                     isDragging = true;
-                    miniGamesSection.classList.add('grabbing'); // Sürüklerken cursor değişimi
+                    miniGamesSection.classList.add('grabbing'); 
                     startX = e.pageX - miniGamesSection.offsetLeft;
                     scrollLeftStart = miniGamesSection.scrollLeft;
-                    e.preventDefault(); // Metin seçilmesini veya varsayılan sürüklemeyi engelle
+                    e.preventDefault(); 
                 });
 
                 miniGamesSection.addEventListener('mouseleave', () => {
@@ -1661,11 +1536,10 @@
                     if (!isDragging) return;
                     e.preventDefault();
                     const x = e.pageX - miniGamesSection.offsetLeft;
-                    const walk = (x - startX) * 1.5; // Kaydırma hızını ayarla
+                    const walk = (x - startX) * 1.5; 
                     miniGamesSection.scrollLeft = scrollLeftStart - walk;
                 });
 
-                // Dokunmatik olaylar (mobil için)
                 miniGamesSection.addEventListener('touchstart', (e) => {
                     isDragging = true;
                     startX = e.touches[0].pageX - miniGamesSection.offsetLeft;
@@ -1678,9 +1552,9 @@
 
                 miniGamesSection.addEventListener('touchmove', (e) => {
                     if (!isDragging) return;
-                    e.preventDefault(); // Mobil cihazlarda varsayılan kaydırmayı engelle
+                    e.preventDefault(); 
                     const x = e.touches[0].pageX - miniGamesSection.offsetLeft;
-                    const walk = (x - startX) * 1.5; // Kaydırma hızını ayarla
+                    const walk = (x - startX) * 1.5; 
                     miniGamesSection.scrollLeft = scrollLeftStart - walk;
                 });
             }
