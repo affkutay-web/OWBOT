@@ -223,12 +223,13 @@
             flex-grow: 1; /* Kalan tüm dikey boşluğu doldur */
             width: 100%;
             max-width: 600px; /* Genel içerik için maksimum genişlik */
-            margin-top: 60px; /* Sabit başlığın altından başla */
+            min-width: 320px; /* Çok dar ekranlarda içeriğin bozulmasını engelle */
+            margin: 60px auto 1.5rem auto; /* Üstten sabit, yatayda ortalı, alttan boşluk */
             overflow-y: auto; /* Kendi içinde dikey kaydırma */
             -webkit-overflow-scrolling: touch; /* iOS'ta daha akıcı kaydırma */
             display: flex; /* İçeriğini dikeyde sıralamak için */
             flex-direction: column;
-            padding-bottom: 1.5rem; /* En alt kartın altından boşluk */
+            /* padding-bottom: 1.5rem;  Bu artık margin içinde */
         }
 
         #home-page-content {
@@ -1140,47 +1141,7 @@
             messageBoxWheelModal = document.getElementById('message-box-wheel-modal');
 
             fastClickModal = document.getElementById('fast-click-modal');
-            fastClickModalCloseBtn = document.getElementById('fast-click-modal-close-btn');
-            fastClickGameButton = document.getElementById('fast-click-game-button'); // ID güncellendi
-            messageBoxFastClickModal = document.getElementById('message-box-fast-click-modal');
-
-            guessGameModal = document.getElementById('guess-game-modal');
-            guessGameModalCloseBtn = document.getElementById('guess-game-modal-close-btn');
-            guessGameInput = document.getElementById('guess-game-input'); // ID güncellendi
-            guessGameSubmitButton = document.getElementById('guess-game-submit-button'); // ID güncellendi
-            guessGameFeedback = document.getElementById('guess-game-feedback'); // ID güncellendi
-            guessGameNewButton = document.getElementById('guess-game-new-button'); // ID güncellendi
-            messageBoxGuessGameModal = document.getElementById('message-box-guess-game-modal');
-
-            rpsGameModal = document.getElementById('rps-game-modal');
-            rpsGameModalCloseBtn = document.getElementById('rps-game-modal-close-btn');
-            rpsRockBtn = document.getElementById('rps-rock-btn'); // ID güncellendi
-            rpsPaperBtn = document.getElementById('rps-paper-btn'); // ID güncellendi
-            rpsScissorsBtn = document.getElementById('rps-scissors-btn'); // ID güncellendi
-            rpsPlayerChoiceDisplay = document.getElementById('rps-player-choice-display'); // ID güncellendi
-            rpsComputerChoiceDisplay = document.getElementById('rps-computer-choice-display'); // ID güncellendi
-            rpsResultDisplayText = document.getElementById('rps-result-display-text'); // ID güncellendi
-            rpsPlayAgainButton = document.getElementById('rps-play-again-button'); // ID güncellendi
-            messageBoxRpsGameModal = document.getElementById('message-box-rps-game-modal');
-
-
-            // Kullanıcı adı kaydetme butonu için olay dinleyici
-            if (saveUsernameBtn) {
-                saveUsernameBtn.addEventListener('click', saveUsername);
-            } else {
-                console.error("Hata: saveUsernameBtn HTML elementi bulunamadı!");
-                showMessage("Uygulama yüklenirken bir sorun oluştu (Kullanıcı Adı Kaydet Butonu bulunamadı).", true, 'message-box-home');
-            }
-
-            // Hızlı Tıkla! kartına tıklama olayı (modalı açar)
-            if (fastClickCard) {
-                fastClickCard.addEventListener('click', () => {
-                    if (fastClickModal) openModal(fastClickModal);
-                });
-            }
-            // Hızlı Tıkla! modalındaki kapatma butonu
-            if (fastClickModalCloseBtn) {
-                fastClickModalCloseBtn.addEventListener('click', () => {
+            fastClickModalCloseBtn = document => {
                     if (fastClickModal) closeModal(fastClickModal);
                 });
             }
