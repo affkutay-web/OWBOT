@@ -32,7 +32,8 @@
         }
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #4b0082; /* Ana tema arkaplanı mor */
+            /* Ana tema arkaplanı mor degrade */
+            background: linear-gradient(135deg, #4b0082 0%, #2a0045 100%);
             color: #ffffff; /* Varsayılan yazılar beyaz */
             display: flex;
             flex-direction: column; /* İçeriği dikeyde sırala */
@@ -42,9 +43,23 @@
         .telegram-btn {
             background-color: var(--tg-theme-button-color, #a78bfa); /* Telegram tema butonu veya mor bir ton */
             color: var(--tg-theme-button-text-color, #ffffff);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            border-radius: 0.5rem; /* Yuvarlak köşeler */
+            /* Daha dinamik bir düğme görünümü için gölge ve hafif kabartma */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), 0 2px 5px rgba(0, 0, 0, 0.1), inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+            border-radius: 0.75rem; /* Daha yuvarlak köşeler */
+            transition: all 0.2s ease-in-out; /* Yumuşak geçişler */
         }
+        .telegram-btn:hover {
+            transform: translateY(-2px); /* Hafif yukarı kalkma efekti */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 3px 8px rgba(0, 0, 0, 0.15), inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+        }
+        .telegram-btn:disabled {
+            background-color: #555; /* Gri tonu */
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         /* Yükleme ekranı stili */
         #loading-screen {
             display: flex;
@@ -61,7 +76,7 @@
             z-index: 9999;
         }
         .spinner {
-            border: 4px solid #ffffff; /* Beyaz spinner */
+            border: 4px solid rgba(255, 255, 255, 0.3); /* Beyaz spinner, daha şeffaf */
             border-top: 4px solid #a78bfa; /* Mor tonunda spinner üst kenarı */
             border-radius: 50%;
             width: 50px;
@@ -78,17 +93,18 @@
             bottom: 1rem; /* Alttan boşluk */
             left: 50%;
             transform: translateX(-50%);
-            background-color: #333; /* Mesaj kutusu için daha koyu bir arka plan */
+            background-color: rgba(51, 51, 51, 0.9); /* Mesaj kutusu için daha koyu ve yarı şeffaf bir arka plan */
             color: #ffffff; /* Beyaz yazı */
             padding: 10px 20px;
             border-radius: 8px;
             z-index: 1000;
             display: none;
             text-align: center;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Daha belirgin gölge */
             width: 90%; /* Genişliği ayarla */
             max-width: 300px; /* Maksimum genişlik */
             box-sizing: border-box;
+            backdrop-filter: blur(5px); /* Hafif bulanıklık efekti */
         }
         #message-box-home { /* Anasayfa mesaj kutusu için özel konumlandırma */
             position: relative; /* Anasayfa içeriğine göre konumlanır */
@@ -107,7 +123,7 @@
             margin: 0 auto;
             border-radius: 50%;
             overflow: hidden; /* Dilimlerin dışarı taşmasını engelle */
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4); /* Daha belirgin gölge */
         }
         .wheel {
             position: relative; /* Dilimler için konteyner */
@@ -117,6 +133,7 @@
             transition: transform 5s cubic-bezier(0.1, 0.9, 0.2, 1); /* Hızlı başla, yavaş dur */
             transform-origin: center center;
             overflow: hidden; /* Dilimlerin dışarı taşmasını engelle */
+            background: radial-gradient(circle at center, #3a005f 0%, #1a1a1a 100%); /* Çarkın ortasından yayılan degrade */
         }
         .segment { /* Her bir çark diliminin kapsayıcısı */
             position: absolute;
@@ -138,6 +155,7 @@
             transform-origin: 0% 50%; /* Kapsayıcının sol ortasından dön */
             transform: rotate(var(--segment-sweep-angle)); /* Dilimin yayını oluşturmak için döndür */
             border-radius: 0 100% 100% 0 / 50%; /* Yarım daire şekli */
+            opacity: 0.9; /* Hafif şeffaflık */
         }
         .segment-label { /* Dilim üzerindeki okunabilir metin */
             position: absolute;
@@ -148,7 +166,7 @@
             font-size: 0.8em;
             font-weight: bold;
             color: #ffffff; /* Beyaz metin */
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Okunabilirliği artır */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7); /* Daha belirgin gölge */
             z-index: 2; /* Metin dilimin üstünde olsun */
             pointer-events: none; /* Metnin tıklamayı engellememesi için */
             padding: 0 5px; /* Kenarlardan boşluk */
@@ -160,7 +178,7 @@
             height: 0;
             border-left: 15px solid transparent;
             border-right: 15px solid transparent;
-            border-top: 25px solid #a78bfa; /* Mor tonunda ok */
+            border-top: 25px solid #fcd34d; /* Sarımsı renkte ok */
             top: -15px;
             left: 50%;
             transform: translateX(-50%);
@@ -173,10 +191,10 @@
             top: 0;
             left: 0;
             width: 100%;
-            background-color: #2a0045; /* Koyu mor başlık arkaplanı */
+            background: linear-gradient(90deg, #2a0045 0%, #4b0082 100%); /* Başlık için degrade */
             color: #ffffff;
             padding: 1rem 1.5rem; /* Yanlara ve dikeyde boşluk */
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4); /* Daha belirgin gölge */
             z-index: 10000; /* Diğer her şeyin üstünde olsun */
             display: flex;
             justify-content: space-between; /* İçeriği iki yana yasla */
@@ -185,17 +203,20 @@
             height: 60px; /* Başlık için sabit yükseklik */
         }
         #app-header .title {
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 1.6rem; /* Biraz daha büyük başlık */
+            font-weight: 900;
+            letter-spacing: 0.05em; /* Harf aralığı */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
         #app-header .user-info-display {
             text-align: right;
             font-size: 0.9rem;
         }
         #app-header .points-display {
-            font-size: 1.1rem;
+            font-size: 1.2rem; /* Daha büyük puan yazısı */
             font-weight: bold;
             color: #fcd34d; /* Sarımsı renk puanlar için */
+            text-shadow: 0 0 5px rgba(252, 211, 77, 0.5); /* Hafif parlama */
         }
 
         #app-wrapper {
@@ -207,30 +228,34 @@
             -webkit-overflow-scrolling: touch; /* iOS'ta daha akıcı kaydırma */
             display: flex; /* İçeriğini dikeyde sıralamak için */
             flex-direction: column;
+            padding-bottom: 1.5rem; /* En alt kartın altından boşluk */
         }
 
         #home-page-content {
             padding: 1.5rem; /* İç padding */
-            background-color: #1a1a1a; /* Uygulama kapsayıcısı için koyu siyah */
+            background-color: rgba(26, 26, 26, 0.8); /* Uygulama kapsayıcısı için koyu şeffaf */
             border-radius: 0.75rem; /* Daha belirgin yuvarlak köşeler */
             margin: 1.5rem; /* app-wrapper içinde üstten alttan boşluk */
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5); /* Daha büyük ve derin gölge */
             display: flex;
             flex-direction: column;
             gap: 1.5rem; /* Bölümler arası boşluk */
             align-items: center; /* İçerikleri yatayda ortala */
             flex-grow: 1; /* Home page içeriğinin de kendi içinde büyümesini sağlar */
+            backdrop-filter: blur(8px); /* Hafif bulanıklık efekti */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* İnce beyaz kenarlık */
         }
         
         /* Başlıklar için renk güncellemesi */
         h1, h2 {
-            color: #ffffff; /* Başlıklar beyaz */
+            color: #fcd34d; /* Başlıklar sarımsı olsun */
             font-weight: 900; /* Daha kalın ve etkileyici */
+            text-shadow: 0 0 8px rgba(252, 211, 77, 0.6); /* Hafif parlama */
         }
 
         /* Tüm küçük yazıları beyaz yapalım */
         .text-gray-600 {
-            color: #ffffff; /* Tüm küçük yazılar beyaz olsun */
+            color: #e0e0e0; /* Daha açık gri tonu, daha okunabilir */
         }
 
         /* Kullanıcı adı giriş modal stili */
@@ -240,19 +265,21 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.8); /* Daha koyu arka plan */
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10000;
+            backdrop-filter: blur(8px); /* Bulanıklık efekti */
         }
         .username-modal-content {
-            background-color: #1a1a1a;
-            padding: 2rem;
-            border-radius: 0.75rem;
+            background: linear-gradient(180deg, #1a1a1a 0%, #333333 100%); /* Degradeli arka plan */
+            padding: 2.5rem; /* Daha fazla padding */
+            border-radius: 1rem; /* Daha yuvarlak köşeler */
             text-align: center;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); /* Daha büyük gölge */
             max-width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .username-modal-content input {
             width: 100%;
@@ -260,23 +287,27 @@
             margin-top: 1rem;
             margin-bottom: 1.5rem;
             border-radius: 0.5rem;
-            border: 1px solid #333;
+            border: 1px solid #555; /* Daha belirgin kenarlık */
             background-color: #2a2a2a;
             color: #ffffff;
             font-size: 1em;
             text-align: center;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* İç gölge */
         }
         .username-modal-content button {
             width: 100%;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
+            padding: 0.9rem; /* Daha büyük padding */
+            border-radius: 0.75rem; /* Daha yuvarlak köşeler */
             background-color: #a78bfa;
             color: #ffffff;
             font-weight: bold;
-            transition: opacity 0.2s;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 -2px 0 rgba(0, 0, 0, 0.1);
         }
         .username-modal-content button:hover {
-            opacity: 0.8;
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3), inset 0 -2px 0 rgba(0, 0, 0, 0.1);
         }
 
         /* Genel Modal Stili (Çark, Hızlı Tıkla, Sayı Tahmin, Taş Kağıt Makas) */
@@ -286,54 +317,61 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); /* Yarı saydam arka plan */
+            background-color: rgba(0, 0, 0, 0.8); /* Daha koyu yarı saydam arka plan */
             display: none; /* Varsayılan olarak gizli */
             align-items: center;
             justify-content: center;
             z-index: 10001;
             opacity: 0;
             transition: opacity 0.3s ease; /* Sadece opacity geçişi */
+            backdrop-filter: blur(8px); /* Bulanıklık efekti */
         }
         .game-modal.open {
             opacity: 1;
             /* display: flex; JavaScript tarafından yönetilecek */
         }
         .game-modal-content {
-            background-color: #1a1a1a;
-            padding: 2rem;
-            border-radius: 0.75rem;
+            background: linear-gradient(180deg, #1a1a1a 0%, #333333 100%); /* Degradeli arka plan */
+            padding: 2.5rem; /* Daha fazla padding */
+            border-radius: 1rem; /* Daha yuvarlak köşeler */
             text-align: center;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); /* Daha büyük gölge */
             max-width: 90%;
             width: 400px; /* Modal için sabit genişlik */
             position: relative; /* Mesaj kutusu için göreceli konum */
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .game-modal-close-btn { /* Modal kapatma butonu için genel sınıf */
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 15px; /* Konumu ayarla */
+            right: 15px; /* Konumu ayarla */
             background: none;
             border: none;
-            color: #ffffff;
-            font-size: 2em;
+            color: #fcd34d; /* Sarımsı renk */
+            font-size: 2.2em; /* Daha büyük */
             cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .game-modal-close-btn:hover {
+            transform: rotate(90deg); /* Kapatırken dönme efekti */
         }
 
         /* Oyun kartı stili (Ana sayfadaki görsel) */
         .game-card-homepage { /* Ana sayfadaki tıklanabilir oyun kartları */
-            background-color: #2a0045; /* Koyu mor arkaplan */
+            background: linear-gradient(145deg, #2a0045 0%, #4b0082 100%); /* Degradeli arka plan */
             padding: 1.5rem;
-            border-radius: 0.75rem;
+            border-radius: 1rem; /* Daha yuvarlak köşeler */
             text-align: center;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.3s ease-in-out; /* Yumuşak geçişler */
             max-width: 300px; /* Orta boyutlu kart */
             width: 100%; /* Mobil uyumluluk */
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), inset 0 2px 5px rgba(255, 255, 255, 0.1); /* Daha belirgin ve iç gölge */
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .game-card-homepage:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            transform: translateY(-8px) scale(1.02); /* Daha belirgin büyüme ve kalkma */
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), inset 0 2px 8px rgba(255, 255, 255, 0.2);
         }
         .game-card-homepage img {
             width: 100px; /* Resim boyutu */
@@ -341,28 +379,52 @@
             margin: 0 auto 1rem auto;
             border-radius: 50%; /* Yuvarlak resim */
             object-fit: cover;
-            border: 2px solid #a78bfa; /* Mor çerçeve */
+            border: 3px solid #fcd34d; /* Sarımsı çerçeve */
+            box-shadow: 0 0 15px rgba(252, 211, 77, 0.5); /* Resme parlama efekti */
+            transition: all 0.3s ease-in-out;
+        }
+        .game-card-homepage:hover img {
+            transform: scale(1.05); /* Hover'da resmin de büyümesi */
+            box-shadow: 0 0 20px rgba(252, 211, 77, 0.8);
         }
         
         /* Mini Oyunlar bölümü stili */
         #mini-games-section {
             width: 100%;
-            background-color: #2a0045;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            background: linear-gradient(160deg, #2a0045 0%, #3a005f 100%); /* Degradeli arka plan */
+            padding: 2rem; /* Daha fazla padding */
+            border-radius: 1rem; /* Daha yuvarlak köşeler */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
             display: flex; /* İçindeki oyunları da flex ile sırala */
             flex-direction: column;
             gap: 1.5rem; /* Oyunlar arası boşluk */
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         /* Bonus Kodları bölümü stili */
         #bonus-codes-list-section {
             width: 100%;
-            background-color: #2a0045;
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            background: linear-gradient(160deg, #2a0045 0%, #3a005f 100%); /* Degradeli arka plan */
+            padding: 2rem; /* Daha fazla padding */
+            border-radius: 1rem; /* Daha yuvarlak köşeler */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #bonus-codes-list li {
+            background-color: rgba(75, 0, 130, 0.3); /* Listeler için şeffaf mor arkaplan */
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        #bonus-codes-list li::before {
+            content: '💎'; /* Elmas emojisi */
+            font-size: 1.2em;
         }
 
         /* Taş-Kağıt-Makas butonları için düzen */
@@ -378,17 +440,26 @@
             font-weight: bold;
             flex: 1; /* Eşit genişlik */
             max-width: 120px; /* Maksimum genişlik */
+            /* telegram-btn'in stilini kullanır */
         }
         #rps-result-display-text {
             font-weight: bold;
             margin-bottom: 1rem;
+            font-size: 1.3em; /* Daha büyük metin */
+            text-shadow: 0 0 5px rgba(255,255,255,0.7);
         }
         #rps-play-again-button {
             background-color: #555; /* Gri tonu */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+        }
+        #rps-play-again-button:hover {
+            background-color: #666;
+            transform: translateY(-1px);
         }
         #rps-player-choice-display, #rps-computer-choice-display {
             font-weight: bold;
             color: #fcd34d; /* Sarımsı renk */
+            text-shadow: 0 0 5px rgba(252, 211, 77, 0.5);
         }
     </style>
 </head>
@@ -447,7 +518,7 @@
 
                 <!-- Mini Oyun Kartı: Taş, Kağıt, Makas -->
                 <div id="rps-game-card" class="game-card-homepage">
-                    <img src="src="https://e7.pngegg.com/pngimages/378/463/png-clipart-rock-paper-scissors-game-money-scissors-text-dragon-thumbnail.png" alt="Taş, Kağıt, Makas" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
+                    <img src="https://placehold.co/100x100/b19cd9/FFFFFF?text=RPS" alt="Taş, Kağıt, Makas" class="mx-auto mb-4 rounded-full object-cover border-2 border-purple-400">
                     <h3 class="text-xl font-bold mb-2">Taş, Kağıt, Makas!</h3>
                     <p class="text-sm text-gray-600">Bilgisayarı yen ve puan kazan.</p>
                 </div>
