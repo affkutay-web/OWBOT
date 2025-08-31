@@ -1,1602 +1,737 @@
-<!--
-  Bu dosya, bir Telegram Web Uygulaması'nı
-  Firebase Firestore ile entegre ederek çok kullanıcılı ve
-  gerçek zamanlı veri saklama özelliğine kavuşturur.
-  Kullanıcılar bir mini oyundan puan kazanır ve bu puanlarla
-  bir bonus çarkını çevirerek kodlar kazanabilir.
--->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONWIN Web Uygulaması</title> <!-- Başlık güncellendi -->
-    <!-- Tailwind CSS'i dahil etme -->
+    <title>ONWIN - Mini Games</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Telegram Web App SDK'sını dahil etme -->
+    <script src="https://kit.fontawesome.com/4f721868c6.js" crossorigin="anonymous"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Firebase SDK'larını uyumluluk (compat) modunda dahil etme -->
-    <!-- Bu, `import` hatalarını önler ve `firebase` nesnesini global olarak erişilebilir kılar. -->
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
-    <!-- Font Awesome ikonları için CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        /* Varsayılan fontu ayarlama */
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%; /* Tüm yüksekliği kaplamalarını sağla */
-            width: 100%;
-            box-sizing: border-box; /* Padding/border'ı toplam genişlik/yüksekliğe dahil et */
-            overflow-x: hidden; /* Sadece yatay kaydırmayı engelle, dikey kaydırmaya izin ver */
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            /* Ana tema arkaplanı mor degrade */
-            background: linear-gradient(135deg, #4b0082 0%, #2a0045 100%);
-            color: #ffffff; /* Varsayılan yazılar beyaz */
+            background-color: #f3f4f6;
+            color: #374151;
             display: flex;
-            flex-direction: column; /* İçeriği dikeyde sırala */
-            align-items: center; /* Yatayda ortala */
-            justify-content: flex-start; /* İçeriği dikeyde yukarıdan başlat */
-        }
-        .telegram-btn {
-            background-color: var(--tg-theme-button-color, #a78bfa); /* Telegram tema butonu veya mor bir ton */
-            color: var(--tg-theme-button-text-color, #ffffff);
-            /* Daha dinamik bir düğme görünümü için gölge ve hafif kabartma */
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 3px 8px rgba(0, 0, 0, 0.15), inset 0 -3px 0 rgba(0, 0, 0, 0.2); /* Daha güçlü gölge */
-            border-radius: 0.75rem; /* Daha yuvarlak köşeler */
-            transition: all 0.2s ease-in-out; /* Yumuşak geçişler */
-        }
-        .telegram-btn:hover {
-            transform: translateY(-3px); /* Hafif yukarı kalkma efekti */
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 -4px 0 rgba(0, 0, 0, 0.25); /* Daha da güçlü gölge */
-        }
-        .telegram-btn:disabled {
-            background-color: #555; /* Gri tonu */
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Yükleme ekranı stili */
-        #loading-screen {
-            display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #4b0082; /* Mor arkaplan */
-            color: #ffffff; /* Beyaz yazı */
-            z-index: 9999;
-        }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3); /* Beyaz spinner, daha şeffaf */
-            border-top: 4px solid #a78bfa; /* Mor tonunda spinner üst kenarı */
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* Mesaj kutusu için stil */
-        .message-box { /* Genel bir sınıf yapıldı */
-            position: absolute; /* Modalların içinde absolute olarak konumlandırılacak */
-            bottom: 1rem; /* Alttan boşluk */
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(51, 51, 51, 0.9); /* Mesaj kutusu için daha koyu ve yarı şeffaf bir arka plan */
-            color: #ffffff; /* Beyaz yazı */
-            padding: 10px 20px;
-            border-radius: 8px;
-            z-index: 1000;
-            display: none;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Daha belirgin gölge */
-            width: 90%; /* Genişliği ayarla */
-            max-width: 300px; /* Maksimum genişlik */
-            box-sizing: border-box;
-            backdrop-filter: blur(5px); /* Hafif bulanıklık efekti */
-        }
-        #message-box-home { /* Anasayfa mesaj kutusu için özel konumlandırma */
-            position: relative; /* Anasayfa içeriğine göre konumlanır */
-            margin-top: 1.5rem; /* Üstten boşluk */
-            left: auto;
-            transform: none;
-            width: auto;
-            max-width: none;
-        }
-
-        /* Çark stili (modal içinde) */
-        .wheel-container {
-            position: relative;
-            width: min(280px, 90vw); /* Ekran genişliğine göre boyutlandır, max 280px */
-            height: min(280px, 90vw); /* En boy oranını koru */
-            margin: 0 auto;
-            border-radius: 50%;
-            overflow: hidden; /* Dilimlerin dışarı taşmasını engelle */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4); /* Daha belirgin gölge */
-        }
-        .wheel {
-            position: relative; /* Dilimler için konteyner */
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            transition: transform 5s cubic-bezier(0.1, 0.9, 0.2, 1); /* Hızlı başla, yavaş dur */
-            transform-origin: center center;
-            overflow: hidden; /* Dilimlerin dışarı taşmasını engelle */
-            background: radial-gradient(circle at center, #3a005f 0%, #1a1a1a 100%); /* Çarkın ortasından yayılan degrade */
-        }
-        .segment { /* Her bir çark diliminin kapsayıcısı */
-            position: absolute;
-            width: 50%;   /* Yarıçap kadar genişlik */
-            height: 100%; /* Tam çap kadar yükseklik */
-            top: 0;
-            left: 50%;    /* Çarkın merkezinden başla */
-            transform-origin: 0% 50%; /* Dönüş noktası çarkın merkezi */
-            overflow: hidden; /* İçerideki renkli kısmı gizlemek için */
-            transform: rotate(var(--rotation-angle)); /* Dilimi kendi yerine döndür */
-        }
-        .segment-color-fill { /* Dilimin renkli görünümünü veren kısım */
-            position: absolute;
-            width: 100%; /* Kapsayıcının tam genişliği */
-            height: 100%; /* Kapsayıcının tam yüksekliği */
-            left: 0;
-            top: 0;
-            background-color: var(--segment-color);
-            transform-origin: 0% 50%; /* Kapsayıcının sol ortasından dön */
-            transform: rotate(var(--segment-sweep-angle)); /* Dilimin yayını oluşturmak için döndür */
-            border-radius: 0 100% 100% 0 / 50%; /* Yarım daire şekli */
-            opacity: 0.9; /* Hafif şeffaflık */
-        }
-        .segment-label { /* Dilim üzerindeki okunabilir metin */
-            position: absolute;
-            top: 50%; /* Dikeyde ortala */
-            left: 75%; /* Merkeze göre dışa doğru konumlandır */
-            transform: translate(-50%, -50%) rotate(calc(-1 * var(--rotation-angle))); /* Yatayda tutmak için karşıt dönüş */
-            white-space: nowrap;
-            font-size: 0.8em;
-            font-weight: bold;
-            color: #ffffff; /* Beyaz metin */
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.7); /* Daha belirgin gölge */
-            z-index: 2; /* Metin dilimin üstünde olsun */
-            pointer-events: none; /* Metnin tıklamayı engellememesi için */
-            padding: 0 5px; /* Kenarlardan boşluk */
-            box-sizing: border-box;
-        }
-        .wheel-marker {
-            position: absolute;
-            width: 0;
-            height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 25px solid #fcd34d; /* Sarımsı renkte ok */
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10;
-        }
-
-        /* Sabit başlık stili */
-        #app-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: linear-gradient(90deg, #2a0045 0%, #4b0082 100%); /* Başlık için degrade */
-            color: #ffffff;
-            padding: 1rem 1.5rem; /* Yanlara ve dikeyde boşluk */
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4); /* Daha belirgin gölge */
-            z-index: 10000; /* Diğer her şeyin üstünde olsun */
-            display: flex;
-            justify-content: space-between; /* İçeriği iki yana yasla */
-            align-items: center; /* Dikeyde ortala */
-            box-sizing: border-box;
-            height: 60px; /* Başlık için sabit yükseklik */
-        }
-        #app-header .title {
-            font-size: 2.2rem; /* Daha büyük başlık */
-            font-weight: 900;
-            letter-spacing: 0.12em; /* Harf aralığı artırıldı */
-            text-shadow: 3px 3px 7px rgba(0,0,0,0.8); /* Daha belirgin gölge */
-            color: #fcd34d; /* ONWIN başlığı sarımsı olsun */
-        }
-        #app-header .user-info-display {
-            text-align: right;
-            font-size: 0.9rem;
-            display: flex; /* İçindeki öğeleri yatayda sıralamak için */
-            align-items: center; /* Dikeyde ortala */
-            gap: 0.5rem; /* Resim ve metin arasına boşluk azaltıldı */
-        }
-        #app-header .user-info-text { /* Kullanıcı adı ve puan için yeni kapsayıcı */
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end; /* Metni sağa yasla */
-        }
-        #app-header .user-info-header { /* Kullanıcı adı için daha belirgin stil */
-            font-weight: bold;
-            color: #e8e8e8;
-            font-size: 1rem;
-        }
-        #app-header .points-display {
-            font-size: 1.15rem; /* Puan yazısı boyutu güncellendi */
-            font-weight: bold;
-            color: #fcd34d; /* Sarımsı renk puanlar için */
-            text-shadow: 0 0 8px rgba(252, 211, 77, 0.7); /* Hafif parlama */
-        }
-        #app-header .points-display .fa-coins { /* Puan ikonuna stil */
-            color: #fcd34d;
-            margin-right: 0.3rem; /* Boşluk azaltıldı */
-        }
-        #user-profile-pic { /* Kullanıcı profil resmi için stil */
-            width: 36px; /* Boyut azaltıldı */
-            height: 36px; /* Boyut azaltıldı */
-            border-radius: 50%; /* Yuvarlak profil resmi */
-            background-color: #555; /* Varsayılan arka plan */
-            background-size: cover;
-            background-position: center;
-            border: 2px solid #a78bfa; /* Mor çerçeve */
-            box-shadow: 0 0 8px rgba(167, 139, 250, 0.6); /* Hafif parlama */
-            flex-shrink: 0; /* Küçülmesini engelle */
-        }
-
-
-        #app-wrapper {
-            flex-grow: 1; /* Kalan tüm dikey boşluğu doldur */
-            width: 100%;
-            max-width: 600px; /* Genel içerik için maksimum genişlik */
-            min-width: 320px; /* Çok dar ekranlarda içeriğin bozulmasını engelle */
-            margin: 60px auto 1.5rem auto; /* Üstten sabit, yatayda ortalı, alttan boşluk */
-            overflow-y: auto; /* Kendi içinde dikey kaydırma */
-            -webkit-overflow-scrolling: touch; /* iOS'ta daha akıcı kaydırma */
-            display: flex; /* İçeriğini dikeyde sıralamak için */
-            flex-direction: column;
-            padding: 0 0.5rem; /* Kenarlardan hafif boşluk eklendi */
-        }
-
-        #home-page-content {
-            padding: 1.5rem 1rem; /* İç padding: dikey 1.5rem, yatay 1rem */
-            background-color: rgba(26, 26, 26, 0.8); /* Uygulama kapsayıcısı için koyu şeffaf */
-            border-radius: 1rem; /* Daha belirgin yuvarlak köşeler */
-            margin: 0; /* Artık dış margin yok, app-wrapper yönetecek */
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); /* Daha büyük ve derin gölge */
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem; /* Bölümler arası boşluk */
-            align-items: center; /* İçerikleri yatayda ortala */
-            flex-grow: 1; /* Home page içeriğinin de kendi içinde büyümesini sağlar */
-            backdrop-filter: blur(10px); /* Hafif bulanıklık efekti */
-            border: 1px solid rgba(255, 255, 255, 0.15); /* İnce beyaz kenarlık */
+            justify-content: flex-start;
+            min-height: 100vh;
         }
         
-        /* Başlıklar için renk güncellemesi */
-        h1, h2 {
-            color: #fcd34d; /* Başlıklar sarımsı olsun */
-            font-weight: 900; /* Daha kalın ve etkileyici */
-            text-shadow: 0 0 10px rgba(252, 211, 77, 0.8); /* Hafif parlama */
-            font-size: 2.2rem; /* H1 için daha büyük */
-        }
-        h2 {
-            font-size: 1.7rem; /* H2 için daha büyük */
-        }
-
-        /* Tüm küçük yazıları beyaz yapalım */
-        .text-gray-600 {
-            color: #e8e8e8; /* Daha açık gri tonu, daha okunabilir */
-        }
-
-        /* Kullanıcı adı giriş modal stili */
-        /* Bu kısım artık kullanılmıyor, ancak stil referansı olarak duruyor */
-        #username-modal {
-            display: none; /* Bu modal artık tamamen gizli */
-        }
-        .username-modal-content input:focus {
-            border-color: #a78bfa; /* Odaklandığında mor kenarlık */
-            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.4); /* Hafif dış gölge */
-            outline: none;
-        }
-
-        /* Genel Modal Stili (Çark, Hızlı Tıkla, Sayı Tahmin, Taş Kağıt Makas) */
-        .game-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
+        #app-container {
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* Daha koyu yarı saydam arka plan */
-            display: none; /* Varsayılan olarak gizli */
-            align-items: center;
-            justify-content: center;
-            z-index: 10001;
-            opacity: 0;
-            transition: opacity 0.3s ease; /* Sadece opacity geçişi */
-            backdrop-filter: blur(8px); /* Bulanıklık efekti */
-        }
-        .game-modal.open {
-            opacity: 1;
-            /* display: flex; JavaScript tarafından yönetilecek */
-        }
-        .game-modal-content {
-            background: linear-gradient(180deg, #1a1a1a 0%, #333333 100%); /* Degradeli arka plan */
-            padding: 2.0rem; /* Daha fazla padding */
-            border-radius: 1rem; /* Daha yuvarlak köşeler */
-            text-align: center;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5); /* Daha büyük gölge */
-            max-width: 90%;
-            width: min(380px, 95vw); /* Responsive genişlik */
-            position: relative; /* Mesaj kutusu için göreceli konum */
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .game-modal-close-btn { /* Modal kapatma butonu için genel sınıf */
-            position: absolute;
-            top: 10px; /* Konumu ayarla */
-            right: 10px; /* Konumu ayarla */
-            background: none;
-            border: none;
-            color: #fcd34d; /* Sarımsı renk */
-            font-size: 1.8em; /* Boyut küçültüldü */
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        .game-modal-close-btn:hover {
-            transform: rotate(90deg); /* Kapatırken dönme efekti */
+            max-width: 600px;
+            padding: 1rem;
+            box-sizing: border-box;
         }
 
-        /* Oyun kartı stili (Ana sayfadaki görsel) */
-        .game-card-homepage { /* Ana sayfadaki tıklanabilir oyun kartları */
-            background: linear-gradient(145deg, #2a0045 0%, #4b0082 100%); /* Degradeli arka plan */
-            padding: 1.2rem; /* Padding azaltıldı */
-            border-radius: 0.8rem; /* Daha yuvarlak köşeler */
-            text-align: center;
+        .game-card-homepage {
+            min-width: 140px;
+            max-width: 160px;
+            flex-shrink: 0;
             cursor: pointer;
-            transition: all 0.3s ease-in-out; /* Yumuşak geçişler */
-            min-width: 200px; /* Her kartın minimum genişliği azaltıldı */
-            flex-shrink: 0; /* Kartların küçülmesini engelle */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35), inset 0 2px 6px rgba(255, 255, 255, 0.1); /* Gölgeler azaltıldı */
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            scroll-snap-align: start; /* Kaydırma hizalaması */
-            display: flex; /* İçeriğini ortalamak için */
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            scroll-snap-align: center;
+            background: linear-gradient(135deg, #1f2937 0%, #000000 100%);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .game-card-homepage + .game-card-homepage { /* Kartlar arasına boşluk */
-            margin-left: 1rem; /* Boşluk azaltıldı */
-        }
-        .game-card-homepage:last-child { /* Son karttan sonraki boşluğu kapat */
-            margin-right: 1rem; /* Boşluk azaltıldı */
-        }
-
         .game-card-homepage:hover {
-            transform: translateY(-8px) scale(1.02); /* Daha belirgin büyüme ve kalkma */
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), inset 0 2px 8px rgba(255, 255, 255, 0.15);
-        }
-        .game-card-homepage .game-icon { /* İkonlar için stil */
-            font-size: 3rem; /* İkon boyutu azaltıldı */
-            color: #fcd34d; /* Sarımsı renk */
-            margin-bottom: 0.8rem; /* Boşluk azaltıldı */
-            border: 2px solid #fcd34d; /* Sarımsı çerçeve */
-            border-radius: 50%; /* Yuvarlak çerçeve */
-            width: 80px; /* Sabit genişlik azaltıldı */
-            height: 80px; /* Sabit yükseklik azaltıldı */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: rgba(0,0,0,0.2); /* Hafif arkaplan */
-            box-shadow: 0 0 15px rgba(252, 211, 77, 0.6); /* Resme parlama efekti */
-            transition: all 0.3s ease-in-out;
-        }
-        .game-card-homepage:hover .game-icon {
-            transform: scale(1.05); /* Hover'da ikonun da büyümesi */
-            box-shadow: 0 0 20px rgba(252, 211, 77, 0.8);
-        }
-        
-        /* Mini Oyunlar bölümü stili */
-        #mini-games-carousel-container { /* Carousel için dış konteyner */
-            width: 100%;
-            position: relative; /* Ok butonları için */
-            margin-bottom: 1.2rem; /* Alt boşluk */
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
         }
 
-        #mini-games-section {
-            width: 100%;
-            background: linear-gradient(160deg, #2a0045 0%, #3a005f 100%); /* Degradeli arka plan */
-            padding: 1.5rem 0.8rem; /* Dikey padding, yatay 1rem */
-            border-radius: 0.8rem; /* Daha yuvarlak köşeler */
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-            display: flex; /* İçindeki oyunları yatayda sırala */
-            flex-direction: row; /* Yatay düzen */
-            flex-wrap: nowrap; /* Alt satıra geçme */
-            gap: 0; /* İç elemanlar arasındaki boşluğu manuel ayarla */
-            overflow-x: auto; /* Yatay kaydırma */
-            -webkit-overflow-scrolling: touch; /* iOS için akıcı kaydırma */
-            scroll-snap-type: x mandatory; /* Kaydırma hizalaması */
-            scrollbar-width: none; /* Firefox kaydırma çubuğunu gizle */
-            -ms-overflow-style: none;  /* IE and Edge kaydırma çubuğunu gizle */
-            margin-bottom: 0.8rem; /* Oklar ile oyunlar arasına boşluk */
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            /* Dokunmatik/sürükleme kaydırması için varsayılan cursor */
-            cursor: grab;
-        }
-        #mini-games-section.grabbing {
-            cursor: grabbing; /* Sürükleme anında el işareti */
+        #mini-games-section, .banner-carousel {
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
         }
 
-
-        /* Webkit tabanlı tarayıcılar için kaydırma çubuğunu gizle */
-        #mini-games-section::-webkit-scrollbar {
-            display: none;
-        }
-
-        .scroll-button {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: rgba(75, 0, 130, 0.6); /* Mor yarı şeffaf */
-            color: #fcd34d; /* Sarımsı ok */
-            border: none;
-            padding: 0.4rem 0.7rem; /* Boyut azaltıldı */
-            border-radius: 50%;
-            font-size: 1.3rem; /* Boyut azaltıldı */
-            cursor: pointer;
-            z-index: 10;
-            box-shadow: 0 1px 8px rgba(0,0,0,0.4);
-            transition: background-color 0.2s ease, transform 0.2s ease;
-        }
-        .scroll-button:hover {
-            background-color: rgba(75, 0, 130, 0.8);
-            transform: translateY(-50%) scale(1.08);
-        }
-        #scroll-left-btn {
-            left: 5px;
-        }
-        #scroll-right-btn {
-            right: 5px;
-        }
-
-
-        /* Bonus Kodları bölümü stili */
-        #bonus-codes-list-section {
-            width: 100%;
-            background: linear-gradient(160deg, #2a0045 0%, #3a005f 100%); /* Degradeli arka plan */
-            padding: 1.5rem; /* Padding azaltıldı */
-            border-radius: 0.8rem; /* Daha yuvarlak köşeler */
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        #bonus-codes-list li {
-            background-color: rgba(75, 0, 130, 0.3); /* Listeler için şeffaf mor arkaplan */
-            padding: 0.6rem 0.8rem; /* Padding azaltıldı */
-            border-radius: 0.4rem; /* Köşeler azaltıldı */
-            margin-bottom: 0.4rem; /* Boşluk azaltıldı */
-            font-size: 0.9rem; /* Yazı boyutu azaltıldı */
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
-        }
-        #bonus-codes-list li .fa-gift {
-            color: #fcd34d;
-            margin-right: 0.4rem;
-        }
-
-
-        /* Liderlik Tablosu Stili */
-        #leaderboard-section {
-            width: 100%;
-            background: linear-gradient(160deg, #2a0045 0%, #3a005f 100%); /* Degradeli arka plan */
-            padding: 1.5rem; /* Padding azaltıldı */
-            border-radius: 0.8rem; /* Daha yuvarlak köşeler */
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: 1.2rem; /* Diğer bölümlerden üst boşluk azaltıldı */
-        }
-        #leaderboard-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        #leaderboard-list li {
-            background-color: rgba(75, 0, 130, 0.3); /* Listeler için şeffaf mor arkaplan */
-            padding: 0.6rem 0.8rem; /* Padding azaltıldı */
-            border-radius: 0.4rem; /* Köşeler azaltıldı */
-            margin-bottom: 0.4rem; /* Boşluk azaltıldı */
-            font-size: 0.9rem; /* Yazı boyutu azaltıldı */
-            font-weight: 500;
-            display: flex;
-            justify-content: space-between; /* İsim ve puanı iki yana yasla */
-            align-items: center;
-            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
-        }
-        #leaderboard-list li span:first-child { /* Sıra ve kullanıcı adı */
-            font-weight: bold;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-        }
-        #leaderboard-list li span:first-child .fa-trophy {
-            color: #fcd34d;
-            margin-right: 0.4rem;
-        }
-        #leaderboard-list li span:last-child { /* Puan */
-            font-weight: bold;
-            color: #fcd34d; /* Sarımsı renk */
-        }
-
-
-        /* Taş-Kağıt-Makas butonları için düzen */
-        #rps-choices {
-            display: flex;
-            justify-content: center;
-            gap: 0.6rem; /* Butonlar arasında boşluk azaltıldı */
-            margin-bottom: 0.8rem; /* Boşluk azaltıldı */
-        }
-        #rps-choices .rps-btn {
-            padding: 0.6rem 1rem; /* Padding azaltıldı */
-            font-size: 1em; /* Boyut azaltıldı */
-            font-weight: bold;
-            flex: 1; /* Eşit genişlik */
-            max-width: 100px; /* Maksimum genişlik azaltıldı */
-            /* telegram-btn'in stilini kullanır */
-        }
-        #rps-result-display-text {
-            font-weight: bold;
-            margin-bottom: 0.8rem; /* Boşluk azaltıldı */
-            font-size: 1.1em; /* Boyut azaltıldı */
-            text-shadow: 0 0 5px rgba(255,255,255,0.7);
-        }
-        #rps-play-again-button {
-            background-color: #555; /* Gri tonu */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2), inset 0 -3px 0 rgba(0, 0, 0, 0.2);
-        }
-        #rps-play-again-button:hover {
-            background-color: #666;
-            transform: translateY(-1px);
-        }
-        #rps-player-choice-display, #rps-computer-choice-display {
-            font-weight: bold;
-            color: #fcd34d; /* Sarımsı renk */
-            text-shadow: 0 0 5px rgba(252, 211, 77, 0.5);
-        }
-
-        /* Yeni Sekme Navigasyonu Stilleri */
-        #tab-navigation {
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            background-color: rgba(0,0,0,0.3);
-            border-radius: 0.6rem; /* Köşeler azaltıldı */
-            padding: 0.4rem; /* Padding azaltıldı */
-            margin-bottom: 1.2rem; /* Boşluk azaltıldı */
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.1);
+        #mini-games-section::-webkit-scrollbar, .banner-carousel::-webkit-scrollbar {
+            height: 0;
         }
 
         .tab-button {
-            flex: 1;
-            padding: 0.6rem 0.4rem; /* Padding azaltıldı */
-            background: none;
-            border: none;
-            color: #e8e8e8;
-            font-weight: 600;
-            font-size: 0.9rem; /* Yazı boyutu azaltıldı */
-            border-radius: 0.4rem; /* Köşeler azaltıldı */
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.4rem; /* Boşluk azaltıldı */
+            transition: all 0.3s ease;
+            position: relative;
+            background-color: transparent;
+            color: #9ca3af;
         }
 
         .tab-button.active {
-            background: linear-gradient(45deg, #6f2da8 0%, #a78bfa 100%);
             color: #ffffff;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.25), inset 0 1px 4px rgba(255,255,255,0.15);
-            transform: translateY(-1px);
-            font-weight: bold;
         }
 
-        .tab-button:not(.active):hover {
-            background-color: rgba(255,255,255,0.1);
-            color: #fcd34d;
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 2px;
+            background-color: #f59e0b;
         }
 
-        .tab-content {
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            display: none; /* Varsayılan olarak gizli */
-            animation: fadeIn 0.5s ease-out; /* İçerik görünür olduğunda animasyon */
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
         }
 
-        .tab-content.active {
-            display: block; /* Aktif olduğunda görünür */
+        .modal-content {
+            background-color: #1f2937;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            opacity: 0;
+            animation: modal-enter 0.3s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes modal-enter {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
     </style>
 </head>
-<body>
-    <!-- Yükleme Ekranı -->
-    <div id="loading-screen" class="space-y-4">
-        <div class="spinner"></div>
-        <p class="text-sm">Bağlanıyor...</p>
-    </div>
+<body class="bg-gray-900 text-white">
 
-    <!-- Sabit Uygulama Başlığı -->
-    <header id="app-header">
-        <div class="flex items-center">
-            <span class="title">ONWIN</span> <!-- Başlık güncellendi -->
-        </div>
-        <div class="user-info-display">
-            <div id="user-profile-pic"></div> <!-- Kullanıcı profil resmi -->
-            <div class="user-info-text">
-                <p id="user-info-header" class="user-info-header">Yükleniyor...</p> <!-- Sınıf güncellendi -->
-                <p id="points-display-header" class="points-display"><i class="fa-solid fa-coins"></i> Puan: 0</p>
-            </div>
-        </div>
-    </header>
+    <!-- Firebase SDK'leri -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, query, orderBy, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <!-- Ana Uygulama İçeriği (Kaydırılabilir Alan) -->
-    <div id="app-wrapper">
-        <div id="home-page-content" class="text-center hidden">
-            <h1 class="font-bold mb-4">Hoş Geldin!</h1>
-            <p class="text-sm text-gray-600 mb-6">Puan kazanmak ve bonus kodları almak için oyna!</p>
-
-            <!-- Sekme Navigasyonu -->
-            <nav id="tab-navigation">
-                <button class="tab-button active" data-tab="games"><i class="fa-solid fa-gamepad"></i> Oyunlar</button>
-                <button class="tab-button" data-tab="wheel"><i class="fa-solid fa-gem"></i> Bonus Çarkı</button>
-                <button class="tab-button" data-tab="leaderboard"><i class="fa-solid fa-trophy"></i> Liderlik</button>
-                <button class="tab-button" data-tab="bonus-codes"><i class="fa-solid fa-gift"></i> Kodlarım</button>
-            </nav>
-
-            <!-- Sekme İçerikleri -->
-            <div id="tab-content-games" class="tab-content active w-full">
-                <!-- Mini Oyunlar Bölümü -->
-                <section id="mini-games-carousel-container" class="w-full relative">
-                    <h2 class="font-bold mb-4">Mini Oyunlar</h2>
-                    <p class="text-sm text-gray-600 mb-4">Yatay kaydırarak farklı oyunları keşfet ve puan topla!</p>
-                    
-                    <button id="scroll-left-btn" class="scroll-button -ml-2">‹</button>
-                    <div id="mini-games-section">
-                        <!-- Mini Oyun Kartı: Hızlı Tıkla! -->
-                        <div id="fast-click-card" class="game-card-homepage">
-                            <div class="game-icon"><i class="fa-solid fa-hand-pointer"></i></div>
-                            <h3 class="text-xl font-bold mb-2">Hızlı Tıkla!</h3>
-                            <p class="text-sm text-gray-600">Butona basarak puan kazan.</p>
-                        </div>
-
-                        <!-- Mini Oyun Kartı: Sayı Tahmin Oyunu -->
-                        <div id="guess-game-card" class="game-card-homepage">
-                            <div class="game-icon"><i class="fa-solid fa-dice-one"></i></div>
-                            <h3 class="text-xl font-bold mb-2">Sayı Tahmin Oyunu</h3>
-                            <p class="text-sm text-gray-600">Sayıyı tahmin et, puanı kap!</p>
-                        </div>
-
-                        <!-- Mini Oyun Kartı: Taş, Kağıt, Makas -->
-                        <div id="rps-game-card" class="game-card-homepage">
-                            <div class="game-icon"><i class="fa-solid fa-hand-fist"></i></div>
-                            <h3 class="text-xl font-bold mb-2">Taş, Kağıt, Makas!</h3>
-                            <p class="text-sm text-gray-600">Bilgisayarı yen ve puan kazan.</p>
-                        </div>
-
-                        <!-- Daha fazla oyun kartı eklenebilir -->
-                        <div class="game-card-homepage">
-                            <div class="game-icon"><i class="fa-solid fa-star"></i></div>
-                            <h3 class="text-xl font-bold mb-2">Yeni Oyun 1</h3>
-                            <p class="text-sm text-gray-600">Çok yakında!</p>
-                        </div>
-                        <div class="game-card-homepage">
-                            <div class="game-icon"><i class="fa-solid fa-hourglass-half"></i></div>
-                            <h3 class="text-xl font-bold mb-2">Yeni Oyun 2</h3>
-                            <p class="text-sm text-gray-600">Geliyor!</p>
-                        </div>
-                    </div>
-                    <button id="scroll-right-btn" class="scroll-button -mr-2">›</button>
-                </section>
-            </div>
-
-            <div id="tab-content-wheel" class="tab-content w-full">
-                <!-- Çarkıfelek Kartı (Artık sekme içeriği) -->
-                <div id="wheel-card" class="game-card-homepage">
-                    <div class="game-icon"><i class="fa-solid fa-gem"></i></div>
-                    <h3 class="text-xl font-bold mb-2">Bonus Çarkı</h3>
-                    <p class="text-sm text-gray-600">Çevirmek için tıkla ve bonus kazan!</p>
-                </div>
-            </div>
-
-            <div id="tab-content-leaderboard" class="tab-content w-full">
-                <!-- Liderlik Tablosu Bölümü -->
-                <section id="leaderboard-section" class="w-full">
-                    <h2 class="font-bold mb-4">Liderlik Tablosu</h2>
-                    <ul id="leaderboard-list" class="text-sm text-gray-600 space-y-2">
-                        <!-- Liderler buraya eklenecek -->
-                    </ul>
-                </section>
-            </div>
-
-            <div id="tab-content-bonus-codes" class="tab-content w-full">
-                <!-- Bonus Kodları Bölümü -->
-                <section id="bonus-codes-list-section" class="w-full">
-                    <h2 class="font-bold mb-4">Kazanılan Bonus Kodları</h2>
-                    <ul id="bonus-codes-list" class="text-sm text-gray-600 space-y-2">
-                        <!-- Bonus kodları buraya eklenecek -->
-                    </ul>
-                </section>
-            </div>
-
-            <!-- Mesaj kutusu öğesi -->
-            <div id="message-box-home" class="message-box"></div>
-        </div>
-    </div>
-
-    <!-- Tüm Oyun Modalları -->
-
-    <!-- Çarkıfelek Modalı -->
-    <div id="wheel-modal" class="game-modal">
-        <div class="game-modal-content">
-            <button id="wheel-modal-close-btn" class="game-modal-close-btn">×</button>
-            <h2 class="font-bold mb-4">Bonus Çarkı</h2>
-            <p class="text-sm text-gray-600 mb-4">Çarkı çevirmek için 100 puana ihtiyacın var.</p>
-            <div class="wheel-container">
-                <div class="wheel-marker"></div>
-                <div id="wheel-element" class="wheel">
-                    <!-- Çark dilimleri ve metin etiketleri dinamik olarak eklenecek -->
-                </div>
-            </div>
-            <button id="wheel-spin-button" class="telegram-btn w-full py-3 mt-6 transition duration-200 hover:opacity-80 disabled:opacity-50" disabled>
-                <span id="spin-button-text">Çarkı Çevir (100 Puan)</span>
-            </button>
-            <!-- Mesaj kutusu öğesi (modal içinde) -->
-            <div id="message-box-wheel-modal" class="message-box mt-4"></div>
-        </div>
-    </div>
-
-    <!-- Hızlı Tıkla! Modalı -->
-    <div id="fast-click-modal" class="game-modal">
-        <div class="game-modal-content">
-            <button id="fast-click-modal-close-btn" class="game-modal-close-btn">×</button>
-            <h2 class="font-bold mb-4">Hızlı Tıkla!</h2>
-            <p class="text-sm text-gray-600 mb-3">Butona her tıkladığınızda 10 puan kazanırsınız.</p>
-            <button id="fast-click-game-button" class="telegram-btn w-full py-3 transition duration-200 hover:opacity-80">
-                <span id="fast-click-game-button-text">Puan Kazan (+10)</span>
-            </button>
-            <div id="message-box-fast-click-modal" class="message-box mt-4"></div>
-        </div>
-    </div>
-
-    <!-- Sayı Tahmin Oyunu Modalı -->
-    <div id="guess-game-modal" class="game-modal">
-        <div class="game-modal-content">
-            <button id="guess-game-modal-close-btn" class="game-modal-close-btn">×</button>
-            <h2 class="font-bold mb-4">Sayı Tahmin Oyunu</h2>
-            <p class="text-sm text-gray-600 mb-3">1 ile 100 arasında bir sayı tuttum. 7 tahmin hakkın var!</p>
-            <input type="number" id="guess-game-input" class="w-full p-2 mb-3 rounded-md bg-gray-700 text-white border-none text-center" placeholder="Tahminini gir (1-100)">
-            <button id="guess-game-submit-button" class="telegram-btn w-full py-2 mb-2 transition duration-200 hover:opacity-80">Tahmin Et</button>
-            <p id="guess-game-feedback" class="text-sm text-gray-400 mb-3"></p>
-            <button id="guess-game-new-button" class="telegram-btn bg-gray-500 hover:bg-gray-600 w-full py-2 transition duration-200 hover:opacity-80 hidden">Yeni Oyun Başlat</button>
-            <div id="message-box-guess-game-modal" class="message-box mt-4"></div>
-        </div>
-    </div>
-
-    <!-- Taş, Kağıt, Makas Modalı -->
-    <div id="rps-game-modal" class="game-modal">
-        <div class="game-modal-content">
-            <button id="rps-game-modal-close-btn" class="game-modal-close-btn">×</button>
-            <h2 class="font-bold mb-4">Taş, Kağıt, Makas!</h2>
-            <p class="text-sm text-gray-600 mb-3">Bilgisayarı yen, 20 puan kazan!</p>
-            <div id="rps-choices" class="flex justify-center gap-3 mb-4">
-                <button id="rps-rock-btn" class="rps-btn telegram-btn">Taş</button>
-                <button id="rps-paper-btn" class="rps-btn telegram-btn">Kağıt</button>
-                <button id="rps-scissors-btn" class="rps-btn telegram-btn">Makas</button>
-            </div>
-            <div class="mb-3">
-                Senin seçimin: <span id="rps-player-choice-display" class="text-yellow-300"></span><br>
-                Bilgisayarın seçimi: <span id="rps-computer-choice-display" class="text-yellow-300"></span>
-            </div>
-            <p id="rps-result-display-text" class="text-base text-white font-bold mb-3"></p>
-            <button id="rps-play-again-button" class="telegram-btn bg-gray-500 hover:bg-gray-600 w-full py-2 transition duration-200 hover:opacity-80 hidden">Tekrar Oyna</button>
-            <div id="message-box-rps-game-modal" class="message-box mt-4"></div>
-        </div>
-    </div>
-
-
-    <script>
-        // Firebase ve Uygulama Ayarlarını Global Değişkenlerden Alın
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // Kendi firebaseConfig'inizi buraya yapıştırın.
-        const firebaseConfig = {
-            apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
-            authDomain: "onwingiris-afccf.firebaseapp.com",
-            projectId: "onwingiris-afccf",
-            storageBucket: "onwingiris-afccf.firebasestorage.app",
-            messagingSenderId: "1059998132611",
-            appId: "1:1059998132611:web:7f415159c549366cc796eb6",
-            measurementId: "G-RE79PDJSJX"
-        };
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let db, auth, userId, userDocRef;
-        let isSpinning = false;
-        let userProfilePicUrl = null; // Kullanıcının profil resmi URL'si için yeni değişken
-        
-        // Bonus çarkı için bölümler - Mor ve siyah tonlarında güncellendi
-        const segments = [
-            { text: "10 TL Bonus", color: "#6f2da8", type: "bonus_code" }, // Açık mor
-            { text: "Tekrar Dene", color: "#1a1a1a", type: "try_again" }, // Siyah
-            { text: "25 TL Bonus", color: "#8a2be2", type: "bonus_code" }, // Orta mor
-            { text: "Tekrar Dene", color: "#2a0045", type: "try_again" }, // Koyu mor
-            { text: "50 TL Bonus", color: "#b19cd9", type: "bonus_code" }, // Lavanta moru
-            { text: "Tekrar Dene", color: "#3a005f", type: "try_again" }, // Çok koyu mor
-            { text: "25 TL Bonus", color: "#c3aed6", type: "bonus_code" }, // Daha açık lavanta
-            { text: "Tekrar Dene", color: "#1a1a1a", type: "try_again" }  // Siyah
-        ];
-
-        // HTML elemanları (DOMContentLoaded içinde tanımlanacak)
-        let loadingScreen;
-        let appHeader, userInfoHeader, pointsDisplayHeader, userProfilePic; // userProfilePic eklendi
-        let appWrapper, homePageContent, messageBoxHome;
-        
-        // Tab navigasyonu elemanları
-        let tabButtons, tabContents;
-
-        // Sekme içerik elemanları
-        let miniGamesCarouselContainer, miniGamesSection, scrollLeftBtn, scrollRightBtn;
-        let wheelCardElement; 
-        let leaderboardSection, leaderboardList;
-        let bonusCodesListSection, bonusCodesList;
-        
-        // Anasayfa oyun kartları
-        let fastClickCard, guessGameCard, rpsGameCard;
-        
-        // Kaydırma (sürükleme) için değişkenler
+        let db, auth, userId, userDocRef, authReady = false;
         let isDragging = false;
-        let startX;
-        let scrollLeftStart;
+        let startX, scrollLeftStart;
 
-        // Modallar ve içindeki elemanlar
-        let wheelModal, wheelModalCloseBtn, wheelElement, wheelSpinButton, messageBoxWheelModal; 
-        let fastClickModal, fastClickModalCloseBtn, fastClickGameButton, messageBoxFastClickModal; 
-        let guessGameModal, guessGameModalCloseBtn, guessGameInput, guessGameSubmitButton, guessGameFeedback, guessGameNewButton, messageBoxGuessGameModal; 
-        let rpsGameModal, rpsGameModalCloseBtn, rpsRockBtn, rpsPaperBtn, rpsScissorsBtn, rpsPlayerChoiceDisplay, rpsComputerChoiceDisplay, rpsResultDisplayText, rpsPlayAgainButton, messageBoxRpsGameModal; 
-
-        // Sayı Tahmin Oyunu Değişkenleri
-        let targetNumber, attemptsLeft, gameOver;
-        const MAX_ATTEMPTS = 7;
-        const MIN_NUM = 1;
-        const MAX_NUM = 100;
-        const GUESS_GAME_WIN_POINTS = 50;
-
-        // Taş-Kağıt-Makas Oyunu Değişkenleri
-        const choices = ['taş', 'kağıt', 'makas'];
-        const RPS_GAME_WIN_POINTS = 20;
-
-        // MODAL YÖNETİMİ BAŞLANGIÇ
-        function openModal(modalElement) {
-            modalElement.style.display = 'flex'; 
-            setTimeout(() => { 
-                modalElement.classList.add('open');
-            }, 10);
-            Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
-        }
-
-        function closeModal(modalElement) {
-            modalElement.classList.remove('open');
-            modalElement.addEventListener('transitionend', function handler() {
-                modalElement.style.display = 'none'; 
-                modalElement.removeEventListener('transitionend', handler); 
-            }, { once: true });
-            Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
-        }
-        // MODAL YÖNETİMİ BİTİŞ
-
-        // Kullanıcıya mesaj göstermek için özel fonksiyon (hedef kutu ID'sine göre)
-        function showMessage(text, isError = false, targetBoxId = 'message-box-home') {
-            let targetBox = document.getElementById(targetBoxId);
-            if (!targetBox) {
-                console.error(`Hata: ${targetBoxId} HTML elementi henüz bulunamadı. Mesaj:`, text);
-                return;
-            }
-            targetBox.textContent = text;
-            if (isError) {
-                targetBox.style.backgroundColor = '#dc3545'; 
-            } else {
-                targetBox.style.backgroundColor = '#333'; 
-            }
-            targetBox.style.display = 'block';
-            setTimeout(() => {
-                targetBox.style.display = 'none';
-            }, 3000); 
-            Telegram.WebApp.HapticFeedback.notificationOccurred(isError ? 'error' : 'success'); 
-        }
-
-        // Çarkı dinamik olarak oluşturma
-        function createWheel() {
-            const numSegments = segments.length;
-            const segmentAngle = 360 / numSegments;
-            
-            if (wheelElement) wheelElement.innerHTML = ''; 
-            
-            segments.forEach((segmentData, index) => {
-                const rotationAngle = index * segmentAngle; 
-
-                const segmentEl = document.createElement('div');
-                segmentEl.className = 'segment';
-                segmentEl.style.setProperty('--rotation-angle', `${rotationAngle}deg`);
-                segmentEl.style.setProperty('--segment-color', segmentData.color);
-                segmentEl.style.setProperty('--segment-sweep-angle', `${segmentAngle}deg`); 
-
-                const colorFillEl = document.createElement('div');
-                colorFillEl.className = 'segment-color-fill';
-                segmentEl.appendChild(colorFillEl);
-
-                const labelEl = document.createElement('div');
-                labelEl.className = 'segment-label';
-                labelEl.textContent = segmentData.text;
-                labelEl.style.setProperty('--rotation-angle', `${rotationAngle}deg`); 
-
-                segmentEl.appendChild(labelEl);
-                if (wheelElement) wheelElement.appendChild(segmentEl);
-            });
-        }
-
-        // Firebase'i başlat ve kullanıcıyı yetkilendir
         async function initializeFirebase() {
             try {
-                // Firebase'i başlatma
-                const app = firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth(); 
-                db = firebase.firestore(); 
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
 
-                // Kullanıcı yetkilendirmesi
-                if (initialAuthToken) {
-                    await auth.signInWithCustomToken(initialAuthToken);
-                } else {
-                    await auth.signInAnonymously();
-                }
-
-                auth.onAuthStateChanged(async (user) => {
+                onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         userId = user.uid;
-                        userDocRef = db.collection(`artifacts/${appId}/public/data/game_data`).doc(userId);
+                        authReady = true;
+                        userDocRef = doc(db, `artifacts/${typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'}/users/${userId}/profile`, "data");
+                        const userDocSnap = await getDoc(userDocRef);
+                        const telegramUser = Telegram.WebApp.initDataUnsafe.user;
+                        let username = telegramUser ? (telegramUser.first_name || 'Kullanıcı') : 'Kullanıcı';
+                        let photoUrl = telegramUser ? telegramUser.photo_url : null;
                         
-                        const docSnap = await userDocRef.get();
-                        console.log("Firestore docSnap exists:", docSnap.exists, "Data:", docSnap.data()); 
-
-                        let telegramUsername = 'Misafir'; // Varsayılan kullanıcı adı
-                        if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
-                            const tgUser = Telegram.WebApp.initDataUnsafe.user;
-                            if (tgUser.first_name) {
-                                telegramUsername = tgUser.first_name;
-                                if (tgUser.last_name) {
-                                    telegramUsername += ` ${tgUser.last_name}`;
-                                }
-                            } else {
-                                telegramUsername = `Kullanıcı_${tgUser.id}`; 
-                            }
-                            // Kullanıcının profil resmini al
-                            if (tgUser.photo_url) {
-                                userProfilePicUrl = tgUser.photo_url;
-                            }
-                        }
-
-                        if (!docSnap.exists) { 
-                            await userDocRef.set({
-                                username: telegramUsername, 
+                        if (!userDocSnap.exists()) {
+                            await setDoc(userDocRef, {
+                                username: username,
                                 points: 0,
-                                bonusCodes: [],
-                                lastClick: 0
+                                lastSpin: new Date(0),
+                                lastBonusClaim: new Date(0),
+                                photoUrl: photoUrl
                             });
-                            console.log("Yeni kullanıcı belgesi Telegram verileriyle oluşturuldu.");
-                        } else if (!docSnap.data().username) { 
-                            await userDocRef.update({
-                                username: telegramUsername 
-                            });
-                            console.log("Mevcut kullanıcının kullanıcı adı Telegram verileriyle güncellendi.");
                         }
-                        
-                        // Kullanıcı adı ayarlı olduğu için ana uygulamayı göster
-                        loadingScreen.style.display = 'none';
-                        if (homePageContent) homePageContent.style.display = 'flex';
-                        listenForDataChanges();
-                        fetchLeaderboard();
-                    } else {
-                        console.error("Kimlik doğrulama başarısız oldu, kullanıcı nesnesi boş.");
-                        loadingScreen.style.display = 'none';
-                        showMessage('Kimlik doğrulama başarısız oldu, lütfen uygulamayı tekrar açın.', true, 'message-box-home');
+                        updateUI();
                     }
                 });
+
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                startRealtimeListeners();
+                
             } catch (error) {
                 console.error("Firebase başlatılırken bir hata oluştu:", error);
-                loadingScreen.style.display = 'none';
-                showMessage(`Uygulama başlatılırken bir hata oluştu: ${error.message}`, true, 'message-box-home');
             }
         }
-        
-        // Firestore'dan gerçek zamanlı veri dinleme
-        function listenForDataChanges() {
-            userDocRef.onSnapshot((doc) => {
-                if (doc.exists) {
-                    const data = doc.data();
-                    updateUI(data);
-                    fetchLeaderboard(); 
+
+        window.onload = initializeFirebase;
+
+        function startRealtimeListeners() {
+            const userIdDisplay = document.getElementById('user-id-display');
+            const userPointsDisplay = document.getElementById('user-points');
+            const userProfilePic = document.getElementById('user-profile-pic');
+            const userDocPath = `artifacts/${typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'}/users/${userId}/profile/data`;
+
+            onSnapshot(doc(db, userDocPath), (doc) => {
+                if (doc.exists()) {
+                    const userData = doc.data();
+                    const username = userData.username || 'Kullanıcı';
+                    const points = userData.points || 0;
+                    const photoUrl = userData.photoUrl || null;
+                    
+                    document.getElementById('username-display').textContent = username;
+                    userPointsDisplay.textContent = points;
+                    if (photoUrl) {
+                        userProfilePic.style.backgroundImage = `url(${photoUrl})`;
+                    } else {
+                        userProfilePic.style.backgroundImage = `url('https://placehold.co/100x100/A0AEC0/000000?text=${username.charAt(0).toUpperCase()}')`;
+                    }
                 }
+            }, (error) => {
+                console.error("Kullanıcı verisi dinlenirken hata oluştu:", error);
             });
         }
         
-        // UI'ı verilerle güncelleme
-        function updateUI(data) {
-            // Header'daki puan ve kullanıcı adını güncelle
-            if (pointsDisplayHeader) pointsDisplayHeader.innerHTML = `<i class="fa-solid fa-coins"></i> Puan: ${data.points}`;
-            
-            if (userInfoHeader) {
-                if (data.username) {
-                    userInfoHeader.textContent = `Kullanıcı: ${data.username}`;
-                } else {
-                    userInfoHeader.textContent = `Kullanıcı Kimliği: ${userId}`;
-                }
-            }
-            
-            // Profil resmini güncelle
-            if (userProfilePic) {
-                if (userProfilePicUrl) {
-                    userProfilePic.style.backgroundImage = `url('${userProfilePicUrl}')`;
-                } else {
-                    userProfilePic.style.backgroundImage = 'none'; // Resim yoksa temizle
-                    userProfilePic.style.backgroundColor = '#555'; // Varsayılan gri arkaplan
-                }
-            }
-
-            // Bonus kodlarını listele
-            if (bonusCodesList) {
-                bonusCodesList.innerHTML = '';
-                if (data.bonusCodes && data.bonusCodes.length > 0) {
-                    data.bonusCodes.forEach(code => {
-                        const li = document.createElement('li');
-                        li.innerHTML = `<i class="fa-solid fa-gift"></i> ${code}`;
-                        bonusCodesList.appendChild(li);
-                    });
-                } else {
-                    const li = document.createElement('li');
-                    li.textContent = "Henüz kazanılmış bonus kodunuz yok.";
-                    bonusCodesList.appendChild(li);
-                }
-            }
-
-            // Çarkı çevir butonunu etkinleştirme
-            if (wheelSpinButton) wheelSpinButton.disabled = data.points < 100 || isSpinning;
+        function updateUI() {
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
         }
 
-        // Liderlik Tablosunu getirme fonksiyonu
-        async function fetchLeaderboard() {
-            if (!db || !leaderboardList) return;
-
+        async function updatePoints(pointsToAdd) {
             try {
-                // Sadece kullanıcı adı olan ve en yüksek puana sahip ilk 10 kullanıcıyı getir
-                const leaderboardSnapshot = await db.collection(`artifacts/${appId}/public/data/game_data`)
-                    .where('username', '!=', null) 
-                    .orderBy('points', 'desc') 
-                    .limit(10)
-                    .get();
-
-                leaderboardList.innerHTML = ''; 
-                if (leaderboardSnapshot.empty) {
-                    const li = document.createElement('li');
-                    li.textContent = "Liderlik tablosu henüz boş.";
-                    leaderboardList.appendChild(li);
+                if (!authReady) {
+                    console.error("Firebase yetkilendirmesi hazır değil.");
                     return;
                 }
-
-                let rank = 1;
-                leaderboardSnapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.username && data.points !== undefined) { 
-                        const li = document.createElement('li');
-                        li.innerHTML = `<span><i class="fa-solid fa-trophy"></i> ${rank}. ${data.username}</span><span>${data.points} Puan</span>`;
-                        leaderboardList.appendChild(li);
-                        rank++;
-                    }
-                });
+                const userDocSnap = await getDoc(userDocRef);
+                if (userDocSnap.exists()) {
+                    const currentPoints = userDocSnap.data().points || 0;
+                    await setDoc(userDocRef, { points: currentPoints + pointsToAdd }, { merge: true });
+                }
             } catch (error) {
-                console.error("Liderlik tablosu getirilirken hata oluştu:", error);
-                showMessage("Liderlik tablosu yüklenemedi.", true, 'message-box-home');
+                console.error("Puanlar güncellenirken hata oluştu:", error);
             }
         }
+    </script>
+    
+    <div id="loading-overlay" class="fixed inset-0 flex items-center justify-center bg-gray-900 z-50">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500"></div>
+    </div>
 
-        // Sayı Tahmin Oyunu Mantığı
-        function startGame() {
-            targetNumber = Math.floor(Math.random() * (MAX_NUM - MIN_NUM + 1)) + MIN_NUM;
-            attemptsLeft = MAX_ATTEMPTS;
-            gameOver = false;
-            if (guessGameInput) guessGameInput.value = '';
-            if (guessGameInput) guessGameInput.disabled = false;
-            if (guessGameSubmitButton) guessGameSubmitButton.disabled = false;
-            if (guessGameNewButton) guessGameNewButton.classList.add('hidden');
-            updateGuessFeedback(`Kalan tahmin hakkı: ${attemptsLeft}`, false); 
-        }
+    <div id="app-container" class="hidden">
+        <header class="w-full max-w-5xl mx-auto flex flex-col items-center justify-center py-6 px-4">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 mb-2 tracking-wide text-shadow-lg">
+                ONWIN
+            </h1>
+            <div class="flex items-center justify-center space-x-2 text-white/80">
+                <i class="fa-solid fa-gem text-lg"></i>
+                <span id="user-points" class="text-xl font-bold">0</span>
+            </div>
+            <div class="w-full flex justify-center items-center mt-4">
+                <div class="user-info-display flex items-center bg-gray-800 rounded-full py-2 px-4 shadow-xl">
+                    <div id="user-profile-pic" class="w-10 h-10 bg-center bg-cover rounded-full border-2 border-yellow-400"></div>
+                    <span id="username-display" class="ml-3 font-semibold text-lg text-white"></span>
+                </div>
+            </div>
+        </header>
 
-        function updateGuessFeedback(message, isError = false) {
-            if (guessGameFeedback) {
-                guessGameFeedback.textContent = message;
-                guessGameFeedback.style.color = isError ? '#dc3545' : '#ffffff';
-            }
-        }
+        <div class="relative w-full max-w-5xl mx-auto mt-4 px-4">
+            <h1 class="text-xl sm:text-2xl font-bold mb-4 text-center text-white">Hoş Geldiniz</h1>
+            <div id="banner-container" class="relative w-full overflow-hidden rounded-xl shadow-lg">
+                <div id="banner-carousel" class="flex flex-nowrap snap-x snap-mandatory scroll-container overflow-x-auto transition-transform duration-500 ease-in-out">
+                    <!-- Banner 1 -->
+                    <div class="flex-none w-full snap-start">
+                        <div class="w-full aspect-video flex items-center justify-center p-4 text-center bg-purple-500 text-white rounded-xl">
+                            <div class="max-w-md">
+                                <h2 class="text-lg sm:text-xl font-semibold mb-2">Harika Fırsatları Keşfedin</h2>
+                                <p class="text-sm sm:text-base opacity-90">Sadece size özel indirimler ve kampanyalar için hemen tıklayın!</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Banner 2 -->
+                    <div class="flex-none w-full snap-start">
+                        <div class="w-full aspect-video flex items-center justify-center p-4 text-center bg-teal-500 text-white rounded-xl">
+                            <div class="max-w-md">
+                                <h2 class="text-lg sm:text-xl font-semibold mb-2">Yeni Ürünlerimiz Geldi</h2>
+                                <p class="text-sm sm:text-base opacity-90">En son çıkan ürünleri ilk siz görün.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Banner 3 -->
+                    <div class="flex-none w-full snap-start">
+                        <div class="w-full aspect-video flex items-center justify-center p-4 text-center bg-indigo-500 text-white rounded-xl">
+                            <div class="max-w-md">
+                                <h2 class="text-lg sm:text-xl font-semibold mb-2">Mobil Uygulamamızı İndirin</h2>
+                                <p class="text-sm sm:text-base opacity-90">Daha hızlı ve pratik alışveriş için uygulamamızı indirmeyi unutmayın.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        async function checkGuess() {
-            if (gameOver) return;
+                <!-- Navigasyon Butonları -->
+                <button id="prevBtn" class="absolute top-1/2 left-2 transform -translate-y-1/2 bg-white bg-opacity-75 p-2 rounded-full shadow-md hover:bg-opacity-100 transition-all focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button id="nextBtn" class="absolute top-1/2 right-2 transform -translate-y-1/2 bg-white bg-opacity-75 p-2 rounded-full shadow-md hover:bg-opacity-100 transition-all focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </div>
 
-            const guess = parseInt(guessGameInput.value);
+        <div class="w-full max-w-5xl mx-auto p-4 sm:p-6 bg-gray-800 rounded-xl shadow-lg mt-8">
+            <div class="flex justify-around mb-6 space-x-2 sm:space-x-4">
+                <button class="tab-button active flex-1 text-center py-3 rounded-xl hover:bg-gray-700 font-semibold text-lg" onclick="showTab('games')">
+                    <i class="fa-solid fa-gamepad"></i> Oyunlar
+                </button>
+                <button class="tab-button flex-1 text-center py-3 rounded-xl hover:bg-gray-700 font-semibold text-lg" onclick="showTab('bonus-wheel')">
+                    <i class="fa-solid fa-star"></i> Çark
+                </button>
+                <button class="tab-button flex-1 text-center py-3 rounded-xl hover:bg-gray-700 font-semibold text-lg" onclick="showTab('leaderboard')">
+                    <i class="fa-solid fa-trophy"></i> Liderler
+                </button>
+                <button class="tab-button flex-1 text-center py-3 rounded-xl hover:bg-gray-700 font-semibold text-lg" onclick="showTab('bonus-codes')">
+                    <i class="fa-solid fa-gift"></i> Kodlar
+                </button>
+            </div>
 
-            if (isNaN(guess) || guess < MIN_NUM || guess > MAX_NUM) {
-                updateGuessFeedback(`Lütfen ${MIN_NUM} ile ${MAX_NUM} arasında geçerli bir sayı girin.`, true);
-                return;
-            }
+            <div id="games-tab" class="tab-content active">
+                <h2 class="text-xl font-bold mb-4 text-center">Mini Oyunlar</h2>
+                <div id="mini-games-section" class="flex overflow-x-auto gap-4 py-4 scroll-snap-x scroll-container">
+                    <div id="click-game" class="game-card-homepage rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-lg transform active:scale-95 transition-all">
+                        <i class="fa-solid fa-hand-pointer text-5xl mb-2 text-yellow-400"></i>
+                        <span class="text-lg font-semibold text-white">Tıkla Kazan</span>
+                        <span class="text-xs text-gray-400 mt-1">10 Puan</span>
+                    </div>
+                    <div id="number-game" class="game-card-homepage rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-lg transform active:scale-95 transition-all">
+                        <i class="fa-solid fa-dice-one text-5xl mb-2 text-yellow-400"></i>
+                        <span class="text-lg font-semibold text-white">Sayı Tahmini</span>
+                        <span class="text-xs text-gray-400 mt-1">50 Puan</span>
+                    </div>
+                    <div id="rps-game" class="game-card-homepage rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-lg transform active:scale-95 transition-all">
+                        <i class="fa-solid fa-hand-rock text-5xl mb-2 text-yellow-400"></i>
+                        <span class="text-lg font-semibold text-white">Taş-Kağıt-Makas</span>
+                        <span class="text-xs text-gray-400 mt-1">20 Puan</span>
+                    </div>
+                </div>
+            </div>
 
-            attemptsLeft--;
+            <div id="bonus-wheel-tab" class="tab-content hidden">
+                <div class="flex flex-col items-center">
+                    <h2 class="text-xl font-bold mb-4 text-center">Bonus Çarkı</h2>
+                    <canvas id="wheelCanvas" width="280" height="280" class="rounded-full bg-gray-700 shadow-xl"></canvas>
+                    <button id="spin-btn" class="mt-8 px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
+                        Çarkı Çevir
+                    </button>
+                    <p id="spin-status" class="mt-4 text-center text-sm text-gray-400"></p>
+                </div>
+            </div>
 
-            if (guess === targetNumber) {
-                updateGuessFeedback(`Tebrikler! Sayıyı ${MAX_ATTEMPTS - attemptsLeft} tahminde buldun! (+${GUESS_GAME_WIN_POINTS} Puan)`, false);
-                gameOver = true;
-                if (guessGameInput) guessGameInput.disabled = true;
-                if (guessGameSubmitButton) guessGameSubmitButton.disabled = true;
-                if (guessGameNewButton) guessGameNewButton.classList.remove('hidden');
+            <div id="leaderboard-tab" class="tab-content hidden">
+                <h2 class="text-xl font-bold mb-4 text-center">Liderlik Tablosu</h2>
+                <div id="leaderboard-list" class="bg-gray-700 rounded-xl p-4 space-y-3">
+                    <p class="text-center text-gray-400">Yükleniyor...</p>
+                </div>
+            </div>
+
+            <div id="bonus-codes-tab" class="tab-content hidden">
+                <h2 class="text-xl font-bold mb-4 text-center">Bonus Kodları</h2>
+                <div id="bonus-codes-list" class="bg-gray-700 rounded-xl p-4 space-y-3">
+                    <p class="text-center text-gray-400">Henüz kazanılmış bir kodunuz yok.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="game-modal-overlay" class="modal-overlay hidden">
+        <div id="game-modal-content" class="modal-content bg-gray-800 text-white p-6 rounded-xl shadow-2xl text-center">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
+            <p id="modal-message" class="text-gray-300 mb-6"></p>
+            <div id="modal-body"></div>
+            <button id="modal-close-btn" class="mt-6 px-6 py-2 bg-gray-700 text-white rounded-full hover:bg-gray-600 transition-colors">
+                Kapat
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, query, orderBy, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let db, auth, userId, userDocRef, authReady = false;
+        let isDragging = false;
+        let startX, scrollLeftStart;
+
+        async function initializeFirebase() {
+            try {
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        authReady = true;
+                        userDocRef = doc(db, `artifacts/${typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'}/users/${userId}/profile`, "data");
+                        const userDocSnap = await getDocs(userDocRef);
+                        const telegramUser = Telegram.WebApp.initDataUnsafe.user;
+                        let username = telegramUser ? (telegramUser.first_name || 'Kullanıcı') : 'Kullanıcı';
+                        let photoUrl = telegramUser ? telegramUser.photo_url : null;
+                        
+                        if (!userDocSnap.exists()) {
+                            await setDoc(userDocRef, {
+                                username: username,
+                                points: 0,
+                                lastSpin: new Date(0),
+                                lastBonusClaim: new Date(0),
+                                photoUrl: photoUrl
+                            });
+                        }
+                        updateUI();
+                    }
+                });
+
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
                 
-                // Puanı Firestore'a kaydet
-                try {
-                    const docSnap = await userDocRef.get();
-                    await userDocRef.update({
-                        points: (docSnap.data().points || 0) + GUESS_GAME_WIN_POINTS
-                    });
-                    showMessage(`${GUESS_GAME_WIN_POINTS} puan kazandın!`, false, 'message-box-guess-game-modal');
-                } catch (e) {
-                    console.error("Puan güncellenirken hata oluştu: ", e);
-                    showMessage("Puan kaydedilirken bir hata oluştu.", true, 'message-box-guess-game-modal');
-                }
-
-            } else if (attemptsLeft === 0) {
-                updateGuessFeedback(`Üzgünüm, tahmin hakkın kalmadı! Sayı ${targetNumber} idi.`, true);
-                gameOver = true;
-                if (guessGameInput) guessGameInput.disabled = true;
-                if (guessGameSubmitButton) guessGameSubmitButton.disabled = true;
-                if (guessGameNewButton) guessGameNewButton.classList.remove('hidden');
-            } else {
-                const hint = guess < targetNumber ? 'daha yüksek' : 'daha düşük';
-                updateGuessFeedback(`Yanlış! Sayı ${hint}. Kalan tahmin hakkı: ${attemptsLeft}`);
+                startRealtimeListeners();
+                
+            } catch (error) {
+                console.error("Firebase başlatılırken bir hata oluştu:", error);
             }
-            if (guessGameInput) guessGameInput.value = ''; 
         }
 
-        // Taş-Kağıt-Makas Oyunu Mantığı
-        function initializeRPSGame() {
-            if (rpsPlayerChoiceDisplay) rpsPlayerChoiceDisplay.textContent = '';
-            if (rpsComputerChoiceDisplay) rpsComputerChoiceDisplay.textContent = '';
-            if (rpsResultDisplayText) rpsResultDisplayText.textContent = 'Bir seçim yap!';
-            if (rpsRockBtn) rpsRockBtn.disabled = false;
-            if (rpsPaperBtn) rpsPaperBtn.disabled = false;
-            if (rpsScissorsBtn) rpsScissorsBtn.disabled = false;
-            if (rpsPlayAgainButton) rpsPlayAgainButton.classList.add('hidden');
-            if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#ffffff'; 
+        window.onload = initializeFirebase;
+
+        function startRealtimeListeners() {
+            const userPointsDisplay = document.getElementById('user-points');
+            const userProfilePic = document.getElementById('user-profile-pic');
+            const userDocPath = `artifacts/${typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'}/users/${userId}/profile/data`;
+
+            onSnapshot(doc(db, userDocPath), (doc) => {
+                if (doc.exists()) {
+                    const userData = doc.data();
+                    const username = userData.username || 'Kullanıcı';
+                    const points = userData.points || 0;
+                    const photoUrl = userData.photoUrl || null;
+                    
+                    document.getElementById('username-display').textContent = username;
+                    userPointsDisplay.textContent = points;
+                    if (photoUrl) {
+                        userProfilePic.style.backgroundImage = `url(${photoUrl})`;
+                    } else {
+                        userProfilePic.style.backgroundImage = `url('https://placehold.co/100x100/A0AEC0/000000?text=${username.charAt(0).toUpperCase()}')`;
+                    }
+                }
+            }, (error) => {
+                console.error("Kullanıcı verisi dinlenirken hata oluştu:", error);
+            });
+        }
+        
+        function updateUI() {
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
         }
 
-        async function playRPSGame(playerChoice) {
-            if (!userId) {
-                showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true, 'message-box-rps-game-modal');
+        async function updatePoints(pointsToAdd) {
+            try {
+                if (!authReady) {
+                    console.error("Firebase yetkilendirmesi hazır değil.");
+                    return;
+                }
+                const userDocSnap = await getDocs(userDocRef);
+                if (userDocSnap.exists()) {
+                    const currentPoints = userDocSnap.data().points || 0;
+                    await setDoc(userDocRef, { points: currentPoints + pointsToAdd }, { merge: true });
+                }
+            } catch (error) {
+                console.error("Puanlar güncellenirken hata oluştu:", error);
+            }
+        }
+
+        // Tab and Carousel Logic
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+            document.getElementById(tabId + '-tab').style.display = 'block';
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+        }
+
+        // Game Modals and Logic
+        const gameModalOverlay = document.getElementById('game-modal-overlay');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalBody = document.getElementById('modal-body');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        function showModal(title, message, bodyContent = '') {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalBody.innerHTML = bodyContent;
+            gameModalOverlay.classList.remove('hidden');
+        }
+
+        modalCloseBtn.onclick = () => {
+            gameModalOverlay.classList.add('hidden');
+        };
+
+        // Mini Games Logic
+        document.getElementById('click-game').onclick = () => {
+            if (Telegram.WebApp) { Telegram.WebApp.HapticFeedback.impactOccurred('light'); }
+            updatePoints(10);
+            showModal('Tıkla Kazan', '10 Puan kazandınız!', '<p>Tebrikler!</p>');
+        };
+
+        document.getElementById('number-game').onclick = () => {
+            if (Telegram.WebApp) { Telegram.WebApp.HapticFeedback.impactOccurred('light'); }
+            showModal('Sayı Tahmini', '1 ile 10 arasında bir sayı tahmin edin.',
+                `<input type="number" id="guess-input" class="w-full text-center p-2 mb-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all" min="1" max="10">
+                <button id="guess-btn" class="px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 font-bold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all">
+                    Tahmin Et
+                </button>`);
+            document.getElementById('guess-btn').onclick = () => {
+                const guess = parseInt(document.getElementById('guess-input').value);
+                const randomNumber = Math.floor(Math.random() * 10) + 1;
+                if (guess === randomNumber) {
+                    updatePoints(50);
+                    showModal('Tebrikler!', `Doğru bildiniz! Kazandığınız puan: 50`);
+                } else {
+                    showModal('Yanlış Tahmin', `Tahmininiz yanlış. Doğru sayı ${randomNumber} idi.`);
+                }
+            };
+        };
+
+        document.getElementById('rps-game').onclick = () => {
+            if (Telegram.WebApp) { Telegram.WebApp.HapticFeedback.impactOccurred('light'); }
+            showModal('Taş-Kağıt-Makas', 'Seçiminizi yapın:',
+                `<div class="flex justify-center space-x-4">
+                    <button class="choice-btn px-6 py-3 bg-gray-700 text-white rounded-full hover:bg-gray-600 transition-colors" data-choice="taş">Taş</button>
+                    <button class="choice-btn px-6 py-3 bg-gray-700 text-white rounded-full hover:bg-gray-600 transition-colors" data-choice="kağıt">Kağıt</button>
+                    <button class="choice-btn px-6 py-3 bg-gray-700 text-white rounded-full hover:bg-gray-600 transition-colors" data-choice="makas">Makas</button>
+                </div>`);
+            document.querySelectorAll('.choice-btn').forEach(button => {
+                button.onclick = (e) => {
+                    const playerChoice = e.target.dataset.choice;
+                    const choices = ['taş', 'kağıt', 'makas'];
+                    const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+
+                    let resultMessage;
+                    if (playerChoice === computerChoice) {
+                        resultMessage = 'Berabere! Her ikiniz de ' + playerChoice + ' seçtiniz.';
+                    } else if (
+                        (playerChoice === 'taş' && computerChoice === 'makas') ||
+                        (playerChoice === 'kağıt' && computerChoice === 'taş') ||
+                        (playerChoice === 'makas' && computerChoice === 'kağıt')
+                    ) {
+                        updatePoints(20);
+                        resultMessage = `Kazandınız! Siz ${playerChoice}, rakip ${computerChoice} seçti.`;
+                    } else {
+                        resultMessage = `Kaybettiniz! Siz ${playerChoice}, rakip ${computerChoice} seçti.`;
+                    }
+                    showModal('Sonuç', resultMessage);
+                };
+            });
+        };
+
+        // Spin Wheel Logic
+        const wheelCanvas = document.getElementById('wheelCanvas');
+        const spinBtn = document.getElementById('spin-btn');
+        const spinStatus = document.getElementById('spin-status');
+        const ctx = wheelCanvas.getContext('2d');
+        const segments = [{
+            text: "10 Puan",
+            value: 10
+        }, {
+            text: "50 Puan",
+            value: 50
+        }, {
+            text: "100 Puan",
+            value: 100
+        }, {
+            text: "0 Puan",
+            value: 0
+        }, {
+            text: "200 Puan",
+            value: 200
+        }, {
+            text: "0 Puan",
+            value: 0
+        }];
+        const deg = 360 / segments.length;
+        let rotation = 0;
+
+        function drawWheel() {
+            ctx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+            segments.forEach((segment, i) => {
+                ctx.beginPath();
+                ctx.moveTo(140, 140);
+                ctx.arc(140, 140, 140, (i * deg) * Math.PI / 180, ((i + 1) * deg) * Math.PI / 180);
+                ctx.closePath();
+                ctx.fillStyle = i % 2 === 0 ? '#10B981' : '#EF4444';
+                ctx.fill();
+
+                ctx.save();
+                ctx.translate(140, 140);
+                ctx.rotate(((i * deg + deg / 2) * Math.PI / 180));
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 16px Inter';
+                ctx.fillText(segment.text, 0, -100);
+                ctx.restore();
+            });
+        }
+        drawWheel();
+
+        spinBtn.onclick = async () => {
+            if (!authReady) {
+                showModal("Hata", "Lütfen girişin tamamlanmasını bekleyin.");
+                return;
+            }
+            if (Telegram.WebApp) { Telegram.WebApp.HapticFeedback.impactOccurred('medium'); }
+
+            const userDocSnap = await getDocs(userDocRef);
+            if (!userDocSnap.exists()) {
+                showModal("Hata", "Kullanıcı verisi bulunamadı.");
+                return;
+            }
+            const userData = userDocSnap.data();
+            const lastSpin = userData.lastSpin.toDate();
+            const now = new Date();
+            const timeDiff = now - lastSpin;
+            const cooldown = 24 * 60 * 60 * 1000; // 24 saat
+
+            if (timeDiff < cooldown) {
+                const remainingTime = new Date(cooldown - timeDiff);
+                const hours = remainingTime.getUTCHours();
+                const minutes = remainingTime.getUTCMinutes();
+                const seconds = remainingTime.getUTCSeconds();
+                showModal("Beklemede", `Bir sonraki çark çevirme için kalan süre: ${hours}sa ${minutes}dk ${seconds}sn`);
                 return;
             }
 
-            if (rpsRockBtn) rpsRockBtn.disabled = true;
-            if (rpsPaperBtn) rpsPaperBtn.disabled = true;
-            if (rpsScissorsBtn) rpsScissorsBtn.disabled = true;
-
-            const computerChoice = choices[Math.floor(Math.random() * choices.length)];
-
-            if (rpsPlayerChoiceDisplay) rpsPlayerChoiceDisplay.textContent = playerChoice.charAt(0).toUpperCase() + playerChoice.slice(1);
-            if (rpsComputerChoiceDisplay) rpsComputerChoiceDisplay.textContent = computerChoice.charAt(0).toUpperCase() + computerChoice.slice(1);
-
-            let result;
-            let isWin = false;
-
-            if (playerChoice === computerChoice) {
-                result = 'Berabere!';
-            } else if (
-                (playerChoice === 'taş' && computerChoice === 'makas') ||
-                (playerChoice === 'kağıt' && computerChoice === 'taş') ||
-                (playerChoice === 'makas' && computerChoice === 'kağıt')
-            ) {
-                result = 'Kazandın! (+20 Puan)';
-                isWin = true;
-            } else {
-                result = 'Kaybettin.';
-            }
-
-            if (rpsResultDisplayText) rpsResultDisplayText.textContent = result;
-            if (isWin) {
-                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#a78bfa'; 
-                try {
-                    const docSnap = await userDocRef.get();
-                    await userDocRef.update({
-                        points: (docSnap.data().points || 0) + RPS_GAME_WIN_POINTS
-                    });
-                    showMessage(`${RPS_GAME_WIN_POINTS} puan kazandın!`, false, 'message-box-rps-game-modal');
-                } catch (e) {
-                    console.error("RPS puanı güncellenirken hata oluştu: ", e);
-                    showMessage("Puan kaydedilirken bir hata oluştu.", true, 'message-box-rps-game-modal');
-                }
-            } else if (result === 'Berabere!') {
-                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#fcd34d'; 
-            } else {
-                if (rpsResultDisplayText) rpsResultDisplayText.style.color = '#dc3545'; 
-            }
+            spinBtn.disabled = true;
+            spinStatus.textContent = "Çark dönüyor...";
             
-            if (rpsPlayAgainButton) rpsPlayAgainButton.classList.remove('hidden');
-            Telegram.WebApp.HapticFeedback.impactOccurred('medium'); 
+            const spinTo = (Math.floor(Math.random() * 360) + 360 * 5); // 5 tam tur + rastgele
+            let currentRotation = rotation;
+            let start = null;
+
+            function animate(timestamp) {
+                if (!start) start = timestamp;
+                const progress = timestamp - start;
+                const rotationDelta = (spinTo / 2000) * progress;
+                rotation = currentRotation + rotationDelta;
+
+                ctx.save();
+                ctx.clearRect(0, 0, wheelCanvas.width, wheelCanvas.height);
+                ctx.translate(140, 140);
+                ctx.rotate(rotation * Math.PI / 180);
+                ctx.translate(-140, -140);
+                drawWheel();
+                ctx.restore();
+
+                if (progress < 2000) {
+                    requestAnimationFrame(animate);
+                } else {
+                    spinBtn.disabled = false;
+                    rotation %= 360;
+                    const finalRotation = rotation;
+                    const finalIndex = Math.floor((360 - (finalRotation % 360)) / deg);
+                    const finalSegment = segments[finalIndex];
+                    spinStatus.textContent = `Tebrikler! ${finalSegment.text} kazandınız.`;
+
+                    updatePoints(finalSegment.value);
+                    setDoc(userDocRef, { lastSpin: now }, { merge: true });
+                }
+            }
+            requestAnimationFrame(animate);
+        };
+
+        // Leaderboard Logic
+        document.getElementById('leaderboard-tab').onclick = async () => {
+            if (!authReady) {
+                showModal("Hata", "Lütfen girişin tamamlanmasını bekleyin.");
+                return;
+            }
+            const leaderboardList = document.getElementById('leaderboard-list');
+            try {
+                const leaderboardCollection = collection(db, `artifacts/${typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'}/users`);
+                const q = query(leaderboardCollection, orderBy("profile.data.points", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                leaderboardList.innerHTML = '';
+                let rank = 1;
+                querySnapshot.forEach((userDoc) => {
+                    const userData = userDoc.data().profile.data;
+                    const username = userData.username || 'Anonim';
+                    const points = userData.points || 0;
+                    const isCurrentUser = userDoc.id === userId;
+                    
+                    const leaderboardItem = document.createElement('div');
+                    leaderboardItem.className = `flex justify-between items-center p-3 rounded-lg ${isCurrentUser ? 'bg-yellow-500 bg-opacity-30 text-yellow-300 font-bold' : 'bg-gray-800'}`;
+                    leaderboardItem.innerHTML = `
+                        <span>#${rank} ${username}</span>
+                        <span>${points} Puan</span>
+                    `;
+                    leaderboardList.appendChild(leaderboardItem);
+                    rank++;
+                });
+            } catch (e) {
+                console.error("Liderlik tablosu yüklenirken hata:", e);
+                leaderboardList.innerHTML = `<p class="text-center text-red-400">Liderlik tablosu yüklenemedi.</p>`;
+            }
+        };
+
+        // Banner Carousel Logic
+        const bannerCarousel = document.getElementById('banner-carousel');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const totalBanners = bannerCarousel.children.length;
+        let currentIndex = 0;
+
+        function updateButtons() {
+            prevBtn.style.display = currentIndex === 0 ? 'none' : 'block';
+            nextBtn.style.display = currentIndex === totalBanners - 1 ? 'none' : 'block';
         }
 
-
-        // Uygulama yüklendiğinde başlat
-        document.addEventListener('DOMContentLoaded', () => { 
-            // HTML elemanlarını DOM yüklendikten sonra al ve global değişkenlere ata
-            loadingScreen = document.getElementById('loading-screen');
-
-            appHeader = document.getElementById('app-header');
-            userInfoHeader = document.getElementById('user-info-header');
-            pointsDisplayHeader = document.getElementById('points-display-header');
-            userProfilePic = document.getElementById('user-profile-pic'); // Yeni profil resmi elemanı
-
-            appWrapper = document.getElementById('app-wrapper');
-            homePageContent = document.getElementById('home-page-content');
-            messageBoxHome = document.getElementById('message-box-home');
-            
-            // Tab navigasyonu elemanlarını al
-            tabButtons = document.querySelectorAll('#tab-navigation .tab-button');
-            tabContents = {
-                'games': document.getElementById('tab-content-games'),
-                'wheel': document.getElementById('tab-content-wheel'),
-                'leaderboard': document.getElementById('tab-content-leaderboard'),
-                'bonus-codes': document.getElementById('tab-content-bonus-codes')
-            };
-
-            // Sekme içerik elemanlarını al
-            miniGamesCarouselContainer = document.getElementById('mini-games-carousel-container');
-            miniGamesSection = document.getElementById('mini-games-section');
-            scrollLeftBtn = document.getElementById('scroll-left-btn');
-            scrollRightBtn = document.getElementById('scroll-right-btn');
-            wheelCardElement = document.getElementById('wheel-card'); 
-            leaderboardSection = document.getElementById('leaderboard-section');
-            leaderboardList = document.getElementById('leaderboard-list');
-            bonusCodesListSection = document.getElementById('bonus-codes-list-section');
-            bonusCodesList = document.getElementById('bonus-codes-list');
-
-            // Anasayfa oyun kartları
-            fastClickCard = document.getElementById('fast-click-card');
-            guessGameCard = document.getElementById('guess-game-card');
-            rpsGameCard = document.getElementById('rps-game-card');
-
-            // Modallar ve içindeki elemanlar
-            wheelModal = document.getElementById('wheel-modal');
-            wheelModalCloseBtn = document.getElementById('wheel-modal-close-btn');
-            wheelElement = document.getElementById('wheel-element');
-            wheelSpinButton = document.getElementById('wheel-spin-button');
-            messageBoxWheelModal = document.getElementById('message-box-wheel-modal');
-
-            fastClickModal = document.getElementById('fast-click-modal');
-            fastClickModalCloseBtn = document.getElementById('fast-click-modal-close-btn');
-            messageBoxFastClickModal = document.getElementById('message-box-fast-click-modal');
-            fastClickGameButton = document.getElementById('fast-click-game-button');
-
-            guessGameModal = document.getElementById('guess-game-modal');
-            guessGameModalCloseBtn = document.getElementById('guess-game-modal-close-btn');
-            guessGameInput = document.getElementById('guess-game-input');
-            guessGameSubmitButton = document.getElementById('guess-game-submit-button');
-            guessGameFeedback = document.getElementById('guess-game-feedback');
-            guessGameNewButton = document.getElementById('guess-game-new-button');
-            messageBoxGuessGameModal = document.getElementById('message-box-guess-game-modal');
-
-            rpsGameModal = document.getElementById('rps-game-modal');
-            rpsGameModalCloseBtn = document.getElementById('rps-game-modal-close-btn');
-            rpsRockBtn = document.getElementById('rps-rock-btn');
-            rpsPaperBtn = document.getElementById('rps-paper-btn');
-            rpsScissorsBtn = document.getElementById('rps-scissors-btn');
-            rpsPlayerChoiceDisplay = document.getElementById('rps-player-choice-display');
-            rpsComputerChoiceDisplay = document.getElementById('rps-computer-choice-display');
-            rpsResultDisplayText = document.getElementById('rps-result-display-text');
-            rpsPlayAgainButton = document.getElementById('rps-play-again-button');
-            messageBoxRpsGameModal = document.getElementById('message-box-rps-game-modal');
-
-            // Sekme butonları için olay dinleyicileri
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
-                    const targetTab = button.dataset.tab;
-
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-
-                    for (const key in tabContents) {
-                        tabContents[key].classList.remove('active');
-                    }
-                    if (tabContents[targetTab]) {
-                        tabContents[targetTab].classList.add('active');
-                    }
-                    
-                    if (targetTab === 'leaderboard') {
-                        fetchLeaderboard();
-                    }
-                });
-            });
-
-            // Hızlı Tıkla! kartına tıklama olayı (modalı açar)
-            if (fastClickCard) {
-                fastClickCard.addEventListener('click', () => {
-                    if (fastClickModal) openModal(fastClickModal);
+        prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                bannerCarousel.scrollBy({
+                    left: -bannerCarousel.offsetWidth,
+                    behavior: 'smooth'
                 });
             }
-            // Hızlı Tıkla! modalındaki kapatma butonu
-            if (fastClickModalCloseBtn) {
-                fastClickModalCloseBtn.addEventListener('click', () => {
-                    if (fastClickModal) closeModal(fastClickModal);
-                });
-            }
-
-            // Sayı Tahmin Oyunu kartına tıklama olayı (modalı açar)
-            if (guessGameCard) {
-                guessGameCard.addEventListener('click', () => {
-                    if (guessGameModal) openModal(guessGameModal);
-                    startGame(); 
-                });
-            }
-            // Sayı Tahmin Oyunu modalındaki kapatma butonu
-            if (guessGameModalCloseBtn) {
-                guessGameModalCloseBtn.addEventListener('click', () => {
-                    if (guessGameModal) closeModal(guessGameModal);
-                });
-            }
-
-            // Taş, Kağıt, Makas kartına tıklama olayı (modalı açar)
-            if (rpsGameCard) {
-                rpsGameCard.addEventListener('click', () => {
-                    if (rpsGameModal) openModal(rpsGameModal);
-                    initializeRPSGame(); 
-                });
-            }
-            // Taş, Kağıt, Makas modalındaki kapatma butonu
-            if (rpsGameModalCloseBtn) {
-                rpsGameModalCloseBtn.addEventListener('click', () => {
-                    if (rpsGameModal) closeModal(rpsGameModal);
-                });
-            }
-
-            // Hızlı Tıkla! butonu için olay dinleyici (modal içinde)
-            if (fastClickGameButton) { 
-                fastClickGameButton.addEventListener('click', async () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
-                    if (!userId) {
-                        showMessage("Kullanıcı verisi yükleniyor, lütfen bekleyin.", true, 'message-box-fast-click-modal');
-                        return;
-                    }
-
-                    const now = Date.now();
-                    const docSnap = await userDocRef.get();
-                    if (docSnap.exists) {
-                        const lastClick = docSnap.data().lastClick || 0;
-                        if (now - lastClick < 500) { 
-                            showMessage("Çok hızlısın! Lütfen biraz bekle.", false, 'message-box-fast-click-modal');
-                            return;
-                        }
-                    }
-
-                    try {
-                        await userDocRef.update({
-                            points: (docSnap.data().points || 0) + 10,
-                            lastClick: now
-                        });
-                        showMessage("Puan kazandın!", false, 'message-box-fast-click-modal');
-                    } catch (e) {
-                        console.error("Puan güncellenirken hata oluştu: ", e);
-                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true, 'message-box-fast-click-modal');
-                    }
-                });
-            } else {
-                console.error("Hata: fastClickGameButton HTML elementi bulunamadı!");
-                showMessage("Uygulama yüklenirken bir sorun oluştu (Oyun Butonu bulunamadı).", true, 'message-box-home');
-            }
-
-            // Çarkıfelek kartına tıklama olayı (modalı açar)
-            if (wheelCardElement) { 
-                wheelCardElement.addEventListener('click', () => {
-                    if (wheelModal) openModal(wheelModal);
-                });
-            } else {
-                console.error("Hata: wheelCardElement HTML elementi bulunamadı!");
-            }
-
-            // Çark modalındaki kapatma butonu
-            if (wheelModalCloseBtn) {
-                wheelModalCloseBtn.addEventListener('click', () => {
-                    if (wheelModal) closeModal(wheelModal);
-                });
-            } else {
-                console.error("Hata: wheelModalCloseBtn HTML elementi bulunamadı!");
-            }
-
-            // Çarkı çevir butonu (modal içinde)
-            if (wheelSpinButton) { 
-                wheelSpinButton.addEventListener('click', async () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('heavy'); 
-                    if (!userId) return;
-                    isSpinning = true;
-                    wheelSpinButton.disabled = true;
-                    wheelSpinButton.textContent = "Çevriliyor...";
-
-                    try {
-                        const docSnap = await userDocRef.get();
-                        const currentPoints = docSnap.data().points || 0;
-
-                        if (currentPoints < 100) {
-                            showMessage("Yeterli puanın yok!", true, 'message-box-wheel-modal');
-                            isSpinning = false;
-                            wheelSpinButton.disabled = false;
-                            wheelSpinButton.textContent = "Çarkı Çevir (100 Puan)";
-                            return;
-                        }
-
-                        await userDocRef.update({
-                            points: currentPoints - 100
-                        });
-
-                        const targetSegmentIndex = Math.floor(Math.random() * segments.length);
-                        const segmentAngle = 360 / segments.length;
-                        const totalAngle = 360 * 5 + (360 - (targetSegmentIndex * segmentAngle + segmentAngle / 2));
-                        
-                        wheelElement.style.transform = `rotate(${totalAngle}deg)`;
-                        
-                        setTimeout(async () => {
-                            const result = segments[targetSegmentIndex];
-                            if (result.type === 'bonus_code') {
-                                const newBonusCode = `BONUS-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-                                await userDocRef.update({
-                                    bonusCodes: firebase.firestore.FieldValue.arrayUnion(newBonusCode)
-                                });
-                                showMessage(`Tebrikler! ${result.text} kazandın. Kodun: ${newBonusCode}`, false, 'message-box-wheel-modal');
-                                Telegram.WebApp.HapticFeedback.notificationOccurred('success'); 
-                            } else {
-                                showMessage("Maalesef, bir dahaki sefere!", false, 'message-box-wheel-modal');
-                                Telegram.WebApp.HapticFeedback.notificationOccurred('warning'); 
-                            }
-                            
-                            isSpinning = false;
-                            wheelSpinButton.disabled = false;
-                            wheelSpinButton.textContent = "Çarkı Çevir (100 Puan)";
-                            wheelElement.style.transform = 'rotate(0deg)'; 
-                        }, 5000); 
-                    } catch (e) {
-                        console.error("Çark çevrilirken bir hata oluştu: ", e);
-                        showMessage("Bir hata oluştu, lütfen tekrar deneyin.", true, 'message-box-wheel-modal');
-                        isSpinning = false;
-                        wheelSpinButton.disabled = false;
-                        wheelSpinButton.textContent = "Çarkı Çevir (100 Puan)";
-                    }
-                });
-            } else {
-                console.error("Hata: wheelSpinButton HTML elementi bulunamadı!");
-                showMessage("Uygulama yüklenirken bir sorun oluştu (Çark Butonu bulunamadı).", true, 'message-box-home');
-            }
-            
-            if (wheelElement) {
-                createWheel(); 
-            } else {
-                console.error("Hata: wheelElement HTML elementi bulunamadı!");
-            }
-
-            if (guessGameSubmitButton) {
-                guessGameSubmitButton.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
-                    checkGuess();
-                });
-            }
-            if (guessGameNewButton) {
-                guessGameNewButton.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
-                    startGame();
-                });
-            }
-            
-            if (rpsRockBtn) rpsRockBtn.addEventListener('click', () => playRPSGame('taş'));
-            if (rpsPaperBtn) rpsPaperBtn.addEventListener('click', () => playRPSGame('kağıt'));
-            if (rpsScissorsBtn) rpsScissorsBtn.addEventListener('click', () => playRPSGame('makas'));
-            if (rpsPlayAgainButton) rpsPlayAgainButton.addEventListener('click', () => {
-                Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
-                initializeRPSGame();
-            });
-            
-            if (scrollLeftBtn && miniGamesSection) {
-                scrollLeftBtn.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
-                    const firstCard = miniGamesSection.querySelector('.game-card-homepage');
-                    if (firstCard) {
-                        miniGamesSection.scrollBy({
-                            left: -firstCard.offsetWidth - 16, // Kart genişliği + margin-left (1rem = 16px)
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            }
-            if (scrollRightBtn && miniGamesSection) {
-                scrollRightBtn.addEventListener('click', () => {
-                    Telegram.WebApp.HapticFeedback.impactOccurred('light'); 
-                    const firstCard = miniGamesSection.querySelector('.game-card-homepage');
-                    if (firstCard) {
-                        miniGamesSection.scrollBy({
-                            left: firstCard.offsetWidth + 16, // Kart genişliği + margin-left (1rem = 16px)
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            }
-            
-            if (miniGamesSection) {
-                miniGamesSection.addEventListener('mousedown', (e) => {
-                    isDragging = true;
-                    miniGamesSection.classList.add('grabbing'); 
-                    startX = e.pageX - miniGamesSection.offsetLeft;
-                    scrollLeftStart = miniGamesSection.scrollLeft;
-                    e.preventDefault(); 
-                });
-
-                miniGamesSection.addEventListener('mouseleave', () => {
-                    isDragging = false;
-                    miniGamesSection.classList.remove('grabbing');
-                });
-
-                miniGamesSection.addEventListener('mouseup', () => {
-                    isDragging = false;
-                    miniGamesSection.classList.remove('grabbing');
-                });
-
-                miniGamesSection.addEventListener('mousemove', (e) => {
-                    if (!isDragging) return;
-                    e.preventDefault();
-                    const x = e.pageX - miniGamesSection.offsetLeft;
-                    const walk = (x - startX) * 1.5; 
-                    miniGamesSection.scrollLeft = scrollLeftStart - walk;
-                });
-
-                miniGamesSection.addEventListener('touchstart', (e) => {
-                    isDragging = true;
-                    startX = e.touches[0].pageX - miniGamesSection.offsetLeft;
-                    scrollLeftStart = miniGamesSection.scrollLeft;
-                });
-
-                miniGamesSection.addEventListener('touchend', () => {
-                    isDragging = false;
-                });
-
-                miniGamesSection.addEventListener('touchmove', (e) => {
-                    if (!isDragging) return;
-                    e.preventDefault(); 
-                    const x = e.touches[0].pageX - miniGamesSection.offsetLeft;
-                    const walk = (x - startX) * 1.5; 
-                    miniGamesSection.scrollLeft = scrollLeftStart - walk;
-                });
-            }
-
-
-            initializeFirebase();
         });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentIndex < totalBanners - 1) {
+                currentIndex++;
+                bannerCarousel.scrollBy({
+                    left: bannerCarousel.offsetWidth,
+                    behavior: 'smooth'
+                });
+            }
+        });
+        
+        bannerCarousel.addEventListener('scroll', () => {
+            const scrollLeft = bannerCarousel.scrollLeft;
+            const newIndex = Math.round(scrollLeft / bannerCarousel.offsetWidth);
+            if (currentIndex !== newIndex) {
+                currentIndex = newIndex;
+                updateButtons();
+            }
+        });
+
+        // initial call
+        updateButtons();
     </script>
 </body>
 </html>
