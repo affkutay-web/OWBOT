@@ -355,7 +355,7 @@
         </div>
 
         <div class="card content-section">
-            <h2>Sıkça Sorulan Sorular</h2>
+             <h2>Sıkça Sorulan Sorular</h2>
              <div id="faqContainer">
                 <!-- FAQ items buraya, değişiklik yok -->
                 <div class="faq-item">
@@ -419,7 +419,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                         Sitemizde aynı isim, adres, telefon, e-posta ve IP adresine bağlı ikinci bir hesap oluşturamazsınız. Böyle bir durumda güvenlik birimlerimiz bunu tespit ederek mevcut hesabınız da dahil olmak üzere tüm hesapları kapatacak ve yeni hesap oluşturmanıza izin vermeyecektir.
                     </div>
                 </div>
-          </div>
+           </div>
         </div>
     </div>
     
@@ -434,7 +434,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </div>
 
     <script>
-         const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   databaseURL: "https://onwingiris-afccf-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -450,7 +450,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const MILLISECONDS_IN_A_DAY = 0;
         let countdownInterval;
 
-        const prizes = [
+         const prizes = [
             { name: '5 Puan', value: 5, color: '#f7931a' },
             { name: '10 Puan', value: 10, color: '#4CAF50' },
             { name: '15 Puan', value: 15, color: '#2196F3' },
@@ -639,5 +639,19 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                              spinRef.set(firebase.database.ServerValue.TIMESTAMP);
                              startCountdown(new Date().getTime());
                         } else {
-                            scoreRef
+                            scoreRef.transaction(currentScore => {
+                                return (currentScore || 0) + winningPrize.value;
+                            }).then(() => {
+                                spinRef.set(firebase.database.ServerValue.TIMESTAMP);
+                                startCountdown(new Date().getTime());
+                            });
+                        }
+                    }, 6000); // Geçiş süresi olan 6 saniyeyi bekle
+                }, 2000); // 2 saniye sonra animasyonu durdur
+            }
 
+            openCaseBtn.addEventListener('click', openCase);
+        });
+    </script>
+</body>
+</html>
