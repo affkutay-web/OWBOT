@@ -351,7 +351,7 @@
         </div>
 
         <div class="card content-section">
-             <h2>Sıkça Sorulan Sorular</h2>
+            <h2>Sıkça Sorulan Sorular</h2>
              <div id="faqContainer">
                 <!-- FAQ items buraya, değişiklik yok -->
                 <div class="faq-item">
@@ -419,6 +419,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
           </div>
         </div>
     </div>
+    
     <div class="case-animation-overlay" id="caseOverlay">
         <div class="case-prizes-track" id="caseTrack">
             </div>
@@ -468,12 +469,14 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             { name: '150 Puan', value: 150, color: '#8BC34A' },
             { name: 'Şanslısın!', value: 500, color: '#a453e9' }
         ];
+        
+        // Ödül kartının genişliği
+        const PRIZE_ITEM_WIDTH = 200;
 
         window.addEventListener('load', () => {
             const WebApp = window.Telegram.WebApp;
             WebApp.ready();
 
-            // Buraya bir konsol logu ekleyerek Telegram verisini kontrol ediyoruz
             console.log("WebApp.initDataUnsafe.user:", WebApp.initDataUnsafe.user);
             
             const user = WebApp.initDataUnsafe.user;
@@ -575,16 +578,18 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 openCaseBtn.disabled = true;
                 caseOverlay.style.display = 'flex';
                 
+                // Animasyon için ödül listesini 100 kez tekrarlayarak uzun bir liste oluştur
                 const prizeList = [];
-                for (let i = 0; i < 50; i++) {
+                for (let i = 0; i < 100; i++) {
                     prizeList.push(...prizes.sort(() => Math.random() - 0.5));
                 }
 
                 const winningPrizeIndex = Math.floor(Math.random() * prizes.length);
                 const winningPrize = prizes[winningPrizeIndex];
 
-                const winningPrizePosition = Math.floor(Math.random() * 20) + 30;
-                prizeList.splice(winningPrizePosition, 0, winningPrize);
+                // Kazanan ödülü listenin ortasına yakın bir yere yerleştir
+                const winningPrizePosition = Math.floor(Math.random() * 20) + 50; 
+                prizeList[winningPrizePosition] = winningPrize;
 
                 caseTrack.innerHTML = '';
                 prizeList.forEach(prize => {
@@ -595,11 +600,14 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     caseTrack.appendChild(prizeItem);
                 });
 
+                // Animasyon için doğru konumu hesapla
                 const winningElement = caseTrack.children[winningPrizePosition];
-                const winningElementPos = winningElement.offsetLeft + (winningElement.offsetWidth / 2);
-                const trackCenter = caseTrack.offsetWidth / 2;
-                const finalPosition = trackCenter - winningElementPos;
+                const winningElementOffset = winningElement.offsetLeft;
 
+                // Animasyonun ödülü ortalaması için gerekli kayma miktarını hesapla
+                const trackCenter = caseTrack.offsetWidth / 2;
+                const finalPosition = trackCenter - winningElementOffset - (PRIZE_ITEM_WIDTH / 2);
+                
                 caseTrack.style.transition = 'none';
                 caseTrack.style.transform = `translateX(0)`;
                 
@@ -639,6 +647,3 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </script>
 </body>
 </html>
-
-
-
