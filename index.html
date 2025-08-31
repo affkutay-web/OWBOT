@@ -351,7 +351,7 @@
         </div>
 
         <div class="card content-section">
-            <h2>Sıkça Sorulan Sorular</h2>
+             <h2>Sıkça Sorulan Sorular</h2>
              <div id="faqContainer">
                 <!-- FAQ items buraya, değişiklik yok -->
                 <div class="faq-item">
@@ -416,8 +416,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                         Sitemizde aynı isim, adres, telefon, e-posta ve IP adresine bağlı ikinci bir hesap oluşturamazsınız. Böyle bir durumda güvenlik birimlerimiz bunu tespit ederek mevcut hesabınız da dahil olmak üzere tüm hesapları kapatacak ve yeni hesap oluşturmanıza izin vermeyecektir.
                     </div>
                 </div>
-
-            </div>
+          </div>
         </div>
     </div>
     <script>
@@ -432,7 +431,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </div>
 
     <script>
-       const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   databaseURL: "https://onwingiris-afccf-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -443,9 +442,11 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
   measurementId: "G-DCSV6R5H98"
 };
         firebase.initializeApp(firebaseConfig);
+
         const db = firebase.database();
         const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
         let countdownInterval;
+
         const prizes = [
             { name: '5 Puan', value: 5, color: '#f7931a' },
             { name: '10 Puan', value: 10, color: '#4CAF50' },
@@ -465,6 +466,9 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const WebApp = window.Telegram.WebApp;
             WebApp.ready();
 
+            // Buraya bir konsol logu ekleyerek Telegram verisini kontrol ediyoruz
+            console.log("WebApp.initDataUnsafe.user:", WebApp.initDataUnsafe.user);
+            
             const user = WebApp.initDataUnsafe.user;
             const profileIconElement = document.getElementById('profileIcon');
             const usernameElement = document.getElementById('username');
@@ -628,4 +632,3 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </script>
 </body>
 </html>
-
