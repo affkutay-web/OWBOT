@@ -230,9 +230,8 @@
             -webkit-backdrop-filter: blur(5px);
         }
         
-        /* Yeni CSS Keyframes Animasyonu */
         @keyframes scroll-prizes {
-            65% { transform: translateX(1000); }
+            0% { transform: translateX(0); }
             100% { transform: translateX(-10000px); }
         }
 
@@ -355,7 +354,7 @@
         </div>
 
         <div class="card content-section">
-             <h2>Sıkça Sorulan Sorular</h2>
+            <h2>Sıkça Sorulan Sorular</h2>
              <div id="faqContainer">
                 <!-- FAQ items buraya, değişiklik yok -->
                 <div class="faq-item">
@@ -450,30 +449,32 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const MILLISECONDS_IN_A_DAY = 0;
         let countdownInterval;
 
-         const prizes = [
-            { name: '5 Puan', value: 5, color: '#f7931a' },
-            { name: '10 Puan', value: 10, color: '#4CAF50' },
-            { name: '15 Puan', value: 15, color: '#2196F3' },
-            { name: '20 Puan', value: 20, color: '#2196F3' },
-            { name: '25 Puan', value: 25, color: '#2196F3' },
-            { name: '30 Puan', value: 30, color: '#2196F3' },
-            { name: '35 Puan', value: 35, color: '#2196F3' },
-            { name: '40 Puan', value: 40, color: '#2196F3' },
-            { name: '45 Puan', value: 45, color: '#2196F3' },
-            { name: '50 Puan', value: 50, color: '#2196F3' },
-            { name: '60 Puan', value: 60, color: '#2196F3' },
-            { name: '80 Puan', value: 80, color: '#9C27B0' },
-            { name: '100 Puan', value: 100, color: '#E91E63' },
-            { name: '200 Puan', value: 200, color: '#F44336' },
-            { name: 'Ekstra Çevirme', value: null, color: '#03A9F4' },
-            { name: '30 Puan', value: 30, color: '#FFC107' },
-            { name: 'Kaybettin', value: 0, color: '#555' },
-            { name: '75 Puan', value: 75, color: '#00BCD4' },
-            { name: '150 Puan', value: 150, color: '#8BC34A' },
-            { name: 'Şanslısın!', value: 500, color: '#a453e9' }
+        const prizes = [
+            { name: '5 Puan', value: 5, color: '#f7931a', rarity: 'common' },
+            { name: '5 Puan', value: 5, color: '#f7931a', rarity: 'common' },
+            { name: '10 Puan', value: 10, color: '#4CAF50', rarity: 'common' },
+            { name: '10 Puan', value: 10, color: '#4CAF50', rarity: 'common' },
+            { name: '20 Puan', value: 20, color: '#2196F3', rarity: 'common' },
+            { name: '30 Puan', value: 30, color: '#FFC107', rarity: 'uncommon' },
+            { name: '50 Puan', value: 50, color: '#9C27B0', rarity: 'uncommon' },
+            { name: '75 Puan', value: 75, color: '#00BCD4', rarity: 'rare' },
+            { name: '100 Puan', value: 100, color: '#E91E63', rarity: 'rare' },
+            { name: '150 Puan', value: 150, color: '#8BC34A', rarity: 'epic' },
+            { name: '200 Puan', value: 200, color: '#F44336', rarity: 'epic' },
+            { name: 'Ekstra Çevirme', value: null, color: '#03A9F4', rarity: 'legendary' },
+            { name: 'Şanslısın!', value: 500, color: '#a453e9', rarity: 'legendary' },
+            { name: 'Kaybettin', value: 0, color: '#555', rarity: 'lose' }
         ];
+
+        const commonPrizes = prizes.filter(p => p.rarity === 'common');
+        const allPrizes = prizes;
         
         const PRIZE_ITEM_WIDTH = 200;
+        const prizeAudio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); // Ses dosya URL'sini buraya yapıştırın
+        prizeAudio.loop = false;
+        
+        let spinTimeout;
+        let finishTimeout;
 
         window.addEventListener('load', () => {
             const WebApp = window.Telegram.WebApp;
@@ -571,6 +572,22 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     countdownElement.textContent = `Yeni hak: ${hours}sa ${minutes}dk ${seconds}sn`;
                 }, 1000);
             }
+
+            function stopSound() {
+                prizeAudio.pause();
+                prizeAudio.currentTime = 0;
+            }
+
+            function playSound() {
+                if (!prizeAudio.paused) {
+                    stopSound();
+                }
+                prizeAudio.play().catch(e => console.error("Ses çalınamadı:", e));
+            }
+            
+            function handleSpinClick() {
+                playSound();
+            }
             
             function openCase() {
                 if (openCaseBtn.disabled || !user) {
@@ -580,17 +597,14 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 openCaseBtn.disabled = true;
                 caseOverlay.style.display = 'flex';
                 
-                // Animasyon için ödül listesini 100 kez tekrarlayarak uzun bir liste oluştur
                 const prizeList = [];
                 for (let i = 0; i < 100; i++) {
-                    prizeList.push(...prizes.sort(() => Math.random() - 0.5));
+                    prizeList.push(...commonPrizes.sort(() => Math.random() - 0.5));
                 }
 
-                // Kazanan ödülü rastgele seç
-                const winningPrizeIndex = Math.floor(Math.random() * prizes.length);
-                const winningPrize = prizes[winningPrizeIndex];
+                const winningPrizeIndex = Math.floor(Math.random() * allPrizes.length);
+                const winningPrize = allPrizes[winningPrizeIndex];
 
-                // Kazanan ödülü listenin ortasına yakın bir yere yerleştir
                 const winningPrizePosition = Math.floor(Math.random() * 20) + 50; 
                 prizeList[winningPrizePosition] = winningPrize;
 
@@ -603,27 +617,26 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     caseTrack.appendChild(prizeItem);
                 });
 
-                // Ödül çarkına sürekli dönme animasyonunu ekle
-                caseTrack.style.animation = 'scroll-prizes 15s linear infinite';
-
-                // Animasyonu durdurmak ve kazananı belirlemek için bir zamanlayıcı ayarla
-                setTimeout(() => {
-                    // Animasyonu durdur
+                caseTrack.style.animation = 'scroll-prizes 5s linear infinite';
+                caseTrack.addEventListener('animationiteration', playSound);
+                
+                clearTimeout(spinTimeout);
+                spinTimeout = setTimeout(() => {
                     caseTrack.style.animation = 'none';
+                    caseTrack.removeEventListener('animationiteration', playSound);
+                    stopSound();
 
-                    // Kazanan ödülün pozisyonunu hesapla
                     const winningElement = caseTrack.children[winningPrizePosition];
                     const winningElementOffset = winningElement.offsetLeft;
 
                     const trackCenter = caseTrack.offsetWidth / 2;
                     const finalPosition = trackCenter - winningElementOffset - (PRIZE_ITEM_WIDTH / 2);
                     
-                    // Ödülün yavaşlayarak durması için geçiş (transition) ekle
-                    caseTrack.style.transition = 'transform 6s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                    caseTrack.style.transition = 'transform 8s cubic-bezier(0.25, 0.1, 0.25, 1)';
                     caseTrack.style.transform = `translateX(${finalPosition}px)`;
                     
-                    // Animasyon tamamlandığında ödülü ver
-                    setTimeout(() => {
+                    clearTimeout(finishTimeout);
+                    finishTimeout = setTimeout(() => {
                         caseOverlay.style.display = 'none';
                         prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
                         
@@ -646,8 +659,8 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                                 startCountdown(new Date().getTime());
                             });
                         }
-                    }, 6000); // Geçiş süresi olan 6 saniyeyi bekle
-                }, 2000); // 2 saniye sonra animasyonu durdur
+                    }, 8000);
+                }, 5000);
             }
 
             openCaseBtn.addEventListener('click', openCase);
@@ -655,4 +668,3 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </script>
 </body>
 </html>
-
