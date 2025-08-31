@@ -307,7 +307,7 @@
         </div>
 
         <div class="card content-section">
-            <h2>Sıkça Sorulan Sorular</h2>
+             <h2>Sıkça Sorulan Sorular</h2>
              <div id="faqContainer">
                 <!-- FAQ items buraya, değişiklik yok -->
                 <div class="faq-item">
@@ -377,8 +377,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         </div>
     </div>
 
-    <script>
-        const firebaseConfig = {
+            const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   databaseURL: "https://onwingiris-afccf-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -537,13 +536,16 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     wheel.addEventListener('transitionend', () => {
                         const spinRef = db.ref('spins/' + user.id);
                         const scoreRef = db.ref('scores/' + user.id);
+                        
+                        // Ödül adını kazanan mesaja ekle
+                        prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
 
                         if (winningPrize.name === 'Ekstra Çevirme') {
                             spinRef.remove();
-                            prizeMessage.textContent = `Tebrikler, ekstra bir çevirme hakkı kazandınız!`;
                             spinBtn.disabled = false;
                             countdownElement.textContent = '';
                         } else if (winningPrize.name === 'Kaybettin') {
+                             // "Kaybettin" ödülü için özel mesajı tekrar yaz
                              prizeMessage.textContent = `Maalesef, Kaybettin. Belki bir dahaki sefere...`;
                              spinRef.set(firebase.database.ServerValue.TIMESTAMP);
                              startCountdown(new Date().getTime());
@@ -551,7 +553,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                             scoreRef.transaction(currentScore => {
                                 return (currentScore || 0) + winningPrize.value;
                             }).then(() => {
-                                prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
                                 spinRef.set(firebase.database.ServerValue.TIMESTAMP);
                                 startCountdown(new Date().getTime());
                             });
