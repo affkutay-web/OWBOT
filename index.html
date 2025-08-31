@@ -325,7 +325,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 </div>
 
                 <div class="faq-item">
-                    <div class="faq-question">Hesabımı doğrulamak zorundamıyım?</div>
+                    <div class="faq-question">Hesabımı doğrulamak zorunda mıyım?</div>
                     <div class="faq-answer">
                         Çevrimiçi oyun kuralları uyarınca, yaşı uygun olmayan kişilerin sitemizde oynamadıklarından emin olmak için kimliğinizi ve yaşınızı doğrulamak zorundayız.
                     </div>
@@ -366,6 +366,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const db = firebase.database();
         const scoreRef = db.ref('tower_stack_scores');
         const generalScoreRef = db.ref('scores');
+        const MAX_SCORE = 100;
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -426,11 +427,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             loadLeaderboard();
         });
 
-        // Yeni drawBlock fonksiyonu
         function drawBlock(block) {
             ctx.fillStyle = block.color;
             ctx.fillRect(block.x, canvas.height - block.y - BLOCK_HEIGHT, block.width, BLOCK_HEIGHT);
-
+            
             ctx.fillStyle = 'white';
             ctx.font = 'bold 24px Arial';
             ctx.textAlign = 'center';
@@ -440,9 +440,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
         function drawGame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             tower.forEach(block => drawBlock(block));
-
             if (currentBlock && gameStarted) {
                 drawBlock(currentBlock);
             }
@@ -450,7 +448,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
         function animate() {
             if (!gameStarted || !currentBlock) return;
-
             currentBlock.x += currentBlock.speed;
             if (currentBlock.x + currentBlock.width > canvas.width || currentBlock.x < 0) {
                 currentBlock.speed *= -1;
@@ -461,34 +458,57 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
         function placeBlock() {
             if (!gameStarted || !currentBlock) return;
-
             cancelAnimationFrame(animationFrameId);
-
+            
             let previousBlock = tower[tower.length - 1];
             const overlap = Math.max(0, previousBlock.width - Math.abs(currentBlock.x - previousBlock.x));
-
+            
             if (overlap > 0) {
                 score++;
-                scoreDisplay.textContent = `Skor: ${score}`;
+
+                // Her 10 skorda 15 puan bonusu genel puana ekle
+                if (score % 10 === 0 && currentUserTelegramId) {
+                    generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
+                        return (currentTotalScore || 0) + 15;
+                    }).then(() => {
+                        console.log("Bonus score added to general score!");
+                    });
+                }
 
                 const newWidth = overlap;
                 const newX = currentBlock.x > previousBlock.x ? currentBlock.x : previousBlock.x;
-
                 const newBlock = {
                     x: newX,
                     y: (tower.length) * BLOCK_HEIGHT,
                     width: newWidth,
-                    color: blockColor
+                    color: '#9b59b6'
                 };
-
                 tower.push(newBlock);
 
                 if (tower.length * BLOCK_HEIGHT > canvas.height - BLOCK_HEIGHT * 2) {
                     tower.forEach(block => block.y -= BLOCK_HEIGHT);
                 }
                 
+                // Eğer skor 100'e ulaştıysa oyunu bitir ve 500 puan bonus ekle
+                if (score >= MAX_SCORE) {
+                    gameStarted = false;
+                    scoreDisplay.textContent = `Tebrikler! Maksimum Skor: ${MAX_SCORE}`;
+                    startGameBtn.style.display = 'none';
+                    restartGameBtn.style.display = 'block';
+
+                    // 500 puanlık büyük ödülü genel puana ekle
+                    if (currentUserTelegramId) {
+                         generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
+                            return (currentTotalScore || 0) + 500;
+                        }).then(() => {
+                            console.log("500 points bonus added!");
+                            loadLeaderboard(); // Liderlik tablosunu yeniden yükle
+                        });
+                    }
+                    return;
+                }
+
                 BLOCK_WIDTH = newWidth;
-                blockColor = `hsl(270, 70%, 30%)`; // Blok rengini koyu mor yap
                 currentBlock = {
                     x: currentBlock.speed > 0 ? 0 : canvas.width - BLOCK_WIDTH,
                     y: (tower.length) * BLOCK_HEIGHT,
@@ -502,10 +522,11 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 scoreDisplay.textContent = `Oyun Bitti! Skor: ${score}`;
                 startGameBtn.style.display = 'none';
                 restartGameBtn.style.display = 'block';
-                saveScore(score);
+                saveScore(score); // Sadece oyun skoru bittiğinde kaydet
             }
         }
 
+        // Oyun skoru bittiğinde kaydediliyor
         function saveScore(finalScore) {
             if (currentUserTelegramId) {
                 scoreRef.child(currentUserTelegramId).once('value').then(snapshot => {
@@ -517,17 +538,18 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                             timestamp: firebase.database.ServerValue.TIMESTAMP
                         }).then(() => {
                             console.log("Tower Stack High Score updated!");
-                            loadLeaderboard();
                         }).catch(error => {
                             console.error("Error updating Tower Stack high score:", error);
                         });
                     }
                 });
-
+                
+                // Oyun bittiğinde skoru genel puana ekle
                 generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
                     return (currentTotalScore || 0) + finalScore;
                 }).then(() => {
                     console.log("General user score updated!");
+                    loadLeaderboard();
                 }).catch(error => {
                     console.error("Error updating general user score:", error);
                 });
@@ -540,13 +562,25 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const leaderboardList = document.getElementById('leaderboardList');
             leaderboardList.innerHTML = '<li class="leaderboard-item"><span>1.</span> <span class="name">Yükleniyor...</span> <span class="score">0</span></li>';
 
-            scoreRef.orderByChild('score').limitToLast(10).on('value', snapshot => {
+            generalScoreRef.orderByValue().limitToLast(10).on('value', async snapshot => {
                 const scores = [];
+                const userPromises = [];
+
                 snapshot.forEach(childSnapshot => {
-                    const data = childSnapshot.val();
-                    scores.push({ username: data.username, score: data.score });
+                    const userId = childSnapshot.key;
+                    const totalScore = childSnapshot.val();
+                    
+                    userPromises.push(
+                        db.ref('users/' + userId).once('value').then(userSnapshot => {
+                            const userData = userSnapshot.val();
+                            const username = userData?.firstName || 'Anonim';
+                            scores.push({ username, score: totalScore, id: userId });
+                        })
+                    );
                 });
-                scores.reverse();
+
+                await Promise.all(userPromises);
+                scores.sort((a, b) => b.score - a.score);
 
                 leaderboardList.innerHTML = '';
                 if (scores.length === 0) {
@@ -567,16 +601,15 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             score = 0;
             tower = [];
             BLOCK_WIDTH = 150;
-            blockColor = '#FF0077';
-            currentBlock = { x: 0, y: BLOCK_HEIGHT, width: BLOCK_WIDTH, color: blockColor, speed: 2 };
+            currentBlock = null;
             scoreDisplay.textContent = `Skor: ${score}`;
             startGameBtn.style.display = 'none';
             restartGameBtn.style.display = 'none';
             canvas.style.display = 'block';
 
-            // İlk bloğu zemin seviyesine tam olarak yerleştir
             tower.push({ x: (canvas.width - BLOCK_WIDTH) / 2, y: 0, width: BLOCK_WIDTH, color: '#9b59b6' }); 
 
+            currentBlock = { x: 0, y: BLOCK_HEIGHT, width: BLOCK_WIDTH, color: `hsl(${score * 40 % 360}, 70%, 50%)`, speed: 2 };
             drawGame();
             animate();
         }
