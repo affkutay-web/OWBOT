@@ -229,24 +229,16 @@
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
         }
-        
-        /* YENİ - Kesintisiz döngü için animasyon */
-        .case-prizes-track-wrapper {
-            position: relative;
+
+        .case-prizes-track {
             display: flex;
             height: 120px;
             overflow: hidden;
             width: 90vw;
             border: 3px solid var(--accent-color);
             border-radius: 10px;
-        }
-
-        .case-prizes-track {
-            display: flex;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
+            position: relative;
+            transition: transform 15s cubic-bezier(0.25, 0.1, 0.25, 1);
         }
 
         .prize-item {
@@ -427,10 +419,8 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </div>
     
     <div class="case-animation-overlay" id="caseOverlay">
-        <div class="case-prizes-track-wrapper">
-            <div id="caseTrack1" class="case-prizes-track"></div>
-            <div id="caseTrack2" class="case-prizes-track"></div>
-        </div>
+        <div class="case-prizes-track" id="caseTrack">
+            </div>
         <div class="prize-pointer"></div>
         <div class="final-prize-display" id="finalPrizeDisplay">
             <h3 id="finalPrizeName"></h3>
@@ -477,8 +467,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const allPrizes = prizes;
         
         const PRIZE_ITEM_WIDTH = 250;
-        
-        // SES DOSYASI İÇİN KISA VE GÜVENİLİR BİR URL
         const soundUrl = 'https://s3.amazonaws.com/freecodecamp-240-drum-kit/sounds/clap.wav';
         const prizeAudio = new Audio(soundUrl);
         
@@ -500,8 +488,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const prizeMessage = document.getElementById('prizeMessage');
             const countdownElement = document.getElementById('countdown');
             const caseOverlay = document.getElementById('caseOverlay');
-            const caseTrack1 = document.getElementById('caseTrack1');
-            const caseTrack2 = document.getElementById('caseTrack2');
+            const caseTrack = document.getElementById('caseTrack');
             const finalPrizeDisplay = document.getElementById('finalPrizeDisplay');
             const finalPrizeName = document.getElementById('finalPrizeName');
             const finalPrizeValue = document.getElementById('finalPrizeValue');
@@ -583,34 +570,25 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 }, 1000);
             }
 
-            // Ses döngüsü
             function startSound() {
                 clearInterval(soundInterval);
                 soundInterval = setInterval(() => {
                     prizeAudio.cloneNode().play().catch(e => console.error("Ses çalınamadı:", e));
-                }, 100); // Her 100ms'de bir tık sesi çal
+                }, 100);
             }
 
             function stopSound() {
                 clearInterval(soundInterval);
             }
             
-            function createPrizeItems(trackElement) {
-                let prizeList = [];
-                for (let i = 0; i < 50; i++) {
+            function createPrizeItems() {
+                const prizeList = [];
+                for (let i = 0; i < 100; i++) {
                     prizeList.push(...commonPrizes.sort(() => Math.random() - 0.5));
                 }
-                trackElement.innerHTML = '';
-                prizeList.forEach(prize => {
-                    const prizeItem = document.createElement('div');
-                    prizeItem.className = 'prize-item';
-                    prizeItem.style.backgroundColor = prize.color;
-                    prizeItem.innerHTML = `<span class="prize-value">${prize.value === null ? '🎁' : prize.value}</span><span class="prize-name">${prize.name}</span>`;
-                    trackElement.appendChild(prizeItem);
-                });
-                return prizeList.length;
+                return prizeList;
             }
-            
+
             function openCase() {
                 if (openCaseBtn.disabled || !user) {
                     return;
@@ -619,94 +597,64 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 openCaseBtn.disabled = true;
                 caseOverlay.style.display = 'flex';
                 
-                // Ödül listelerini doldur
-                const totalItems1 = createPrizeItems(caseTrack1);
-                const totalItems2 = createPrizeItems(caseTrack2);
-                const trackLength = totalItems1 * PRIZE_ITEM_WIDTH;
-                
-                // 2. yolu 1. yolun hemen arkasına konumlandır
-                caseTrack2.style.left = `${trackLength}px`;
+                // Ödül listesini oluştur
+                const prizeList = createPrizeItems();
 
-                // Kazananı seç ve konumunu ayarla
+                // Rastgele bir kazanma ödülü ve konumu seç
                 const winningPrizeIndex = Math.floor(Math.random() * allPrizes.length);
                 const winningPrize = allPrizes[winningPrizeIndex];
-                
-                const winningPrizePosition = Math.floor(Math.random() * 20) + 50; 
-                
-                // Animasyon için toplam kaydırma mesafesini hesapla
-                // Bu değer, ödüllerin en az 2 tam tur atmasını sağlar
-                const baseSpinDistance = 2 * trackLength;
-                const winningPositionOffset = winningPrizePosition * PRIZE_ITEM_WIDTH + (PRIZE_ITEM_WIDTH / 2);
-                const finalSpinDistance = baseSpinDistance + winningPositionOffset;
 
-                // Animasyonu başlat
+                const winningPrizePosition = Math.floor(Math.random() * 20) + 50; 
+                prizeList[winningPrizePosition] = winningPrize;
+
+                caseTrack.innerHTML = '';
+                prizeList.forEach(prize => {
+                    const prizeItem = document.createElement('div');
+                    prizeItem.className = 'prize-item';
+                    prizeItem.style.backgroundColor = prize.color;
+                    prizeItem.innerHTML = `<span class="prize-value">${prize.value === null ? '🎁' : prize.value}</span><span class="prize-name">${prize.name}</span>`;
+                    caseTrack.appendChild(prizeItem);
+                });
+                
+                // Animasyon için durma konumunu hesapla
+                const trackCenter = caseTrack.offsetWidth / 2;
+                const winningElementOffset = winningPrizePosition * PRIZE_ITEM_WIDTH;
+                const finalPosition = -winningElementOffset + trackCenter - (PRIZE_ITEM_WIDTH / 2);
+                
+                // Animasyon ve ses efektlerini başlat
                 startSound();
 
-                caseTrack1.style.transition = 'none';
-                caseTrack2.style.transition = 'none';
-                caseTrack1.style.transform = `translateX(0)`;
-                caseTrack2.style.transform = `translateX(0)`;
-
-                // Animasyon başladığında, 2. yolun da döngüye girmesi için transform değerini ayarla
-                caseTrack1.style.transition = 'transform 15s linear';
-                caseTrack2.style.transition = 'transform 15s linear';
-                caseTrack1.style.transform = `translateX(-${trackLength}px)`;
-                caseTrack2.style.transform = `translateX(-${trackLength}px)`;
+                // Animasyonu başlatmak için dönüş değeri ve süreyi ayarla
+                // CSS'teki transition süresi (15s) ile senkronize olacak
+                caseTrack.style.transition = 'transform 15s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                caseTrack.style.transform = `translateX(${finalPosition}px)`;
                 
-                // Kesintisiz döngü için animasyonun tamamlanmasını bekle
-                setTimeout(() => {
-                    // Kazanan ödülün olduğu konumu ayarlamak için geçici liste oluştur
-                    const finalTrackPrizes = [];
-                    for (let i = 0; i < 30; i++) {
-                         finalTrackPrizes.push(...commonPrizes.sort(() => Math.random() - 0.5));
-                    }
-                    const finalWinningPosition = Math.floor(Math.random() * 10) + 5;
-                    finalTrackPrizes[finalWinningPosition] = winningPrize;
-                    
-                    caseTrack1.innerHTML = '';
-                    finalTrackPrizes.forEach(prize => {
-                         const prizeItem = document.createElement('div');
-                         prizeItem.className = 'prize-item';
-                         prizeItem.style.backgroundColor = prize.color;
-                         prizeItem.innerHTML = `<span class="prize-value">${prize.value === null ? '🎁' : prize.value}</span><span class="prize-name">${prize.name}</span>`;
-                         caseTrack1.appendChild(prizeItem);
-                    });
-
-                    // Dönüşü durdur
+                clearTimeout(finishTimeout);
+                finishTimeout = setTimeout(() => {
                     stopSound();
+                    caseOverlay.style.display = 'none';
                     
-                    const finalStopPosition = caseTrack1.offsetWidth / 2 - (finalWinningPosition * PRIZE_ITEM_WIDTH + PRIZE_ITEM_WIDTH / 2);
-
-                    caseTrack1.style.transition = 'transform 10s cubic-bezier(0.25, 0.1, 0.25, 1)';
-                    caseTrack1.style.transform = `translateX(${finalStopPosition}px)`;
-                    caseTrack2.style.transition = 'none';
-                    caseTrack2.style.transform = `translateX(0)`;
-                    caseTrack2.style.left = `0`;
-
-                    setTimeout(() => {
-                        caseOverlay.style.display = 'none';
+                    const spinRef = db.ref('spins/' + user.id);
+                    const scoreRef = db.ref('scores/' + user.id);
+                    
+                    if (winningPrize.name === 'Ekstra Çevirme') {
+                        prizeMessage.textContent = 'Tebrikler, Ekstra Çevirme kazandınız!';
+                        spinRef.remove();
+                        openCaseBtn.disabled = false;
+                        countdownElement.textContent = '';
+                    } else if (winningPrize.name === 'Kaybettin') {
+                         prizeMessage.textContent = `Maalesef, Kaybettin. Belki bir dahaki sefere...`;
+                         spinRef.set(firebase.database.ServerValue.TIMESTAMP);
+                         startCountdown(new Date().getTime());
+                    } else {
                         prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
-                        
-                        const spinRef = db.ref('spins/' + user.id);
-                        const scoreRef = db.ref('scores/' + user.id);
-                        
-                        if (winningPrize.name === 'Ekstra Çevirme') {
-                            spinRef.remove();
-                            openCaseBtn.disabled = false;
-                            countdownElement.textContent = '';
-                        } else if (winningPrize.name === 'Kaybettin') {
-                             prizeMessage.textContent = `Maalesef, Kaybettin. Belki bir dahaki sefere...`;
-                             spinRef.set(firebase.database.ServerValue.TIMESTAMP);
-                             startCountdown(new Date().getTime());
-                        } else {
-                            scoreRef.transaction(currentScore => {
-                                return (currentScore || 0) + winningPrize.value;
-                            }).then(() => {
-                                spinRef.set(firebase.database.ServerValue.TIMESTAMP);
-                                startCountdown(new Date().getTime());
-                            });
-                        }
-                    }, 10000);
+                        scoreRef.transaction(currentScore => {
+                            return (currentScore || 0) + winningPrize.value;
+                        }).then(() => {
+                            spinRef.set(firebase.database.ServerValue.TIMESTAMP);
+                            startCountdown(new Date().getTime());
+                        });
+                    }
                 }, 15000);
             }
 
