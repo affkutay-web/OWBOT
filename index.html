@@ -344,7 +344,8 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         <div class="card content-section">
             <h2>Liderlik Tablosu</h2>
             <ul id="leaderboardList" class="leaderboard-list">
-                <li class="leaderboard-item"><span>1.</span> <span class="name">Yükleniyor...</span> <span class="score">0</span></li>
+                
+<li class="leaderboard-item"><span>1.</span> <span class="name">Yükleniyor...</span> <span class="score">0</span></li>
             </ul>
         </div>
     </div>
@@ -363,36 +364,30 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         firebase.initializeApp(firebaseConfig);
 
         const db = firebase.database();
-        const scoreRef = db.ref('tower_stack_scores'); // Tower Stack oyununun puanları için ayrı bir referans
+        const scoreRef = db.ref('tower_stack_scores');
+        const generalScoreRef = db.ref('scores');
 
-        // Canvas ve Context
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-
-        // Oyun Ayarları
         const BLOCK_HEIGHT = 40;
-        let BLOCK_WIDTH = 150; // Başlangıç genişliği
-        let blockColor = '#FF0077'; // Blok rengi
-
-        // Oyun Durumu
+        let BLOCK_WIDTH = 150;
+        let blockColor = '#FF0077';
         let gameStarted = false;
         let score = 0;
-        let tower = []; // Yığılmış bloklar
-        let currentBlock = { x: 0, y: 0, width: BLOCK_WIDTH, color: blockColor, speed: 2 };
+        let tower = [];
+        let currentBlock = null;
         let animationFrameId;
         let currentUserTelegramId = null;
         let currentUserName = "Anonim";
 
-        // DOM Elementleri
         const scoreDisplay = document.getElementById('scoreDisplay');
         const startGameBtn = document.getElementById('startGameBtn');
         const restartGameBtn = document.getElementById('restartGameBtn');
         const usernameElement = document.getElementById('username');
         const profileIconElement = document.getElementById('profileIcon');
         const userIdElement = document.getElementById('userId');
-        const userScoreElement = document.getElementById('userScore'); // Genel kullanıcı puanı
+        const userScoreElement = document.getElementById('userScore');
 
-        // FAQ İşlevselliği
         const faqItems = document.querySelectorAll('.faq-item');
         faqItems.forEach(item => {
             item.addEventListener('click', () => {
@@ -400,22 +395,18 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             });
         });
 
-        // Firebase ve Telegram WebApp Entegrasyonu
         window.addEventListener('load', () => {
             const WebApp = window.Telegram.WebApp;
             WebApp.ready();
-
             const user = WebApp.initDataUnsafe.user;
 
             if (user) {
                 currentUserTelegramId = user.id;
                 currentUserName = user.first_name || 'Kullanıcı';
-
                 usernameElement.textContent = currentUserName;
                 userIdElement.textContent = `@${user.username || 'ID: ' + currentUserTelegramId}`;
                 profileIconElement.textContent = currentUserName.charAt(0).toUpperCase();
 
-                // Kullanıcı bilgilerini Firebase'e kaydet (opsiyonel)
                 db.ref('users/' + currentUserTelegramId).update({
                     firstName: user.first_name,
                     lastName: user.last_name || null,
@@ -423,12 +414,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     lastLogin: firebase.database.ServerValue.TIMESTAMP
                 });
 
-                // Kullanıcının genel skorunu Firebase'den çek
-                db.ref('scores/' + currentUserTelegramId).on('value', snapshot => {
+                generalScoreRef.child(currentUserTelegramId).on('value', snapshot => {
                     const totalScore = snapshot.val() || 0;
                     userScoreElement.textContent = `${totalScore} Puan`;
                 });
-
             } else {
                 usernameElement.textContent = 'Kullanıcı verisi alınamadı.';
                 userIdElement.textContent = 'Lütfen uygulamayı Telegram içinden açın.';
@@ -437,100 +426,78 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             loadLeaderboard();
         });
 
-
-        // Oyun Çizimi Fonksiyonları
+        // Yeni drawBlock fonksiyonu
         function drawBlock(block) {
             ctx.fillStyle = block.color;
             ctx.fillRect(block.x, canvas.height - block.y - BLOCK_HEIGHT, block.width, BLOCK_HEIGHT);
 
-            // "ONWIN" yazısını ekle
             ctx.fillStyle = 'white';
-            ctx.font = 'bold 20px Arial';
+            ctx.font = 'bold 24px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('ONWIN', block.x + block.width / 2, canvas.height - block.y - BLOCK_HEIGHT / 2);
         }
 
         function drawGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Ekranı temizle
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Yığılmış blokları çiz
             tower.forEach(block => drawBlock(block));
 
-            // Mevcut (sallanan) bloku çiz
-            if (gameStarted) {
+            if (currentBlock && gameStarted) {
                 drawBlock(currentBlock);
             }
         }
 
-        // Oyun Mantığı
         function animate() {
-            if (!gameStarted) return;
+            if (!gameStarted || !currentBlock) return;
 
             currentBlock.x += currentBlock.speed;
-
-            // Bloğu ekran sınırlarında sektir
             if (currentBlock.x + currentBlock.width > canvas.width || currentBlock.x < 0) {
                 currentBlock.speed *= -1;
             }
-
             drawGame();
             animationFrameId = requestAnimationFrame(animate);
         }
 
         function placeBlock() {
-            if (!gameStarted) return;
+            if (!gameStarted || !currentBlock) return;
 
-            cancelAnimationFrame(animationFrameId); // Animasyonu durdur
+            cancelAnimationFrame(animationFrameId);
 
-            let previousBlock;
-            if (tower.length === 0) {
-                // İlk blok için varsayılan bir zemin bloğu oluştur
-                previousBlock = { x: (canvas.width - currentBlock.width) / 2, width: currentBlock.width };
-            } else {
-                previousBlock = tower[tower.length - 1];
-            }
-
-            // Çakışma kontrolü
+            let previousBlock = tower[tower.length - 1];
             const overlap = Math.max(0, previousBlock.width - Math.abs(currentBlock.x - previousBlock.x));
 
             if (overlap > 0) {
                 score++;
                 scoreDisplay.textContent = `Skor: ${score}`;
 
-                // Yeni bloğun genişliğini ve konumunu ayarla
                 const newWidth = overlap;
                 const newX = currentBlock.x > previousBlock.x ? currentBlock.x : previousBlock.x;
 
                 const newBlock = {
                     x: newX,
-                    y: (tower.length * BLOCK_HEIGHT) + BLOCK_HEIGHT, // Yüksekliği doğru ayarla
+                    y: (tower.length) * BLOCK_HEIGHT,
                     width: newWidth,
-                    color: blockColor,
-                    speed: currentBlock.speed // Hızı koru
+                    color: blockColor
                 };
+
                 tower.push(newBlock);
 
-                // Bir sonraki bloğun özelliklerini ayarla
-                BLOCK_WIDTH = newWidth; // Bir sonraki bloğun genişliğini küçült
-                currentBlock = {
-                    x: currentBlock.speed > 0 ? 0 : canvas.width - BLOCK_WIDTH, // Yönü koruyarak başlangıç pozisyonunu ayarla
-                    y: (tower.length * BLOCK_HEIGHT) + BLOCK_HEIGHT,
-                    width: BLOCK_WIDTH,
-                    color: `hsl(${score * 20 % 360}, 70%, 50%)`, // Renk değiştir
-                    speed: currentBlock.speed * 1.1 // Hızı artır
-                };
-
-                // Kule çok yükselirse aşağı kaydır
                 if (tower.length * BLOCK_HEIGHT > canvas.height - BLOCK_HEIGHT * 2) {
-                    // Tüm kuleyi aşağı kaydır
                     tower.forEach(block => block.y -= BLOCK_HEIGHT);
-                    currentBlock.y -= BLOCK_HEIGHT;
                 }
                 
-                animate(); // Yeni blok için animasyonu yeniden başlat
+                BLOCK_WIDTH = newWidth;
+                blockColor = `hsl(270, 70%, 30%)`; // Blok rengini koyu mor yap
+                currentBlock = {
+                    x: currentBlock.speed > 0 ? 0 : canvas.width - BLOCK_WIDTH,
+                    y: (tower.length) * BLOCK_HEIGHT,
+                    width: BLOCK_WIDTH,
+                    color: `hsl(${score * 40 % 360}, 70%, 50%)`,
+                    speed: currentBlock.speed * 1.05
+                };
+                animate();
             } else {
-                // Oyun bitti
                 gameStarted = false;
                 scoreDisplay.textContent = `Oyun Bitti! Skor: ${score}`;
                 startGameBtn.style.display = 'none';
@@ -539,12 +506,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             }
         }
 
-        // Skor Kaydetme Fonksiyonu
         function saveScore(finalScore) {
             if (currentUserTelegramId) {
-                // Tower Stack oyununa özel puanı kaydet
                 scoreRef.child(currentUserTelegramId).once('value').then(snapshot => {
-                    const currentHighScore = snapshot.val() || 0;
+                    const currentHighScore = snapshot.val()?.score || 0;
                     if (finalScore > currentHighScore) {
                         scoreRef.child(currentUserTelegramId).set({
                             username: currentUserName,
@@ -559,26 +524,21 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     }
                 });
 
-                // Genel kullanıcı skorunu da güncelle (eğer bu oyun genel skora ekleniyorsa)
-                // Eğer genel puana eklemek istemiyorsanız bu kısmı silebilirsiniz.
-                const generalScoreRef = db.ref('scores/' + currentUserTelegramId);
-                generalScoreRef.transaction(currentTotalScore => {
-                    return (currentTotalScore || 0) + finalScore; // Her oyunun skoru genel skora ekleniyor
+                generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
+                    return (currentTotalScore || 0) + finalScore;
                 }).then(() => {
                     console.log("General user score updated!");
                 }).catch(error => {
                     console.error("Error updating general user score:", error);
                 });
-
             } else {
                 console.warn("User not logged in, score not saved.");
             }
         }
 
-        // Liderlik Tablosunu Yükle
         function loadLeaderboard() {
             const leaderboardList = document.getElementById('leaderboardList');
-            leaderboardList.innerHTML = '<li class="leaderboard-item"><span>1.</span> <span class="name">Yükleniyor...</span> <span class="score">0</span></li>'; // Yükleniyor mesajı
+            leaderboardList.innerHTML = '<li class="leaderboard-item"><span>1.</span> <span class="name">Yükleniyor...</span> <span class="score">0</span></li>';
 
             scoreRef.orderByChild('score').limitToLast(10).on('value', snapshot => {
                 const scores = [];
@@ -586,7 +546,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     const data = childSnapshot.val();
                     scores.push({ username: data.username, score: data.score });
                 });
-                scores.reverse(); // Yüksekten düşüğe sırala
+                scores.reverse();
 
                 leaderboardList.innerHTML = '';
                 if (scores.length === 0) {
@@ -602,22 +562,20 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             });
         }
 
-
-        // Oyunu Başlat/Yeniden Başlat
         function initializeGame() {
             gameStarted = true;
             score = 0;
             tower = [];
-            BLOCK_WIDTH = 150; // Başlangıç genişliğini sıfırla
+            BLOCK_WIDTH = 150;
             blockColor = '#FF0077';
             currentBlock = { x: 0, y: BLOCK_HEIGHT, width: BLOCK_WIDTH, color: blockColor, speed: 2 };
             scoreDisplay.textContent = `Skor: ${score}`;
             startGameBtn.style.display = 'none';
             restartGameBtn.style.display = 'none';
-            canvas.style.display = 'block'; // Canvas'ı görünür yap
+            canvas.style.display = 'block';
 
-            // İlk bloğu platform olarak ekle (görsel olarak)
-            tower.push({ x: (canvas.width - BLOCK_WIDTH) / 2, y: 0, width: BLOCK_WIDTH, color: blockColor }); 
+            // İlk bloğu zemin seviyesine tam olarak yerleştir
+            tower.push({ x: (canvas.width - BLOCK_WIDTH) / 2, y: 0, width: BLOCK_WIDTH, color: '#9b59b6' }); 
 
             drawGame();
             animate();
@@ -626,14 +584,12 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         startGameBtn.addEventListener('click', initializeGame);
         restartGameBtn.addEventListener('click', initializeGame);
 
-        // Dokunma ve Tıklama olayları
         canvas.addEventListener('click', placeBlock);
         canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Varsayılan dokunma olayını engelle (kaydırma vb.)
+            e.preventDefault();
             placeBlock();
         });
 
-        // Başlangıçta canvas gizli olsun
         canvas.style.display = 'none';
     </script>
 </body>
