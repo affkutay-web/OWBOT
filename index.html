@@ -174,53 +174,68 @@
         }
 
         #wheel {
-            width: 250px;
-            height: 250px;
-            background-color: #4a4a4a;
+            width: 300px; /* Çarkı biraz büyüttük */
+            height: 300px;
             border-radius: 50%;
             border: 5px solid var(--accent-color);
             position: relative;
             overflow: hidden;
             transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+            background: conic-gradient(
+                #FFC107 0% 8.33%, /* 1/12 = 8.33% */
+                #F44336 8.33% 16.66%,
+                #E91E63 16.66% 25%,
+                #9C27B0 25% 33.33%,
+                #673AB7 33.33% 41.66%,
+                #3F51B5 41.66% 50%,
+                #2196F3 50% 58.33%,
+                #03A9F4 58.33% 66.66%,
+                #00BCD4 66.66% 75%,
+                #009688 75% 83.33%,
+                #4CAF50 83.33% 91.66%,
+                #8BC34A 91.66% 100%
+            );
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 0 20px var(--accent-color);
         }
 
-        .segment {
+        .segment-text {
             position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: 0% 0%; /* Merkezden dönsün */
             width: 50%;
             height: 50%;
-            top: 0;
-            left: 50%;
-            transform-origin: 0% 100%;
-            font-weight: bold;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: flex-start; /* Metni dilimin başlangıcına hizala */
             color: var(--text-color);
-            font-size: 12px;
-            text-align: center;
-            border: 1px solid var(--bg-color);
+            font-size: 11px; /* Daha küçük font */
+            font-weight: bold;
+            text-align: left;
+            padding-left: 10px; /* Metin için boşluk */
             box-sizing: border-box;
-            line-height: 1.2;
+            white-space: nowrap; /* Metnin tek satırda kalması için */
         }
-
-        .segment:nth-child(1) { transform: rotate(0deg) skewY(60deg); background-color: #FF5733; }
-        .segment:nth-child(2) { transform: rotate(60deg) skewY(60deg); background-color: #33FF57; }
-        .segment:nth-child(3) { transform: rotate(120deg) skewY(60deg); background-color: #3357FF; }
-        .segment:nth-child(4) { transform: rotate(180deg) skewY(60deg); background-color: #FF33A1; }
-        .segment:nth-child(5) { transform: rotate(240deg) skewY(60deg); background-color: #A1FF33; }
-        .segment:nth-child(6) { transform: rotate(300deg) skewY(60deg); background-color: #FFC933; }
         
-        .segment span {
-            display: block;
-            transform: skewY(-60deg) rotate(90deg) translateX(45px);
-        }
-
+        .segment-text:nth-child(1) { transform: rotate(15deg) translateY(-50%) translateX(-100%); } /* İlk dilimin ortası */
+        .segment-text:nth-child(2) { transform: rotate(45deg) translateY(-50%) translateX(-100%); }
+        .segment-text:nth-child(3) { transform: rotate(75deg) translateY(-50%) translateX(-100%); }
+        .segment-text:nth-child(4) { transform: rotate(105deg) translateY(-50%) translateX(-100%); }
+        .segment-text:nth-child(5) { transform: rotate(135deg) translateY(-50%) translateX(-100%); }
+        .segment-text:nth-child(6) { transform: rotate(165deg) translateY(-50%) translateX(-100%); }
+        .segment-text:nth-child(7) { transform: rotate(195deg) translateY(-50%) translateX(-100%); }
+        .segment-text:nth-child(8) { transform: rotate(225deg) translateY(-50%) translateX(-100%); }
+        .segment-text:nth-child(9) { transform: rotate(255deg) translateY(-50%) translateX(-100%); }
+        .segment-text:nth-child(10) { transform: rotate(285deg) translateY(-50%) translateX(-100%); }
+        .segment-text:nth-child(11) { transform: rotate(315deg) translateY(-50%) translateX(-100%); }
+        .segment-text:nth-child(12) { transform: rotate(345deg) translateY(-50%) translateX(-100%); }
+        
         .pointer {
             width: 0;
             height: 0;
             border-left: 15px solid transparent;
             border-right: 15px solid transparent;
-            border-top: 25px solid var(--accent-color);
+            border-top: 25px solid var(--accent-light); /* İşaretçi rengi accent'ten gelsin */
             position: absolute;
             top: -10px;
             z-index: 10;
@@ -274,12 +289,18 @@
             <h2>Günlük Bonus Çarkı</h2>
             <div class="wheel-container">
                 <div id="wheel">
-                    <div class="segment"><span>10 Puan</span></div>
-                    <div class="segment"><span>50 Puan</span></div>
-                    <div class="segment"><span>Çevirme Hakkı</span></div>
-                    <div class="segment"><span>100 Puan</span></div>
-                    <div class="segment"><span>Kaybettin</span></div>
-                    <div class="segment"><span>200 Puan</span></div>
+                    <div class="segment-text" data-prize="5 Puan"><span>5 Puan</span></div>
+                    <div class="segment-text" data-prize="10 Puan"><span>10 Puan</span></div>
+                    <div class="segment-text" data-prize="20 Puan"><span>20 Puan</span></div>
+                    <div class="segment-text" data-prize="50 Puan"><span>50 Puan</span></div>
+                    <div class="segment-text" data-prize="100 Puan"><span>100 Puan</span></div>
+                    <div class="segment-text" data-prize="200 Puan"><span>200 Puan</span></div>
+                    <div class="segment-text" data-prize="Ekstra Çevirme"><span>Ekstra Çevirme</span></div>
+                    <div class="segment-text" data-prize="30 Puan"><span>30 Puan</span></div>
+                    <div class="segment-text" data-prize="Kaybettin"><span>Kaybettin</span></div>
+                    <div class="segment-text" data-prize="75 Puan"><span>75 Puan</span></div>
+                    <div class="segment-text" data-prize="150 Puan"><span>150 Puan</span></div>
+                    <div class="segment-text" data-prize="Şanslısın!"><span>Şanslısın!</span></div>
                 </div>
                 <div class="pointer"></div>
             </div>
@@ -426,29 +447,46 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const spinBtn = document.getElementById('spinBtn');
             const prizeMessage = document.getElementById('prizeMessage');
             
+            // 12 dilim için ödüller
             const prizes = [
-                '10 Puan', '50 Puan', 'Ekstra Çevirme Hakkı', '100 Puan', 'Kaybettin', '200 Puan'
+                '5 Puan', '10 Puan', '20 Puan', '50 Puan', '100 Puan', '200 Puan',
+                'Ekstra Çevirme', '30 Puan', 'Kaybettin', '75 Puan', '150 Puan', 'Şanslısın!'
             ];
-            const prizeAngles = [
-                30, 90, 150, 210, 270, 330
-            ];
+            // Her bir dilim 30 derece. prizeAngles, işaretçinin duracağı açının tam ortası olmalı.
+            // Örneğin, ilk dilim 0-30 arası ise ortası 15 derecedir.
+            const prizeAngles = [];
+            for (let i = 0; i < 12; i++) {
+                prizeAngles.push(15 + (i * 30));
+            }
 
             spinBtn.addEventListener('click', () => {
-                const randomSegmentIndex = Math.floor(Math.random() * prizes.length);
-                const winningPrize = prizes[randomSegmentIndex];
-                const winningAngle = prizeAngles[randomSegmentIndex];
+                // Her çevirmeden önce önceki mesajı temizle
+                prizeMessage.textContent = '';
+                // Çarkı başlangıç pozisyonuna resetle (isteğe bağlı, daha akıcı geçiş için)
+                wheel.style.transition = 'none';
+                wheel.style.transform = `rotate(0deg)`;
 
-                const spinDegrees = 360 * 5 + (360 - winningAngle);
+                setTimeout(() => { // Resetten sonra animasyonu başlatmak için küçük bir gecikme
+                    const randomSegmentIndex = Math.floor(Math.random() * prizes.length);
+                    const winningPrize = prizes[randomSegmentIndex];
+                    // Hedef açıyı belirle. Çarkın son 360 derecesi dönme bittiğinde kazanılan ödülün tam ortasına gelecek.
+                    // İşaretçi yukarıda olduğu için (0 dereceye karşılık), 360 - hedef açı kullanıyoruz.
+                    const targetAngle = 360 - prizeAngles[randomSegmentIndex];
+                    
+                    // Çarkın dönme açısını hesapla (min 5 tam tur + hedef açı)
+                    const spinDegrees = 360 * 7 + targetAngle; // Daha fazla tur için 7 ile çarptık
 
-                wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
-                wheel.style.transform = `rotate(${spinDegrees}deg)`;
-                
-                spinBtn.disabled = true;
+                    wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                    wheel.style.transform = `rotate(${spinDegrees}deg)`;
+                    
+                    spinBtn.disabled = true;
 
-                wheel.addEventListener('transitionend', () => {
-                    prizeMessage.textContent = `Tebrikler, ${winningPrize} kazandınız!`;
-                    // Çarkı tekrar çevrilebilir hale getir, ancak günlük hak kontrolü ile birlikte.
-                }, { once: true });
+                    wheel.addEventListener('transitionend', () => {
+                        prizeMessage.textContent = `Tebrikler, ${winningPrize} kazandınız!`;
+                        // Çarkı tekrar çevrilebilir hale getir, ancak günlük hak kontrolü ile birlikte.
+                        // spinBtn.disabled = false; // Firebase kontrolü eklendiğinde bu kaldırılacak
+                    }, { once: true });
+                }, 10); // Küçük bir gecikme
             });
         });
     </script>
