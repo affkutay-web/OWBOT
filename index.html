@@ -116,10 +116,51 @@
             padding-bottom: 8px;
             margin-top: 0;
         }
+
+        /* FAQ Stil Kodları */
+        .faq-item {
+            border-bottom: 1px solid #3a3a3a;
+            padding: 15px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
         
-        .placeholder-text {
-            color: #a0a0a0;
-            line-height: 1.6;
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--accent-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .faq-question::after {
+            content: '+';
+            font-size: 24px;
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.active .faq-question::after {
+            content: '-';
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            color: #b0b0b0;
+            font-size: 14px;
+            padding-top: 0;
+        }
+        
+        .faq-item.active .faq-answer {
+            max-height: 200px; /* Cevabın yüksekliğine göre ayarlanabilir */
+            padding-top: 15px;
         }
     </style>
 </head>
@@ -134,16 +175,42 @@
         </div>
 
         <div class="card content-section">
-            <h2>Kullanıcı Paneli</h2>
-            <p class="placeholder-text">
-                Botunuzla etkileşiminizi kolaylaştırmak için tasarlanmış bir mobil arayüzdür. Buraya bonuslarınızı, istatistiklerinizi ve diğer önemli bilgileri ekleyebilirsiniz.
-            </p>
+            <h2>Sıkça Sorulan Sorular</h2>
+            <div id="faqContainer">
+                <div class="faq-item">
+                    <div class="faq-question">Nasıl Hesap Açabilirim?</div>
+                    <div class="faq-answer">
+                        Üye Ol [Kayıt] butonuna tıkladığınızda çıkan kayıt formunu doldurarak kolayca hesap oluşturabilirsiniz. Kayıt sırasında girdiğiniz e-posta adresinizi doğrulamanız gerekmektedir. Adresinizi doğruladığınızda kayıt işlemi de tamamlanacaktır.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Neden Hesap Açamıyorum?</div>
+                    <div class="faq-answer">
+                        Daha önce adınıza, e-posta adresinize, telefonunuza, adres bilgilerinize veya IP bilgilerinize kayıtlı bir hesabınız varsa, sistem yeni bir hesap oluşturmanıza izin vermeyecektir. Bu durumda bilgilerinizle birlikte ve sorunu anlatan bir e-posta göndererek müşteri hizmetleri temsilcilerimizden yardım alabilirsiniz.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">Botu kullanmak güvenli mi?</div>
+                    <div class="faq-answer">
+                        Evet, botumuz kişisel bilgilerinizi korumak için tasarlanmıştır. Bot, size sadece güncel fırsatları sunar ve kişisel banka bilgilerinize erişemez.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">ONWIN’e kayıt olmakla herhangi bir yükümlülük üstleniyor muyum? </div>
+                    <div class="faq-answer">
+                        Hayır. Siteye kaydınız tamamen bağlayıcılıktan uzaktır ve düzenli olarak para yatırmak veya bahis oynamak mecburiyetiniz yoktur. Bununla birlikte kayıt olmak suretiyle Genel Şirket Şartnamemizi kabul etmiş olursunuz.
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         // Firebase yapılandırma kodlarınızı buraya yapıştırın.
-      const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   projectId: "onwingiris-afccf",
@@ -170,11 +237,9 @@
                 usernameElement.textContent = userName;
                 userIdElement.textContent = `@${user.username || 'Kullanıcı ID: ' + userId}`;
                 
-                // Kullanıcı adının ilk harfini alarak ikonu güncelle.
                 if (userName) {
                     profileIconElement.textContent = userName.charAt(0).toUpperCase();
                 }
-
             } else {
                 usernameElement.textContent = 'Gizli Kullanıcı';
                 userIdElement.textContent = '';
@@ -198,6 +263,14 @@
                     console.error("Firebase'e veri yazılırken hata oluştu: ", error);
                 });
             }
+            
+            // FAQ Açılır-Kapanır İşlevselliği
+            const faqItems = document.querySelectorAll('.faq-item');
+            faqItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    item.classList.toggle('active');
+                });
+            });
         });
     </script>
 </body>
