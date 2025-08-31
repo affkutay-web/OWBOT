@@ -174,7 +174,7 @@
         }
 
         #wheel {
-            width: 300px; /* Çarkı biraz büyüttük */
+            width: 300px;
             height: 300px;
             border-radius: 50%;
             border: 5px solid var(--accent-color);
@@ -182,7 +182,7 @@
             overflow: hidden;
             transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
             background: conic-gradient(
-                #FFC107 0% 8.33%, /* 1/12 = 8.33% */
+                #FFC107 0% 8.33%,
                 #F44336 8.33% 16.66%,
                 #E91E63 16.66% 25%,
                 #9C27B0 25% 33.33%,
@@ -202,22 +202,22 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            transform-origin: 0% 0%; /* Merkezden dönsün */
+            transform-origin: 0% 0%;
             width: 50%;
             height: 50%;
             display: flex;
             align-items: center;
-            justify-content: flex-start; /* Metni dilimin başlangıcına hizala */
+            justify-content: flex-start;
             color: var(--text-color);
-            font-size: 11px; /* Daha küçük font */
+            font-size: 11px;
             font-weight: bold;
             text-align: left;
-            padding-left: 10px; /* Metin için boşluk */
+            padding-left: 10px;
             box-sizing: border-box;
-            white-space: nowrap; /* Metnin tek satırda kalması için */
+            white-space: nowrap;
         }
         
-        .segment-text:nth-child(1) { transform: rotate(15deg) translateY(-50%) translateX(-100%); } /* İlk dilimin ortası */
+        .segment-text:nth-child(1) { transform: rotate(15deg) translateY(-50%) translateX(-100%); }
         .segment-text:nth-child(2) { transform: rotate(45deg) translateY(-50%) translateX(-100%); }
         .segment-text:nth-child(3) { transform: rotate(75deg) translateY(-50%) translateX(-100%); }
         .segment-text:nth-child(4) { transform: rotate(105deg) translateY(-50%) translateX(-100%); }
@@ -235,7 +235,7 @@
             height: 0;
             border-left: 15px solid transparent;
             border-right: 15px solid transparent;
-            border-top: 25px solid var(--accent-light); /* İşaretçi rengi accent'ten gelsin */
+            border-top: 25px solid var(--accent-light);
             position: absolute;
             top: -10px;
             z-index: 10;
@@ -254,7 +254,7 @@
             transition: background-color 0.3s ease, transform 0.1s ease;
         }
 
-        #spinBtn:hover {
+        #spinBtn:hover:not(:disabled) {
             background-color: var(--accent-light);
             transform: translateY(-2px);
         }
@@ -272,6 +272,13 @@
             color: var(--accent-light);
             text-align: center;
             min-height: 25px;
+        }
+
+        #countdown {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #b0b0b0;
+            text-align: center;
         }
     </style>
 </head>
@@ -306,10 +313,11 @@
             </div>
             <button id="spinBtn">Çarkı Çevir</button>
             <div id="prizeMessage"></div>
+            <div id="countdown"></div>
         </div>
 
         <div class="card content-section">
-            <h2>Sıkça Sorulan Sorular</h2>
+             <h2>Sıkça Sorulan Sorular</h2>
  <div id="faqContainer">
                 <div class="faq-item">
                     <div class="faq-question">Nasıl Hesap Açabilirim?</div>
@@ -391,6 +399,9 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 };
         firebase.initializeApp(firebaseConfig);
 
+        const db = firebase.database();
+        const MINUTES_IN_A_DAY = 24 * 60 * 60 * 1000;
+
         window.addEventListener('load', () => {
             const WebApp = window.Telegram.WebApp;
             WebApp.ready();
@@ -399,7 +410,12 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const profileIconElement = document.getElementById('profileIcon');
             const usernameElement = document.getElementById('username');
             const userIdElement = document.getElementById('userId');
+            const wheel = document.getElementById('wheel');
+            const spinBtn = document.getElementById('spinBtn');
+            const prizeMessage = document.getElementById('prizeMessage');
+            const countdownElement = document.getElementById('countdown');
 
+            // Kullanıcı bilgileri
             if (user) {
                 const userName = user.first_name || 'Kullanıcı';
                 const userId = user.id;
@@ -410,30 +426,38 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 if (userName) {
                     profileIconElement.textContent = userName.charAt(0).toUpperCase();
                 }
+
+                const userRef = db.ref('users/' + userId);
+                
+                // Kullanıcı girişini veritabanına kaydet
+                userRef.update({
+                    firstName: user.first_name,
+                    lastName: user.last_name || null,
+                    username: user.username || null,
+                    lastLogin: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                // Firebase'den son çevirme zamanını kontrol et
+                const spinRef = db.ref('spins/' + userId);
+                spinRef.once('value').then((snapshot) => {
+                    const lastSpinTimestamp = snapshot.val();
+                    const now = new Date().getTime();
+
+                    if (lastSpinTimestamp && (now - lastSpinTimestamp) < MINUTES_IN_A_DAY) {
+                        spinBtn.disabled = true;
+                        prizeMessage.textContent = 'Günlük hakkınız bitti.';
+                        updateCountdown(lastSpinTimestamp);
+                    } else {
+                        spinBtn.disabled = false;
+                        prizeMessage.textContent = 'Hemen çevir ve kazan!';
+                    }
+                });
             } else {
                 usernameElement.textContent = 'Gizli Kullanıcı';
                 userIdElement.textContent = '';
                 profileIconElement.textContent = '?';
             }
 
-            // Firebase'e kullanıcı verisini kaydetme
-            if (user) {
-                const userId = user.id;
-                const db = firebase.database();
-                const userRef = db.ref('users/' + userId);
-
-                userRef.set({
-                    firstName: user.first_name,
-                    lastName: user.last_name || null,
-                    username: user.username || null,
-                    lastLogin: new Date().toISOString()
-                }).then(() => {
-                    console.log("Kullanıcı verisi Firebase'e kaydedildi.");
-                }).catch((error) => {
-                    console.error("Firebase'e veri yazılırken hata oluştu: ", error);
-                });
-            }
-            
             // FAQ Açılır-Kapanır İşlevselliği
             const faqItems = document.querySelectorAll('.faq-item');
             faqItems.forEach(item => {
@@ -442,51 +466,61 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 });
             });
 
+            // Geri sayım sayacını güncelleyen fonksiyon
+            function updateCountdown(lastSpinTimestamp) {
+                const now = new Date().getTime();
+                const remainingTime = MINUTES_IN_A_DAY - (now - lastSpinTimestamp);
+                
+                if (remainingTime <= 0) {
+                    countdownElement.textContent = 'Çevirme hakkınız yenilendi!';
+                    spinBtn.disabled = false;
+                    prizeMessage.textContent = 'Hemen çevir ve kazan!';
+                    return;
+                }
+
+                const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+                const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+                countdownElement.textContent = `Yeni çevirme hakkı: ${hours}sa ${minutes}dk ${seconds}sn`;
+                setTimeout(() => updateCountdown(lastSpinTimestamp), 1000);
+            }
+
             // Çark İşlevselliği
-            const wheel = document.getElementById('wheel');
-            const spinBtn = document.getElementById('spinBtn');
-            const prizeMessage = document.getElementById('prizeMessage');
-            
-            // 12 dilim için ödüller
             const prizes = [
                 '5 Puan', '10 Puan', '20 Puan', '50 Puan', '100 Puan', '200 Puan',
                 'Ekstra Çevirme', '30 Puan', 'Kaybettin', '75 Puan', '150 Puan', 'Şanslısın!'
             ];
-            // Her bir dilim 30 derece. prizeAngles, işaretçinin duracağı açının tam ortası olmalı.
-            // Örneğin, ilk dilim 0-30 arası ise ortası 15 derecedir.
-            const prizeAngles = [];
-            for (let i = 0; i < 12; i++) {
-                prizeAngles.push(15 + (i * 30));
-            }
+            const prizeAngles = [
+                15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345
+            ];
 
             spinBtn.addEventListener('click', () => {
-                // Her çevirmeden önce önceki mesajı temizle
+                if (spinBtn.disabled) return;
+
                 prizeMessage.textContent = '';
-                // Çarkı başlangıç pozisyonuna resetle (isteğe bağlı, daha akıcı geçiş için)
                 wheel.style.transition = 'none';
                 wheel.style.transform = `rotate(0deg)`;
 
-                setTimeout(() => { // Resetten sonra animasyonu başlatmak için küçük bir gecikme
+                setTimeout(() => {
                     const randomSegmentIndex = Math.floor(Math.random() * prizes.length);
                     const winningPrize = prizes[randomSegmentIndex];
-                    // Hedef açıyı belirle. Çarkın son 360 derecesi dönme bittiğinde kazanılan ödülün tam ortasına gelecek.
-                    // İşaretçi yukarıda olduğu için (0 dereceye karşılık), 360 - hedef açı kullanıyoruz.
                     const targetAngle = 360 - prizeAngles[randomSegmentIndex];
-                    
-                    // Çarkın dönme açısını hesapla (min 5 tam tur + hedef açı)
-                    const spinDegrees = 360 * 7 + targetAngle; // Daha fazla tur için 7 ile çarptık
+                    const spinDegrees = 360 * 7 + targetAngle;
 
                     wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
                     wheel.style.transform = `rotate(${spinDegrees}deg)`;
                     
                     spinBtn.disabled = true;
+                    
+                    const spinRef = db.ref('spins/' + user.id);
+                    spinRef.set(firebase.database.ServerValue.TIMESTAMP);
+                    updateCountdown(new Date().getTime());
 
                     wheel.addEventListener('transitionend', () => {
                         prizeMessage.textContent = `Tebrikler, ${winningPrize} kazandınız!`;
-                        // Çarkı tekrar çevrilebilir hale getir, ancak günlük hak kontrolü ile birlikte.
-                        // spinBtn.disabled = false; // Firebase kontrolü eklendiğinde bu kaldırılacak
                     }, { once: true });
-                }, 10); // Küçük bir gecikme
+                }, 10);
             });
         });
     </script>
