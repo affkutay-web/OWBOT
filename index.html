@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telegram Mini Uygulaması</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -15,6 +15,7 @@
             --accent-color: #9b59b6; /* Koyu mor */
             --accent-light: #c085e8;
         }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
@@ -29,6 +30,7 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+
         .container {
             width: 100%;
             max-width: 500px;
@@ -39,12 +41,13 @@
             opacity: 0;
             animation: fadeIn 0.8s forwards;
         }
-       
+        
         @keyframes fadeIn {
             to {
                 opacity: 1;
             }
         }
+
         .card {
             background-color: var(--card-color);
             border-radius: 20px;
@@ -52,10 +55,12 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
         }
+
         .profile-header {
             display: flex;
             align-items: center;
@@ -63,13 +68,14 @@
             flex-direction: column;
             text-align: center;
         }
-       
+        
         .profile-info {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 12px;
         }
+
         .profile-icon {
             width: 48px;
             height: 48px;
@@ -83,19 +89,20 @@
             color: var(--text-color);
             text-transform: uppercase;
         }
-       
+        
         .username {
             font-size: 28px;
             font-weight: 700;
             margin: 0;
             color: var(--accent-light);
         }
+
         .user-id {
             color: #b0b0b0;
             font-size: 16px;
             margin: 4px 0 0;
         }
-       
+        
         .user-score {
             font-size: 18px;
             font-weight: 600;
@@ -105,15 +112,17 @@
             align-items: center;
             gap: 8px;
         }
-       
+        
         .user-score::before {
             content: '⭐';
         }
+
         .content-section {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
+
         h2 {
             font-size: 20px;
             font-weight: 600;
@@ -121,6 +130,7 @@
             padding-bottom: 8px;
             margin-top: 0;
         }
+
         /* FAQ Stil Kodları */
         .faq-item {
             border-bottom: 1px solid #3a3a3a;
@@ -128,10 +138,11 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-       
+        
         .faq-item:last-child {
             border-bottom: none;
         }
+
         .faq-question {
             font-weight: 600;
             font-size: 16px;
@@ -140,17 +151,18 @@
             justify-content: space-between;
             align-items: center;
         }
-       
+        
         .faq-question::after {
             content: '+';
             font-size: 24px;
             transition: transform 0.3s ease;
         }
-       
+        
         .faq-item.active .faq-question::after {
             content: '-';
             transform: rotate(180deg);
         }
+
         .faq-answer {
             max-height: 0;
             overflow: hidden;
@@ -159,11 +171,12 @@
             font-size: 14px;
             padding-top: 0;
         }
-       
+        
         .faq-item.active .faq-answer {
             max-height: 200px;
             padding-top: 15px;
         }
+
         /* Çark Stil Kodları */
         .wheel-container {
             position: relative;
@@ -173,6 +186,7 @@
             flex-direction: column;
             margin: 20px 0;
         }
+
         #wheel {
             width: 300px;
             height: 300px;
@@ -197,6 +211,7 @@
             );
             box-shadow: inset 0 0 15px rgba(0,0,0,0.5), 0 0 20px var(--accent-color);
         }
+
         .segment-text {
             position: absolute;
             top: 50%;
@@ -208,14 +223,14 @@
             align-items: center;
             justify-content: flex-start;
             color: var(--text-color);
-            font-size: clamp(9px, 3vw, 11px); /* Responsive font */
+            font-size: 11px;
             font-weight: bold;
             text-align: left;
             padding-left: 10px;
             box-sizing: border-box;
             white-space: nowrap;
         }
-       
+        
         .pointer {
             width: 0;
             height: 0;
@@ -226,7 +241,7 @@
             top: -10px;
             z-index: 10;
         }
-       
+        
         #spinBtn {
             margin-top: 20px;
             padding: 12px 24px;
@@ -239,16 +254,18 @@
             cursor: pointer;
             transition: background-color 0.3s ease, transform 0.1s ease;
         }
+
         #spinBtn:hover:not(:disabled) {
             background-color: var(--accent-light);
             transform: translateY(-2px);
         }
+
         #spinBtn:disabled {
             background-color: #555;
             cursor: not-allowed;
             transform: none;
         }
-       
+        
         #prizeMessage {
             margin-top: 15px;
             font-size: 18px;
@@ -257,6 +274,7 @@
             text-align: center;
             min-height: 25px;
         }
+
         #countdown {
             margin-top: 10px;
             font-size: 14px;
@@ -275,16 +293,19 @@
             <p class="user-id" id="userId"></p>
             <p class="user-score" id="userScore">0 Puan</p>
         </div>
+
         <div class="card content-section">
             <h2>Günlük Bonus Çarkı</h2>
             <div class="wheel-container">
-                <div id="wheel"></div>
+                <div id="wheel">
+                    </div>
                 <div class="pointer"></div>
             </div>
-            <button id="spinBtn" aria-label="Çarkı çevir">Çarkı Çevir</button>
+            <button id="spinBtn">Çarkı Çevir</button>
             <div id="prizeMessage"></div>
             <div id="countdown"></div>
         </div>
+
         <div class="card content-section">
              <h2>Sıkça Sorulan Sorular</h2>
              <div id="faqContainer">
@@ -358,18 +379,21 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
-            authDomain: "onwingiris-afccf.firebaseapp.com",
-            projectId: "onwingiris-afccf",
-            storageBucket: "onwingiris-afccf.firebasestorage.app",
-            messagingSenderId: "1059998132611",
-            appId: "1:1059998132611:web:2fa0e9b46c55d602796eb6",
-            measurementId: "G-4SMQRV8R0N"
-        };
+  apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
+  authDomain: "onwingiris-afccf.firebaseapp.com",
+  databaseURL: "https://onwingiris-afccf-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "onwingiris-afccf",
+  storageBucket: "onwingiris-afccf.firebasestorage.app",
+  messagingSenderId: "1059998132611",
+  appId: "1:1059998132611:web:8ddcf7ed2bd56019796eb6",
+  measurementId: "G-DCSV6R5H98"
+};
         firebase.initializeApp(firebaseConfig);
+
         const db = firebase.database();
         const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
         let countdownInterval;
+
         const prizes = [
             { name: '5 Puan', value: 5 },
             { name: '10 Puan', value: 10 },
@@ -387,9 +411,11 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const prizeAngles = [
             15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345
         ];
+
         window.addEventListener('load', () => {
             const WebApp = window.Telegram.WebApp;
             WebApp.ready();
+
             const user = WebApp.initDataUnsafe.user;
             const profileIconElement = document.getElementById('profileIcon');
             const usernameElement = document.getElementById('username');
@@ -399,6 +425,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const spinBtn = document.getElementById('spinBtn');
             const prizeMessage = document.getElementById('prizeMessage');
             const countdownElement = document.getElementById('countdown');
+
             prizes.forEach((prize, index) => {
                 const segmentDiv = document.createElement('div');
                 segmentDiv.className = 'segment-text';
@@ -406,70 +433,66 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 segmentDiv.innerHTML = `<span>${prize.name}</span>`;
                 wheel.appendChild(segmentDiv);
             });
+
             if (user) {
                 const userName = user.first_name || 'Kullanıcı';
                 const userId = user.id;
+
                 usernameElement.textContent = userName;
                 userIdElement.textContent = `@${user.username || 'Kullanıcı ID: ' + userId}`;
                 if (userName) {
                     profileIconElement.textContent = userName.charAt(0).toUpperCase();
                 }
+
                 const userRef = db.ref('users/' + userId);
                 const spinRef = db.ref('spins/' + userId);
                 const scoreRef = db.ref('scores/' + userId);
-               
-                try {
-                    userRef.update({
-                        firstName: user.first_name,
-                        lastName: user.last_name || null,
-                        username: user.username || null,
-                        lastLogin: firebase.database.ServerValue.TIMESTAMP
-                    });
-               
-                    scoreRef.on('value', snapshot => {
-                        const currentScore = snapshot.val() || 0;
-                        userScoreElement.textContent = `${currentScore} Puan`;
-                    });
-                    spinRef.once('value').then((snapshot) => {
-                        const lastSpinTimestamp = snapshot.val();
-                        const now = Date.now(); // Daha temiz
-                        if (lastSpinTimestamp && (now - lastSpinTimestamp) < MILLISECONDS_IN_A_DAY) {
-                            spinBtn.disabled = true;
-                            prizeMessage.textContent = 'Günlük hakkınız bitti.';
-                            startCountdown(lastSpinTimestamp);
-                        } else {
-                            spinBtn.disabled = false;
-                            prizeMessage.textContent = 'Hemen çevir ve kazan!';
-                        }
-                    }).catch(err => {
-                        console.error('Firebase hatası:', err);
-                        prizeMessage.textContent = 'Bağlantı sorunu, lütfen tekrar deneyin.';
-                    });
-                } catch (err) {
-                    console.error('Kullanıcı güncelleme hatası:', err);
-                }
+                
+                userRef.update({
+                    firstName: user.first_name,
+                    lastName: user.last_name || null,
+                    username: user.username || null,
+                    lastLogin: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                scoreRef.on('value', snapshot => {
+                    const currentScore = snapshot.val() || 0;
+                    userScoreElement.textContent = `${currentScore} Puan`;
+                });
+
+                spinRef.once('value').then((snapshot) => {
+                    const lastSpinTimestamp = snapshot.val();
+                    const now = new Date().getTime();
+
+                    if (lastSpinTimestamp && (now - lastSpinTimestamp) < MILLISECONDS_IN_A_DAY) {
+                        spinBtn.disabled = true;
+                        prizeMessage.textContent = 'Günlük hakkınız bitti.';
+                        startCountdown(lastSpinTimestamp);
+                    } else {
+                        spinBtn.disabled = false;
+                        prizeMessage.textContent = 'Hemen çevir ve kazan!';
+                    }
+                });
             } else {
                 usernameElement.textContent = 'Gizli Kullanıcı';
                 userIdElement.textContent = '';
                 profileIconElement.textContent = '?';
             }
+
             const faqItems = document.querySelectorAll('.faq-item');
             faqItems.forEach(item => {
                 item.addEventListener('click', () => {
                     item.classList.toggle('active');
                 });
-                // Mobil için touch ekle
-                item.addEventListener('touchstart', () => {
-                    item.classList.toggle('active');
-                });
             });
+
             function startCountdown(lastSpinTimestamp) {
                 if (countdownInterval) clearInterval(countdownInterval);
-               
+                
                 countdownInterval = setInterval(() => {
-                    const now = Date.now();
+                    const now = new Date().getTime();
                     const remainingTime = MILLISECONDS_IN_A_DAY - (now - lastSpinTimestamp);
-                   
+                    
                     if (remainingTime <= 0) {
                         clearInterval(countdownInterval);
                         countdownElement.textContent = 'Çevirme hakkınız yenilendi!';
@@ -477,12 +500,15 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                         prizeMessage.textContent = 'Hemen çevir ve kazan!';
                         return;
                     }
+
                     const hours = Math.floor(remainingTime / (1000 * 60 * 60));
                     const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
                     const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
                     countdownElement.textContent = `Yeni çevirme hakkı: ${hours}sa ${minutes}dk ${seconds}sn`;
                 }, 1000);
             }
+
             spinBtn.addEventListener('click', () => {
                 if (spinBtn.disabled || !user) {
                     if (!user) {
@@ -491,50 +517,45 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     }
                     return;
                 }
+
                 prizeMessage.textContent = 'Çark dönüyor...';
                 countdownElement.textContent = '';
                 wheel.style.transition = 'none';
                 wheel.style.transform = `rotate(0deg)`;
-               
+                
                 spinBtn.disabled = true;
+
                 setTimeout(() => {
                     const randomSegmentIndex = Math.floor(Math.random() * prizes.length);
                     const winningPrize = prizes[randomSegmentIndex];
                     const targetAngle = 360 - prizeAngles[randomSegmentIndex];
                     const spinDegrees = 360 * 7 + targetAngle;
+
                     wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
                     wheel.style.transform = `rotate(${spinDegrees}deg)`;
-                   
+                    
                     wheel.addEventListener('transitionend', () => {
-                        try {
-                            const spinRef = db.ref('spins/' + user.id);
-                            const scoreRef = db.ref('scores/' + user.id);
-                            if (winningPrize.name === 'Ekstra Çevirme') {
-                                spinRef.remove();
-                                prizeMessage.textContent = `Tebrikler, ekstra bir çevirme hakkı kazandınız! Hemen tekrar deneyin.`;
-                                spinBtn.disabled = false;
-                                countdownElement.textContent = '';
-                            } else if (winningPrize.name === 'Kaybettin') {
-                                 prizeMessage.textContent = `Maalesef kaybettin. Yarın tekrar dene!`;
-                                 spinRef.set(firebase.database.ServerValue.TIMESTAMP);
-                                 startCountdown(Date.now());
-                            } else {
-                                scoreRef.transaction(currentScore => {
-                                    return (currentScore || 0) + winningPrize.value;
-                                }).then(() => {
-                                    prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
-                                    spinRef.set(firebase.database.ServerValue.TIMESTAMP);
-                                    startCountdown(Date.now());
-                                }).catch(err => {
-                                    console.error('Puan güncelleme hatası:', err);
-                                    prizeMessage.textContent = 'Ödül işlenirken hata oluştu.';
-                                    spinBtn.disabled = false; // Tekrar dene
-                                });
-                            }
-                        } catch (err) {
-                            console.error('Ödül işleme hatası:', err);
-                            prizeMessage.textContent = 'Bir hata oluştu, lütfen tekrar deneyin.';
+                        // Veritabanı işlemlerini burada başlat
+                        const spinRef = db.ref('spins/' + user.id);
+                        const scoreRef = db.ref('scores/' + user.id);
+
+                        if (winningPrize.name === 'Ekstra Çevirme') {
+                            spinRef.remove();
+                            prizeMessage.textContent = `Tebrikler, ekstra bir çevirme hakkı kazandınız!`;
                             spinBtn.disabled = false;
+                            countdownElement.textContent = '';
+                        } else if (winningPrize.name === 'Kaybettin') {
+                             prizeMessage.textContent = `Maalesef, Kaybettin. Belki bir dahaki sefere...`;
+                             spinRef.set(firebase.database.ServerValue.TIMESTAMP);
+                             startCountdown(new Date().getTime());
+                        } else {
+                            scoreRef.transaction(currentScore => {
+                                return (currentScore || 0) + winningPrize.value;
+                            }).then(() => {
+                                prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
+                                spinRef.set(firebase.database.ServerValue.TIMESTAMP);
+                                startCountdown(new Date().getTime());
+                            });
                         }
                     }, { once: true });
                 }, 10);
@@ -543,4 +564,3 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </script>
 </body>
 </html>
-
