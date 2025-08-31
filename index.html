@@ -297,17 +297,17 @@
         <div class="card content-section">
             <h2>Günlük Bonus Çarkı</h2>
             <div class="wheel-container">
-    <div id="wheel">
-        </div>
-    <div class="pointer"></div>
-</div>
+                <div id="wheel">
+                    </div>
+                <div class="pointer"></div>
+            </div>
             <button id="spinBtn">Çarkı Çevir</button>
             <div id="prizeMessage"></div>
             <div id="countdown"></div>
         </div>
 
         <div class="card content-section">
-             <h2>Sıkça Sorulan Sorular</h2>
+            <h2>Sıkça Sorulan Sorular</h2>
              <div id="faqContainer">
                 <!-- FAQ items buraya, değişiklik yok -->
                 <div class="faq-item">
@@ -535,7 +535,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     wheel.style.transform = `rotate(${spinDegrees}deg)`;
                     
                     wheel.addEventListener('transitionend', () => {
-                        // Veritabanı işlemlerini burada başlat
                         const spinRef = db.ref('spins/' + user.id);
                         const scoreRef = db.ref('scores/' + user.id);
 
@@ -564,4 +563,3 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </script>
 </body>
 </html>
-
