@@ -231,19 +231,6 @@
             white-space: nowrap;
         }
         
-        .segment-text:nth-child(1) { transform: rotate(15deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(2) { transform: rotate(45deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(3) { transform: rotate(75deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(4) { transform: rotate(105deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(5) { transform: rotate(135deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(6) { transform: rotate(165deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(7) { transform: rotate(195deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(8) { transform: rotate(225deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(9) { transform: rotate(255deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(10) { transform: rotate(285deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(11) { transform: rotate(315deg) translateY(-50%) translateX(-100%); }
-        .segment-text:nth-child(12) { transform: rotate(345deg) translateY(-50%) translateX(-100%); }
-        
         .pointer {
             width: 0;
             height: 0;
@@ -311,19 +298,7 @@
             <h2>Günlük Bonus Çarkı</h2>
             <div class="wheel-container">
                 <div id="wheel">
-                    <div class="segment-text" data-prize="5 Puan"><span>5 Puan</span></div>
-                    <div class="segment-text" data-prize="10 Puan"><span>10 Puan</span></div>
-                    <div class="segment-text" data-prize="20 Puan"><span>20 Puan</span></div>
-                    <div class="segment-text" data-prize="50 Puan"><span>50 Puan</span></div>
-                    <div class="segment-text" data-prize="100 Puan"><span>100 Puan</span></div>
-                    <div class="segment-text" data-prize="200 Puan"><span>200 Puan</span></div>
-                    <div class="segment-text" data-prize="Ekstra Çevirme"><span>Ekstra Çevirme</span></div>
-                    <div class="segment-text" data-prize="30 Puan"><span>30 Puan</span></div>
-                    <div class="segment-text" data-prize="Kaybettin"><span>Kaybettin</span></div>
-                    <div class="segment-text" data-prize="75 Puan"><span>75 Puan</span></div>
-                    <div class="segment-text" data-prize="150 Puan"><span>150 Puan</span></div>
-                    <div class="segment-text" data-prize="Şanslısın!"><span>Şanslısın!</span></div>
-                </div>
+                    </div>
                 <div class="pointer"></div>
             </div>
             <button id="spinBtn">Çarkı Çevir</button>
@@ -403,7 +378,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
     <script>
         // Firebase yapılandırma kodlarınızı buraya yapıştırın.
-       const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   projectId: "onwingiris-afccf",
@@ -418,6 +393,25 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const MINUTES_IN_A_DAY = 24 * 60 * 60 * 1000;
         let countdownInterval;
 
+        // Çark ödülleri ve açılarını tanımla.
+        const prizes = [
+            { name: '5 Puan', value: 5 },
+            { name: '10 Puan', value: 10 },
+            { name: '20 Puan', value: 20 },
+            { name: '50 Puan', value: 50 },
+            { name: '100 Puan', value: 100 },
+            { name: '200 Puan', value: 200 },
+            { name: 'Ekstra Çevirme', value: null },
+            { name: '30 Puan', value: 30 },
+            { name: 'Kaybettin', value: 0 },
+            { name: '75 Puan', value: 75 },
+            { name: '150 Puan', value: 150 },
+            { name: 'Şanslısın!', value: 500 }
+        ];
+        const prizeAngles = [
+            15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345
+        ];
+
         window.addEventListener('load', () => {
             const WebApp = window.Telegram.WebApp;
             WebApp.ready();
@@ -431,6 +425,15 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const spinBtn = document.getElementById('spinBtn');
             const prizeMessage = document.getElementById('prizeMessage');
             const countdownElement = document.getElementById('countdown');
+
+            // Çark dilimlerini dinamik olarak oluştur
+            prizes.forEach((prize, index) => {
+                const segmentDiv = document.createElement('div');
+                segmentDiv.className = 'segment-text';
+                segmentDiv.style.transform = `rotate(${prizeAngles[index]}deg) translateY(-50%) translateX(-100%)`;
+                segmentDiv.innerHTML = `<span>${prize.name}</span>`;
+                wheel.appendChild(segmentDiv);
+            });
 
             // Kullanıcı bilgileri
             if (user) {
@@ -514,24 +517,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             }
 
             // Çark İşlevselliği
-            const prizes = [
-                { name: '5 Puan', value: 5 },
-                { name: '10 Puan', value: 10 },
-                { name: '20 Puan', value: 20 },
-                { name: '50 Puan', value: 50 },
-                { name: '100 Puan', value: 100 },
-                { name: '200 Puan', value: 200 },
-                { name: 'Ekstra Çevirme', value: null },
-                { name: '30 Puan', value: 30 },
-                { name: 'Kaybettin', value: 0 },
-                { name: '75 Puan', value: 75 },
-                { name: '150 Puan', value: 150 },
-                { name: 'Şanslısın!', value: 500 }
-            ];
-            const prizeAngles = [
-                15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345
-            ];
-
             spinBtn.addEventListener('click', () => {
                 if (spinBtn.disabled) return;
 
@@ -540,10 +525,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 wheel.style.transition = 'none';
                 wheel.style.transform = `rotate(0deg)`;
                 
-                // Butonu pasif hale getir, çevirme hakkını kaydet
                 spinBtn.disabled = true;
-                const spinRef = db.ref('spins/' + user.id);
-                spinRef.set(new Date().getTime());
 
                 setTimeout(() => {
                     const randomSegmentIndex = Math.floor(Math.random() * prizes.length);
@@ -554,20 +536,28 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
                     wheel.style.transform = `rotate(${spinDegrees}deg)`;
                     
+                    // Çevirme tamamlandıktan sonra ödülü göster ve puanı kaydet
                     wheel.addEventListener('transitionend', () => {
                         prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
 
+                        // Puanı ve çevirme hakkını güncelle
+                        const spinRef = db.ref('spins/' + user.id);
+                        const scoreRef = db.ref('scores/' + user.id);
+
                         if (winningPrize.name === 'Ekstra Çevirme') {
-                            spinRef.remove();
+                            spinRef.remove(); // Zaman damgasını silerek tekrar çevirmeye izin ver
                             prizeMessage.textContent = `Tebrikler, ekstra bir çevirme hakkı kazandınız!`;
                             spinBtn.disabled = false;
                         } else if (winningPrize.name === 'Kaybettin') {
                              prizeMessage.textContent += ` Belki bir dahaki sefere...`;
+                             spinRef.set(firebase.database.ServerValue.TIMESTAMP);
+                             startCountdown(new Date().getTime());
                         } else {
-                            const scoreRef = db.ref('scores/' + user.id);
                             scoreRef.transaction(currentScore => {
                                 return (currentScore || 0) + winningPrize.value;
                             });
+                             spinRef.set(firebase.database.ServerValue.TIMESTAMP);
+                             startCountdown(new Date().getTime());
                         }
                     }, { once: true });
                 }, 10);
