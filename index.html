@@ -247,7 +247,7 @@
 
         .prize-item {
             flex-shrink: 0;
-            width: 200px;
+            width: 250px; /* GENİŞLİK ARTIRILDI */
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -259,7 +259,7 @@
             text-align: center;
             font-weight: 600;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            font-size: 14px;
+            font-size: 16px; /* YAZI BOYUTU ARTIRILDI */
         }
         
         .prize-item.winner {
@@ -282,13 +282,13 @@
         }
         
         .prize-value {
-            font-size: 20px;
+            font-size: 24px; /* YAZI BOYUTU ARTIRILDI */
             font-weight: bold;
             color: #e0e0e0;
         }
         
         .prize-name {
-            font-size: 12px;
+            font-size: 14px; /* YAZI BOYUTU ARTIRILDI */
             color: #b0b0b0;
             margin-top: 5px;
         }
@@ -446,7 +446,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         firebase.initializeApp(firebaseConfig);
 
         const db = firebase.database();
-        const MILLISECONDS_IN_A_DAY = 0;
+        const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
         let countdownInterval;
 
         const prizes = [
@@ -469,8 +469,11 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const commonPrizes = prizes.filter(p => p.rarity === 'common');
         const allPrizes = prizes;
         
-        const PRIZE_ITEM_WIDTH = 200;
-        const prizeAudio = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'); // Ses dosya URL'sini buraya yapıştırın
+        const PRIZE_ITEM_WIDTH = 250; // ÖDÜL GENİŞLİĞİ ARTIRILDI
+        
+        // SES DOSYASI İÇİN YENİ URL (KISA VE TIKIRTILI BİR SES İÇİN)
+        const soundUrl = 'https://s3.amazonaws.com/freecodecamp-240-drum-kit/sounds/clap.wav';
+        const prizeAudio = new Audio(soundUrl);
         prizeAudio.loop = false;
         
         let spinTimeout;
@@ -573,20 +576,17 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 }, 1000);
             }
 
+            // Tekrar eden tıkırtı sesi için yeni fonksiyon
+            function playTickSound() {
+                const tickAudio = prizeAudio.cloneNode();
+                tickAudio.volume = 0.5; // Ses seviyesini ayarlayın
+                tickAudio.play().catch(e => console.error("Ses çalınamadı:", e));
+            }
+
             function stopSound() {
                 prizeAudio.pause();
                 prizeAudio.currentTime = 0;
-            }
-
-            function playSound() {
-                if (!prizeAudio.paused) {
-                    stopSound();
-                }
-                prizeAudio.play().catch(e => console.error("Ses çalınamadı:", e));
-            }
-            
-            function handleSpinClick() {
-                playSound();
+                prizeAudio.removeEventListener('animationiteration', playTickSound);
             }
             
             function openCase() {
@@ -617,13 +617,16 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     caseTrack.appendChild(prizeItem);
                 });
 
-                caseTrack.style.animation = 'scroll-prizes 5s linear infinite';
-                caseTrack.addEventListener('animationiteration', playSound);
+                // HIZLAR GÜNCELLENDİ: DAHA YAVAŞ DÖNÜŞ VE DURUŞ
+                caseTrack.style.animation = 'scroll-prizes 15s linear infinite';
+                caseTrack.addEventListener('animationiteration', playTickSound);
                 
+                playTickSound(); // Animasyon başlangıcında sesi çal
+
                 clearTimeout(spinTimeout);
                 spinTimeout = setTimeout(() => {
                     caseTrack.style.animation = 'none';
-                    caseTrack.removeEventListener('animationiteration', playSound);
+                    caseTrack.removeEventListener('animationiteration', playTickSound);
                     stopSound();
 
                     const winningElement = caseTrack.children[winningPrizePosition];
@@ -632,7 +635,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     const trackCenter = caseTrack.offsetWidth / 2;
                     const finalPosition = trackCenter - winningElementOffset - (PRIZE_ITEM_WIDTH / 2);
                     
-                    caseTrack.style.transition = 'transform 8s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                    caseTrack.style.transition = 'transform 10s cubic-bezier(0.25, 0.1, 0.25, 1)'; // Durma süresi
                     caseTrack.style.transform = `translateX(${finalPosition}px)`;
                     
                     clearTimeout(finishTimeout);
@@ -659,8 +662,8 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                                 startCountdown(new Date().getTime());
                             });
                         }
-                    }, 8000);
-                }, 5000);
+                    }, 10000); // Durma süresine eşit olacak
+                }, 15000); // Animasyonun sürekli dönüş süresine eşit olacak
             }
 
             openCaseBtn.addEventListener('click', openCase);
