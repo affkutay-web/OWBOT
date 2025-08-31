@@ -159,8 +159,104 @@
         }
         
         .faq-item.active .faq-answer {
-            max-height: 200px; /* Cevabın yüksekliğine göre ayarlanabilir */
+            max-height: 200px;
             padding-top: 15px;
+        }
+
+        /* Çark Stil Kodları */
+        .wheel-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 20px 0;
+        }
+
+        #wheel {
+            width: 250px;
+            height: 250px;
+            background-color: #4a4a4a;
+            border-radius: 50%;
+            border: 5px solid var(--accent-color);
+            position: relative;
+            overflow: hidden;
+            transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        .segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            top: 0;
+            left: 50%;
+            transform-origin: 0% 100%;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+            font-size: 12px;
+            text-align: center;
+            border: 1px solid var(--bg-color);
+            box-sizing: border-box;
+            line-height: 1.2;
+        }
+
+        .segment:nth-child(1) { transform: rotate(0deg) skewY(60deg); background-color: #FF5733; }
+        .segment:nth-child(2) { transform: rotate(60deg) skewY(60deg); background-color: #33FF57; }
+        .segment:nth-child(3) { transform: rotate(120deg) skewY(60deg); background-color: #3357FF; }
+        .segment:nth-child(4) { transform: rotate(180deg) skewY(60deg); background-color: #FF33A1; }
+        .segment:nth-child(5) { transform: rotate(240deg) skewY(60deg); background-color: #A1FF33; }
+        .segment:nth-child(6) { transform: rotate(300deg) skewY(60deg); background-color: #FFC933; }
+        
+        .segment span {
+            display: block;
+            transform: skewY(-60deg) rotate(90deg) translateX(45px);
+        }
+
+        .pointer {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--accent-color);
+            position: absolute;
+            top: -10px;
+            z-index: 10;
+        }
+        
+        #spinBtn {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: var(--accent-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+
+        #spinBtn:hover {
+            background-color: var(--accent-light);
+            transform: translateY(-2px);
+        }
+
+        #spinBtn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #prizeMessage {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--accent-light);
+            text-align: center;
+            min-height: 25px;
         }
     </style>
 </head>
@@ -172,6 +268,23 @@
                 <h1 class="username" id="username">Yükleniyor...</h1>
             </div>
             <p class="user-id" id="userId"></p>
+        </div>
+
+        <div class="card content-section">
+            <h2>Günlük Bonus Çarkı</h2>
+            <div class="wheel-container">
+                <div id="wheel">
+                    <div class="segment"><span>10 Puan</span></div>
+                    <div class="segment"><span>50 Puan</span></div>
+                    <div class="segment"><span>Çevirme Hakkı</span></div>
+                    <div class="segment"><span>100 Puan</span></div>
+                    <div class="segment"><span>Kaybettin</span></div>
+                    <div class="segment"><span>200 Puan</span></div>
+                </div>
+                <div class="pointer"></div>
+            </div>
+            <button id="spinBtn">Çarkı Çevir</button>
+            <div id="prizeMessage"></div>
         </div>
 
         <div class="card content-section">
@@ -246,7 +359,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
     <script>
         // Firebase yapılandırma kodlarınızı buraya yapıştırın.
-       const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   projectId: "onwingiris-afccf",
@@ -306,6 +419,36 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 item.addEventListener('click', () => {
                     item.classList.toggle('active');
                 });
+            });
+
+            // Çark İşlevselliği
+            const wheel = document.getElementById('wheel');
+            const spinBtn = document.getElementById('spinBtn');
+            const prizeMessage = document.getElementById('prizeMessage');
+            
+            const prizes = [
+                '10 Puan', '50 Puan', 'Ekstra Çevirme Hakkı', '100 Puan', 'Kaybettin', '200 Puan'
+            ];
+            const prizeAngles = [
+                30, 90, 150, 210, 270, 330
+            ];
+
+            spinBtn.addEventListener('click', () => {
+                const randomSegmentIndex = Math.floor(Math.random() * prizes.length);
+                const winningPrize = prizes[randomSegmentIndex];
+                const winningAngle = prizeAngles[randomSegmentIndex];
+
+                const spinDegrees = 360 * 5 + (360 - winningAngle);
+
+                wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                wheel.style.transform = `rotate(${spinDegrees}deg)`;
+                
+                spinBtn.disabled = true;
+
+                wheel.addEventListener('transitionend', () => {
+                    prizeMessage.textContent = `Tebrikler, ${winningPrize} kazandınız!`;
+                    // Çarkı tekrar çevrilebilir hale getir, ancak günlük hak kontrolü ile birlikte.
+                }, { once: true });
             });
         });
     </script>
