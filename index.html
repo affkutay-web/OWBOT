@@ -307,7 +307,7 @@
         </div>
 
         <div class="card content-section">
-            <h2>Sıkça Sorulan Sorular</h2>
+             <h2>Sıkça Sorulan Sorular</h2>
  <div id="faqContainer">
                 <div class="faq-item">
                     <div class="faq-question">Nasıl Hesap Açabilirim?</div>
@@ -377,8 +377,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </div>
 
     <script>
-        // Firebase yapılandırma kodlarınızı buraya yapıştırın.
-       const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   projectId: "onwingiris-afccf",
@@ -393,7 +392,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
         let countdownInterval;
 
-        // Çark ödülleri ve açılarını tanımla.
         const prizes = [
             { name: '5 Puan', value: 5 },
             { name: '10 Puan', value: 10 },
@@ -426,7 +424,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const prizeMessage = document.getElementById('prizeMessage');
             const countdownElement = document.getElementById('countdown');
 
-            // Çark dilimlerini dinamik olarak oluştur
             prizes.forEach((prize, index) => {
                 const segmentDiv = document.createElement('div');
                 segmentDiv.className = 'segment-text';
@@ -441,7 +438,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
                 usernameElement.textContent = userName;
                 userIdElement.textContent = `@${user.username || 'Kullanıcı ID: ' + userId}`;
-                
                 if (userName) {
                     profileIconElement.textContent = userName.charAt(0).toUpperCase();
                 }
@@ -512,7 +508,13 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             }
 
             spinBtn.addEventListener('click', () => {
-                if (spinBtn.disabled) return;
+                if (spinBtn.disabled || !user) {
+                    if (!user) {
+                        console.error('Kullanıcı verisi mevcut değil!');
+                        prizeMessage.textContent = 'Lütfen Telegram uygulamasından giriş yapın.';
+                    }
+                    return;
+                }
 
                 prizeMessage.textContent = 'Çark dönüyor...';
                 countdownElement.textContent = '';
@@ -531,8 +533,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     wheel.style.transform = `rotate(${spinDegrees}deg)`;
                     
                     wheel.addEventListener('transitionend', () => {
-                        prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
-
+                        // Veritabanı işlemlerini burada başlat
                         const spinRef = db.ref('spins/' + user.id);
                         const scoreRef = db.ref('scores/' + user.id);
 
@@ -542,13 +543,14 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                             spinBtn.disabled = false;
                             countdownElement.textContent = '';
                         } else if (winningPrize.name === 'Kaybettin') {
-                             prizeMessage.textContent += ` Belki bir dahaki sefere...`;
+                             prizeMessage.textContent = `Maalesef, Kaybettin. Belki bir dahaki sefere...`;
                              spinRef.set(firebase.database.ServerValue.TIMESTAMP);
                              startCountdown(new Date().getTime());
                         } else {
                             scoreRef.transaction(currentScore => {
                                 return (currentScore || 0) + winningPrize.value;
                             }).then(() => {
+                                prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
                                 spinRef.set(firebase.database.ServerValue.TIMESTAMP);
                                 startCountdown(new Date().getTime());
                             });
