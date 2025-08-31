@@ -102,6 +102,20 @@
             font-size: 16px;
             margin: 4px 0 0;
         }
+        
+        .user-score {
+            font-size: 18px;
+            font-weight: 600;
+            color: #4CAF50; /* Yeşil renk */
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-score::before {
+            content: '⭐';
+        }
 
         .content-section {
             display: flex;
@@ -290,6 +304,7 @@
                 <h1 class="username" id="username">Yükleniyor...</h1>
             </div>
             <p class="user-id" id="userId"></p>
+            <p class="user-score" id="userScore">0 Puan</p>
         </div>
 
         <div class="card content-section">
@@ -317,7 +332,7 @@
         </div>
 
         <div class="card content-section">
-             <h2>Sıkça Sorulan Sorular</h2>
+            <h2>Sıkça Sorulan Sorular</h2>
  <div id="faqContainer">
                 <div class="faq-item">
                     <div class="faq-question">Nasıl Hesap Açabilirim?</div>
@@ -410,6 +425,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const profileIconElement = document.getElementById('profileIcon');
             const usernameElement = document.getElementById('username');
             const userIdElement = document.getElementById('userId');
+            const userScoreElement = document.getElementById('userScore');
             const wheel = document.getElementById('wheel');
             const spinBtn = document.getElementById('spinBtn');
             const prizeMessage = document.getElementById('prizeMessage');
@@ -428,17 +444,23 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 }
 
                 const userRef = db.ref('users/' + userId);
+                const spinRef = db.ref('spins/' + userId);
+                const scoreRef = db.ref('scores/' + userId);
                 
-                // Kullanıcı girişini veritabanına kaydet
+                // Kullanıcı verisini ve puanını yükle
                 userRef.update({
                     firstName: user.first_name,
                     lastName: user.last_name || null,
                     username: user.username || null,
                     lastLogin: firebase.database.ServerValue.TIMESTAMP
                 });
+                
+                scoreRef.once('value').then(snapshot => {
+                    const currentScore = snapshot.val() || 0;
+                    userScoreElement.textContent = `${currentScore} Puan`;
+                });
 
                 // Firebase'den son çevirme zamanını kontrol et
-                const spinRef = db.ref('spins/' + userId);
                 spinRef.once('value').then((snapshot) => {
                     const lastSpinTimestamp = snapshot.val();
                     const now = new Date().getTime();
@@ -469,7 +491,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             // Geri sayım sayacını güncelleyen fonksiyon
             function updateCountdown(lastSpinTimestamp) {
                 const now = new Date().getTime();
-                const remainingTime = MINUTES_IN_A_DAY - (now - lastSpinTimestamp);
+                const remainingTime = MINUTES_IN-A-DAY - (now - lastSpinTimestamp);
                 
                 if (remainingTime <= 0) {
                     countdownElement.textContent = 'Çevirme hakkınız yenilendi!';
@@ -488,8 +510,18 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
             // Çark İşlevselliği
             const prizes = [
-                '5 Puan', '10 Puan', '20 Puan', '50 Puan', '100 Puan', '200 Puan',
-                'Ekstra Çevirme', '30 Puan', 'Kaybettin', '75 Puan', '150 Puan', 'Şanslısın!'
+                { name: '5 Puan', value: 5 },
+                { name: '10 Puan', value: 10 },
+                { name: '20 Puan', value: 20 },
+                { name: '50 Puan', value: 50 },
+                { name: '100 Puan', value: 100 },
+                { name: '200 Puan', value: 200 },
+                { name: 'Ekstra Çevirme', value: null },
+                { name: '30 Puan', value: 30 },
+                { name: 'Kaybettin', value: 0 },
+                { name: '75 Puan', value: 75 },
+                { name: '150 Puan', value: 150 },
+                { name: 'Şanslısın!', value: 500 } // Bonus puan
             ];
             const prizeAngles = [
                 15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345
@@ -512,13 +544,34 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     wheel.style.transform = `rotate(${spinDegrees}deg)`;
                     
                     spinBtn.disabled = true;
-                    
+
+                    // Çevirme zamanını Firebase'e kaydet
                     const spinRef = db.ref('spins/' + user.id);
-                    spinRef.set(firebase.database.ServerValue.TIMESTAMP);
+                    spinRef.set(new Date().getTime());
                     updateCountdown(new Date().getTime());
 
                     wheel.addEventListener('transitionend', () => {
-                        prizeMessage.textContent = `Tebrikler, ${winningPrize} kazandınız!`;
+                        prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
+
+                        // Kazanılan ödüle göre puanları veya çevirme hakkını güncelle
+                        if (winningPrize.name === 'Ekstra Çevirme') {
+                            spinRef.remove(); // Zaman damgasını sil
+                            prizeMessage.textContent += ` Yeni bir çevirme hakkı kazandınız!`;
+                            updateCountdown(new Date().getTime() - MINUTES_IN_A_DAY); // Geri sayımı sıfırla
+                        } else if (winningPrize.name === 'Kaybettin') {
+                             prizeMessage.textContent += ` Belki bir dahaki sefere...`;
+                        } else {
+                            const scoreRef = db.ref('scores/' + user.id);
+                            scoreRef.transaction(currentScore => {
+                                return (currentScore || 0) + winningPrize.value;
+                            }).then(() => {
+                                // Yeni puanı ekranda göster
+                                scoreRef.once('value').then(snapshot => {
+                                    const updatedScore = snapshot.val();
+                                    userScoreElement.textContent = `${updatedScore} Puan`;
+                                });
+                            });
+                        }
                     }, { once: true });
                 }, 10);
             });
