@@ -403,7 +403,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
     <script>
         // Firebase yapılandırma kodlarınızı buraya yapıştırın.
-        const firebaseConfig = {
+       const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   projectId: "onwingiris-afccf",
@@ -416,6 +416,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
         const db = firebase.database();
         const MINUTES_IN_A_DAY = 24 * 60 * 60 * 1000;
+        let countdownInterval;
 
         window.addEventListener('load', () => {
             const WebApp = window.Telegram.WebApp;
@@ -447,7 +448,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 const spinRef = db.ref('spins/' + userId);
                 const scoreRef = db.ref('scores/' + userId);
                 
-                // Kullanıcı verisini ve puanını yükle
                 userRef.update({
                     firstName: user.first_name,
                     lastName: user.last_name || null,
@@ -455,7 +455,8 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     lastLogin: firebase.database.ServerValue.TIMESTAMP
                 });
                 
-                scoreRef.once('value').then(snapshot => {
+                // Puanı yükle ve takip et
+                scoreRef.on('value', snapshot => {
                     const currentScore = snapshot.val() || 0;
                     userScoreElement.textContent = `${currentScore} Puan`;
                 });
@@ -468,7 +469,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     if (lastSpinTimestamp && (now - lastSpinTimestamp) < MINUTES_IN_A_DAY) {
                         spinBtn.disabled = true;
                         prizeMessage.textContent = 'Günlük hakkınız bitti.';
-                        updateCountdown(lastSpinTimestamp);
+                        startCountdown(lastSpinTimestamp);
                     } else {
                         spinBtn.disabled = false;
                         prizeMessage.textContent = 'Hemen çevir ve kazan!';
@@ -488,24 +489,28 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 });
             });
 
-            // Geri sayım sayacını güncelleyen fonksiyon
-            function updateCountdown(lastSpinTimestamp) {
-                const now = new Date().getTime();
-                const remainingTime = MINUTES_IN-A-DAY - (now - lastSpinTimestamp);
+            // Geri sayım sayacını başlatan fonksiyon
+            function startCountdown(lastSpinTimestamp) {
+                if (countdownInterval) clearInterval(countdownInterval);
                 
-                if (remainingTime <= 0) {
-                    countdownElement.textContent = 'Çevirme hakkınız yenilendi!';
-                    spinBtn.disabled = false;
-                    prizeMessage.textContent = 'Hemen çevir ve kazan!';
-                    return;
-                }
+                countdownInterval = setInterval(() => {
+                    const now = new Date().getTime();
+                    const remainingTime = MINUTES_IN_A_DAY - (now - lastSpinTimestamp);
+                    
+                    if (remainingTime <= 0) {
+                        clearInterval(countdownInterval);
+                        countdownElement.textContent = 'Çevirme hakkınız yenilendi!';
+                        spinBtn.disabled = false;
+                        prizeMessage.textContent = 'Hemen çevir ve kazan!';
+                        return;
+                    }
 
-                const hours = Math.floor(remainingTime / (1000 * 60 * 60));
-                const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+                    const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+                    const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
 
-                countdownElement.textContent = `Yeni çevirme hakkı: ${hours}sa ${minutes}dk ${seconds}sn`;
-                setTimeout(() => updateCountdown(lastSpinTimestamp), 1000);
+                    countdownElement.textContent = `Yeni çevirme hakkı: ${hours}sa ${minutes}dk ${seconds}sn`;
+                }, 1000);
             }
 
             // Çark İşlevselliği
@@ -521,7 +526,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 { name: 'Kaybettin', value: 0 },
                 { name: '75 Puan', value: 75 },
                 { name: '150 Puan', value: 150 },
-                { name: 'Şanslısın!', value: 500 } // Bonus puan
+                { name: 'Şanslısın!', value: 500 }
             ];
             const prizeAngles = [
                 15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345
@@ -531,8 +536,14 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 if (spinBtn.disabled) return;
 
                 prizeMessage.textContent = '';
+                countdownElement.textContent = '';
                 wheel.style.transition = 'none';
                 wheel.style.transform = `rotate(0deg)`;
+                
+                // Butonu pasif hale getir, çevirme hakkını kaydet
+                spinBtn.disabled = true;
+                const spinRef = db.ref('spins/' + user.id);
+                spinRef.set(new Date().getTime());
 
                 setTimeout(() => {
                     const randomSegmentIndex = Math.floor(Math.random() * prizes.length);
@@ -543,33 +554,19 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
                     wheel.style.transform = `rotate(${spinDegrees}deg)`;
                     
-                    spinBtn.disabled = true;
-
-                    // Çevirme zamanını Firebase'e kaydet
-                    const spinRef = db.ref('spins/' + user.id);
-                    spinRef.set(new Date().getTime());
-                    updateCountdown(new Date().getTime());
-
                     wheel.addEventListener('transitionend', () => {
                         prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
 
-                        // Kazanılan ödüle göre puanları veya çevirme hakkını güncelle
                         if (winningPrize.name === 'Ekstra Çevirme') {
-                            spinRef.remove(); // Zaman damgasını sil
-                            prizeMessage.textContent += ` Yeni bir çevirme hakkı kazandınız!`;
-                            updateCountdown(new Date().getTime() - MINUTES_IN_A_DAY); // Geri sayımı sıfırla
+                            spinRef.remove();
+                            prizeMessage.textContent = `Tebrikler, ekstra bir çevirme hakkı kazandınız!`;
+                            spinBtn.disabled = false;
                         } else if (winningPrize.name === 'Kaybettin') {
                              prizeMessage.textContent += ` Belki bir dahaki sefere...`;
                         } else {
                             const scoreRef = db.ref('scores/' + user.id);
                             scoreRef.transaction(currentScore => {
                                 return (currentScore || 0) + winningPrize.value;
-                            }).then(() => {
-                                // Yeni puanı ekranda göster
-                                scoreRef.once('value').then(snapshot => {
-                                    const updatedScore = snapshot.val();
-                                    userScoreElement.textContent = `${updatedScore} Puan`;
-                                });
                             });
                         }
                     }, { once: true });
