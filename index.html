@@ -230,24 +230,28 @@
             -webkit-backdrop-filter: blur(5px);
         }
         
-        @keyframes scroll-prizes {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-10000px); }
-        }
-
-        .case-prizes-track {
+        /* YENİ - Kesintisiz döngü için animasyon */
+        .case-prizes-track-wrapper {
+            position: relative;
             display: flex;
             height: 120px;
             overflow: hidden;
             width: 90vw;
             border: 3px solid var(--accent-color);
             border-radius: 10px;
-            position: relative;
+        }
+
+        .case-prizes-track {
+            display: flex;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         .prize-item {
             flex-shrink: 0;
-            width: 250px; /* GENİŞLİK ARTIRILDI */
+            width: 250px;
             height: 100%;
             display: flex;
             flex-direction: column;
@@ -259,7 +263,7 @@
             text-align: center;
             font-weight: 600;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            font-size: 16px; /* YAZI BOYUTU ARTIRILDI */
+            font-size: 16px;
         }
         
         .prize-item.winner {
@@ -282,13 +286,13 @@
         }
         
         .prize-value {
-            font-size: 24px; /* YAZI BOYUTU ARTIRILDI */
+            font-size: 24px;
             font-weight: bold;
             color: #e0e0e0;
         }
         
         .prize-name {
-            font-size: 14px; /* YAZI BOYUTU ARTIRILDI */
+            font-size: 14px;
             color: #b0b0b0;
             margin-top: 5px;
         }
@@ -423,8 +427,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </div>
     
     <div class="case-animation-overlay" id="caseOverlay">
-        <div class="case-prizes-track" id="caseTrack">
-            </div>
+        <div class="case-prizes-track-wrapper">
+            <div id="caseTrack1" class="case-prizes-track"></div>
+            <div id="caseTrack2" class="case-prizes-track"></div>
+        </div>
         <div class="prize-pointer"></div>
         <div class="final-prize-display" id="finalPrizeDisplay">
             <h3 id="finalPrizeName"></h3>
@@ -446,8 +452,9 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         firebase.initializeApp(firebaseConfig);
 
         const db = firebase.database();
-        const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
+        const MILLISECONDS_IN_A_DAY = 0;
         let countdownInterval;
+        let soundInterval;
 
         const prizes = [
             { name: '5 Puan', value: 5, color: '#f7931a', rarity: 'common' },
@@ -469,12 +476,11 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const commonPrizes = prizes.filter(p => p.rarity === 'common');
         const allPrizes = prizes;
         
-        const PRIZE_ITEM_WIDTH = 250; // ÖDÜL GENİŞLİĞİ ARTIRILDI
+        const PRIZE_ITEM_WIDTH = 250;
         
-        // SES DOSYASI İÇİN YENİ URL (KISA VE TIKIRTILI BİR SES İÇİN)
+        // SES DOSYASI İÇİN KISA VE GÜVENİLİR BİR URL
         const soundUrl = 'https://s3.amazonaws.com/freecodecamp-240-drum-kit/sounds/clap.wav';
         const prizeAudio = new Audio(soundUrl);
-        prizeAudio.loop = false;
         
         let spinTimeout;
         let finishTimeout;
@@ -494,7 +500,8 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const prizeMessage = document.getElementById('prizeMessage');
             const countdownElement = document.getElementById('countdown');
             const caseOverlay = document.getElementById('caseOverlay');
-            const caseTrack = document.getElementById('caseTrack');
+            const caseTrack1 = document.getElementById('caseTrack1');
+            const caseTrack2 = document.getElementById('caseTrack2');
             const finalPrizeDisplay = document.getElementById('finalPrizeDisplay');
             const finalPrizeName = document.getElementById('finalPrizeName');
             const finalPrizeValue = document.getElementById('finalPrizeValue');
@@ -576,17 +583,32 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 }, 1000);
             }
 
-            // Tekrar eden tıkırtı sesi için yeni fonksiyon
-            function playTickSound() {
-                const tickAudio = prizeAudio.cloneNode();
-                tickAudio.volume = 0.5; // Ses seviyesini ayarlayın
-                tickAudio.play().catch(e => console.error("Ses çalınamadı:", e));
+            // Ses döngüsü
+            function startSound() {
+                clearInterval(soundInterval);
+                soundInterval = setInterval(() => {
+                    prizeAudio.cloneNode().play().catch(e => console.error("Ses çalınamadı:", e));
+                }, 100); // Her 100ms'de bir tık sesi çal
             }
 
             function stopSound() {
-                prizeAudio.pause();
-                prizeAudio.currentTime = 0;
-                prizeAudio.removeEventListener('animationiteration', playTickSound);
+                clearInterval(soundInterval);
+            }
+            
+            function createPrizeItems(trackElement) {
+                let prizeList = [];
+                for (let i = 0; i < 50; i++) {
+                    prizeList.push(...commonPrizes.sort(() => Math.random() - 0.5));
+                }
+                trackElement.innerHTML = '';
+                prizeList.forEach(prize => {
+                    const prizeItem = document.createElement('div');
+                    prizeItem.className = 'prize-item';
+                    prizeItem.style.backgroundColor = prize.color;
+                    prizeItem.innerHTML = `<span class="prize-value">${prize.value === null ? '🎁' : prize.value}</span><span class="prize-name">${prize.name}</span>`;
+                    trackElement.appendChild(prizeItem);
+                });
+                return prizeList.length;
             }
             
             function openCase() {
@@ -597,49 +619,71 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 openCaseBtn.disabled = true;
                 caseOverlay.style.display = 'flex';
                 
-                const prizeList = [];
-                for (let i = 0; i < 100; i++) {
-                    prizeList.push(...commonPrizes.sort(() => Math.random() - 0.5));
-                }
+                // Ödül listelerini doldur
+                const totalItems1 = createPrizeItems(caseTrack1);
+                const totalItems2 = createPrizeItems(caseTrack2);
+                const trackLength = totalItems1 * PRIZE_ITEM_WIDTH;
+                
+                // 2. yolu 1. yolun hemen arkasına konumlandır
+                caseTrack2.style.left = `${trackLength}px`;
 
+                // Kazananı seç ve konumunu ayarla
                 const winningPrizeIndex = Math.floor(Math.random() * allPrizes.length);
                 const winningPrize = allPrizes[winningPrizeIndex];
-
-                const winningPrizePosition = Math.floor(Math.random() * 20) + 50; 
-                prizeList[winningPrizePosition] = winningPrize;
-
-                caseTrack.innerHTML = '';
-                prizeList.forEach(prize => {
-                    const prizeItem = document.createElement('div');
-                    prizeItem.className = 'prize-item';
-                    prizeItem.style.backgroundColor = prize.color;
-                    prizeItem.innerHTML = `<span class="prize-value">${prize.value === null ? '🎁' : prize.value}</span><span class="prize-name">${prize.name}</span>`;
-                    caseTrack.appendChild(prizeItem);
-                });
-
-                // HIZLAR GÜNCELLENDİ: DAHA YAVAŞ DÖNÜŞ VE DURUŞ
-                caseTrack.style.animation = 'scroll-prizes 15s linear infinite';
-                caseTrack.addEventListener('animationiteration', playTickSound);
                 
-                playTickSound(); // Animasyon başlangıcında sesi çal
+                const winningPrizePosition = Math.floor(Math.random() * 20) + 50; 
+                
+                // Animasyon için toplam kaydırma mesafesini hesapla
+                // Bu değer, ödüllerin en az 2 tam tur atmasını sağlar
+                const baseSpinDistance = 2 * trackLength;
+                const winningPositionOffset = winningPrizePosition * PRIZE_ITEM_WIDTH + (PRIZE_ITEM_WIDTH / 2);
+                const finalSpinDistance = baseSpinDistance + winningPositionOffset;
 
-                clearTimeout(spinTimeout);
-                spinTimeout = setTimeout(() => {
-                    caseTrack.style.animation = 'none';
-                    caseTrack.removeEventListener('animationiteration', playTickSound);
+                // Animasyonu başlat
+                startSound();
+
+                caseTrack1.style.transition = 'none';
+                caseTrack2.style.transition = 'none';
+                caseTrack1.style.transform = `translateX(0)`;
+                caseTrack2.style.transform = `translateX(0)`;
+
+                // Animasyon başladığında, 2. yolun da döngüye girmesi için transform değerini ayarla
+                caseTrack1.style.transition = 'transform 15s linear';
+                caseTrack2.style.transition = 'transform 15s linear';
+                caseTrack1.style.transform = `translateX(-${trackLength}px)`;
+                caseTrack2.style.transform = `translateX(-${trackLength}px)`;
+                
+                // Kesintisiz döngü için animasyonun tamamlanmasını bekle
+                setTimeout(() => {
+                    // Kazanan ödülün olduğu konumu ayarlamak için geçici liste oluştur
+                    const finalTrackPrizes = [];
+                    for (let i = 0; i < 30; i++) {
+                         finalTrackPrizes.push(...commonPrizes.sort(() => Math.random() - 0.5));
+                    }
+                    const finalWinningPosition = Math.floor(Math.random() * 10) + 5;
+                    finalTrackPrizes[finalWinningPosition] = winningPrize;
+                    
+                    caseTrack1.innerHTML = '';
+                    finalTrackPrizes.forEach(prize => {
+                         const prizeItem = document.createElement('div');
+                         prizeItem.className = 'prize-item';
+                         prizeItem.style.backgroundColor = prize.color;
+                         prizeItem.innerHTML = `<span class="prize-value">${prize.value === null ? '🎁' : prize.value}</span><span class="prize-name">${prize.name}</span>`;
+                         caseTrack1.appendChild(prizeItem);
+                    });
+
+                    // Dönüşü durdur
                     stopSound();
-
-                    const winningElement = caseTrack.children[winningPrizePosition];
-                    const winningElementOffset = winningElement.offsetLeft;
-
-                    const trackCenter = caseTrack.offsetWidth / 2;
-                    const finalPosition = trackCenter - winningElementOffset - (PRIZE_ITEM_WIDTH / 2);
                     
-                    caseTrack.style.transition = 'transform 10s cubic-bezier(0.25, 0.1, 0.25, 1)'; // Durma süresi
-                    caseTrack.style.transform = `translateX(${finalPosition}px)`;
-                    
-                    clearTimeout(finishTimeout);
-                    finishTimeout = setTimeout(() => {
+                    const finalStopPosition = caseTrack1.offsetWidth / 2 - (finalWinningPosition * PRIZE_ITEM_WIDTH + PRIZE_ITEM_WIDTH / 2);
+
+                    caseTrack1.style.transition = 'transform 10s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                    caseTrack1.style.transform = `translateX(${finalStopPosition}px)`;
+                    caseTrack2.style.transition = 'none';
+                    caseTrack2.style.transform = `translateX(0)`;
+                    caseTrack2.style.left = `0`;
+
+                    setTimeout(() => {
                         caseOverlay.style.display = 'none';
                         prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
                         
@@ -662,8 +706,8 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                                 startCountdown(new Date().getTime());
                             });
                         }
-                    }, 10000); // Durma süresine eşit olacak
-                }, 15000); // Animasyonun sürekli dönüş süresine eşit olacak
+                    }, 10000);
+                }, 15000);
             }
 
             openCaseBtn.addEventListener('click', openCase);
