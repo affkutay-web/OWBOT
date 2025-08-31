@@ -229,6 +229,12 @@
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
         }
+        
+        /* Yeni CSS Keyframes Animasyonu */
+        @keyframes scroll-prizes {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-10000px); }
+        }
 
         .case-prizes-track {
             display: flex;
@@ -237,8 +243,6 @@
             width: 90vw;
             border: 3px solid var(--accent-color);
             border-radius: 10px;
-            transform: translateX(0);
-            transition: transform 7s cubic-bezier(0.25, 0.1, 0.25, 1);
             position: relative;
         }
 
@@ -431,7 +435,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </div>
 
     <script>
-        const firebaseConfig = {
+         const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   databaseURL: "https://onwingiris-afccf-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -444,7 +448,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         firebase.initializeApp(firebaseConfig);
 
         const db = firebase.database();
-        const MILLISECONDS_IN_A_DAY = 0;
+        const MILLISECONDS_IN_A_DAY = 24 * 60 * 60 * 1000;
         let countdownInterval;
 
         const prizes = [
@@ -470,7 +474,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             { name: 'Şanslısın!', value: 500, color: '#a453e9' }
         ];
         
-        // Ödül kartının genişliği
         const PRIZE_ITEM_WIDTH = 200;
 
         window.addEventListener('load', () => {
@@ -584,6 +587,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     prizeList.push(...prizes.sort(() => Math.random() - 0.5));
                 }
 
+                // Kazanan ödülü rastgele seç
                 const winningPrizeIndex = Math.floor(Math.random() * prizes.length);
                 const winningPrize = prizes[winningPrizeIndex];
 
@@ -600,50 +604,40 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     caseTrack.appendChild(prizeItem);
                 });
 
-                // Animasyon için doğru konumu hesapla
-                const winningElement = caseTrack.children[winningPrizePosition];
-                const winningElementOffset = winningElement.offsetLeft;
+                // Ödül çarkına sürekli dönme animasyonunu ekle
+                caseTrack.style.animation = 'scroll-prizes 2s linear infinite';
 
-                // Animasyonun ödülü ortalaması için gerekli kayma miktarını hesapla
-                const trackCenter = caseTrack.offsetWidth / 2;
-                const finalPosition = trackCenter - winningElementOffset - (PRIZE_ITEM_WIDTH / 2);
-                
-                caseTrack.style.transition = 'none';
-                caseTrack.style.transform = `translateX(0)`;
-                
+                // Animasyonu durdurmak ve kazananı belirlemek için bir zamanlayıcı ayarla
                 setTimeout(() => {
-                    caseTrack.style.transition = 'transform 7s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                    // Animasyonu durdur
+                    caseTrack.style.animation = 'none';
+
+                    // Kazanan ödülün pozisyonunu hesapla
+                    const winningElement = caseTrack.children[winningPrizePosition];
+                    const winningElementOffset = winningElement.offsetLeft;
+
+                    const trackCenter = caseTrack.offsetWidth / 2;
+                    const finalPosition = trackCenter - winningElementOffset - (PRIZE_ITEM_WIDTH / 2);
+                    
+                    // Ödülün yavaşlayarak durması için geçiş (transition) ekle
+                    caseTrack.style.transition = 'transform 6s cubic-bezier(0.25, 0.1, 0.25, 1)';
                     caseTrack.style.transform = `translateX(${finalPosition}px)`;
-                }, 10);
-                
-                setTimeout(() => {
-                    caseOverlay.style.display = 'none';
-                    prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
                     
-                    const spinRef = db.ref('spins/' + user.id);
-                    const scoreRef = db.ref('scores/' + user.id);
-                    
-                    if (winningPrize.name === 'Ekstra Çevirme') {
-                        spinRef.remove();
-                        openCaseBtn.disabled = false;
-                        countdownElement.textContent = '';
-                    } else if (winningPrize.name === 'Kaybettin') {
-                         prizeMessage.textContent = `Maalesef, Kaybettin. Belki bir dahaki sefere...`;
-                         spinRef.set(firebase.database.ServerValue.TIMESTAMP);
-                         startCountdown(new Date().getTime());
-                    } else {
-                        scoreRef.transaction(currentScore => {
-                            return (currentScore || 0) + winningPrize.value;
-                        }).then(() => {
-                            spinRef.set(firebase.database.ServerValue.TIMESTAMP);
-                            startCountdown(new Date().getTime());
-                        });
-                    }
-                }, 7000);
-            }
-
-            openCaseBtn.addEventListener('click', openCase);
-        });
-    </script>
-</body>
-</html>
+                    // Animasyon tamamlandığında ödülü ver
+                    setTimeout(() => {
+                        caseOverlay.style.display = 'none';
+                        prizeMessage.textContent = `Tebrikler, ${winningPrize.name} kazandınız!`;
+                        
+                        const spinRef = db.ref('spins/' + user.id);
+                        const scoreRef = db.ref('scores/' + user.id);
+                        
+                        if (winningPrize.name === 'Ekstra Çevirme') {
+                            spinRef.remove();
+                            openCaseBtn.disabled = false;
+                            countdownElement.textContent = '';
+                        } else if (winningPrize.name === 'Kaybettin') {
+                             prizeMessage.textContent = `Maalesef, Kaybettin. Belki bir dahaki sefere...`;
+                             spinRef.set(firebase.database.ServerValue.TIMESTAMP);
+                             startCountdown(new Date().getTime());
+                        } else {
+                            scoreRef
