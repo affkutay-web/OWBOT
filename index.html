@@ -581,7 +581,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
   appId: "1:1059998132611:web:8ddcf7ed2bd56019796eb6",
   measurementId: "G-DCSV6R5H98"
 };
-
         firebase.initializeApp(firebaseConfig);
 
         const db = firebase.database();
@@ -594,7 +593,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const ctx = canvas.getContext('2d');
         const BLOCK_HEIGHT = 40;
         let BLOCK_WIDTH = 150;
-        let blockSpeed = 4;
+        let blockSpeed = 3; // Başlangıç hızını 3'e düşürdük
         let gameStarted = false;
         let score = 0;
         let tower = [];
@@ -606,8 +605,9 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         let userTotalScore = 0;
         let isUserBanned = false; // Kullanıcı yasaklı mı?
 
-        // YÖNETİCİ ID'nizi buraya girin. Kendi Telegram ID'nizi öğrenip tırnak içine yazın.
-        const ADMIN_ID = "6817203711";
+        // YÖNETİCİ ID'lerinizi buraya girin. Kendi Telegram ID'lerinizi ve diğer yöneticilerin ID'lerini ekleyin.
+        // Örnek: const ADMIN_IDS = ["123456789", "987654321", "1122334455"];
+        const ADMIN_IDS = ["6817203711", "YOUR_ADMIN_TELEGRAM_ID_2", "YOUR_ADMIN_TELEGRAM_ID_3"];
 
         const scoreDisplay = document.getElementById('scoreDisplay');
         const startGameBtn = document.getElementById('startGameBtn');
@@ -935,7 +935,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 });
 
                 // Admin butonu görünür mü kontrol et
-                if (currentUserTelegramId === ADMIN_ID) {
+                if (ADMIN_IDS.includes(currentUserTelegramId)) {
                     showAdminBtn.style.display = 'block';
                 }
 
@@ -996,8 +996,8 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 score++;
                 scoreDisplay.textContent = `Skor: ${score}`;
 
-                if (score % 5 === 0 && score < MAX_SCORE) {
-                    blockSpeed += 0.2;
+                if (score % 10 === 0 && score < MAX_SCORE) {
+                    blockSpeed += 0.2; // Hız artışı her 10 skorda bir gerçekleşir
                 }
 
                 if (score % 10 === 0 && currentUserTelegramId) {
@@ -1131,7 +1131,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             score = 0;
             tower = [];
             BLOCK_WIDTH = 150;
-            blockSpeed = 4;
+            blockSpeed = 3; // Oyun yeniden başladığında hızı sıfırladık
             currentBlock = null;
             yOffset = 0;
             scoreDisplay.textContent = `Skor: ${score}`;
