@@ -313,14 +313,7 @@
             Güncel giriş
         </a>
 
-        <div class="card game-section">
-            <h2>Kule Yıkma Oyunu</h2>
-            <div id="scoreDisplay">Skor: 0</div>
-            <canvas id="gameCanvas" width="300" height="400"></canvas>
-            <button id="startGameBtn">Oyunu Başlat</button>
-            <button id="restartGameBtn" style="display:none;">Yeniden Başlat</button>
-        </div>
-        
+        <button id="playTowerBtn" class="action-btn">Kule Yıkma Oyna</button>
         <button id="playRPSBtn" class="action-btn">Taş-Kağıt-Makas Oyna</button>
 
         <div class="card content-section">
@@ -401,6 +394,17 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         </div>
     </div>
     
+    <div id="towerGameScreen" class="container game-screen">
+        <div class="card game-section">
+            <h2>Kule Yıkma Oyunu</h2>
+            <div id="scoreDisplay">Skor: 0</div>
+            <canvas id="gameCanvas" width="300" height="400"></canvas>
+            <button id="startGameBtn">Oyunu Başlat</button>
+            <button id="restartGameBtn" style="display:none;">Yeniden Başlat</button>
+            <button id="backToMainFromTowerBtn" class="action-btn">Geri Dön</button>
+        </div>
+    </div>
+
     <div id="rpsGameScreen" class="container game-screen">
         <div class="card">
             <h2>Taş-Kağıt-Makas</h2>
@@ -412,7 +416,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             </div>
             <div id="rpsResult"></div>
             <button id="playAgainBtn" class="action-btn" style="display:none;">Tekrar Oyna</button>
-            <button id="backToMainBtn" class="action-btn">Geri Dön</button>
+            <button id="backToMainFromRPSBtn" class="action-btn">Geri Dön</button>
         </div>
     </div>
 
@@ -438,13 +442,13 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const ctx = canvas.getContext('2d');
         const BLOCK_HEIGHT = 40;
         let BLOCK_WIDTH = 150;
-        const INITIAL_BLOCK_SPEED = 2; // Başlangıç hızı
+        let blockSpeed = 4; // Başlangıç hızı 2'den 4'e yükseltildi
         let gameStarted = false;
         let score = 0;
         let tower = [];
         let currentBlock = null;
         let animationFrameId;
-        let yOffset = 0; // Ekranı kaydırmak için yeni değişken
+        let yOffset = 0;
         let currentUserTelegramId = null;
         let currentUserName = "Anonim";
 
@@ -463,13 +467,16 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             });
         });
         
-        // Yeni Oyun için DOM Elementleri
         const mainContent = document.getElementById('mainContent');
         const rpsGameScreen = document.getElementById('rpsGameScreen');
+        const towerGameScreen = document.getElementById('towerGameScreen');
         const playRPSBtn = document.getElementById('playRPSBtn');
+        const playTowerBtn = document.getElementById('playTowerBtn');
         const rpsResultDisplay = document.getElementById('rpsResult');
-        const backToMainBtn = document.getElementById('backToMainBtn');
         const playAgainBtn = document.getElementById('playAgainBtn');
+        const backToMainFromRPSBtn = document.getElementById('backToMainFromRPSBtn');
+        const backToMainFromTowerBtn = document.getElementById('backToMainFromTowerBtn');
+
 
         const rpsChoices = ['taş', 'kağıt', 'makas'];
         const rpsButtons = {
@@ -491,9 +498,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             }
         }
         
-        // ** Taş-Kağıt-Makas Oyunu Mantığı **
         function playRPS(userChoice) {
-            // Seçenek butonlarını pasif yap
             rpsButtons.rockBtn.disabled = true;
             rpsButtons.paperBtn.disabled = true;
             rpsButtons.scissorsBtn.disabled = true;
@@ -502,10 +507,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             let resultText;
             
             const rand = Math.random();
-            if (rand < 0.4) { // %40 kazanma şansı
+            if (rand < 0.4) {
                 resultText = `Senin seçimin: ${userChoice} | Rakibin seçimi: ${botChoice} | Sonuç: Kazandın! (+10 Puan)`;
                 addPoints(10);
-            } else { // %60 kaybetme veya berabere
+            } else {
                 if (userChoice === botChoice) {
                     resultText = `Senin seçimin: ${userChoice} | Rakibin seçimi: ${botChoice} | Sonuç: Berabere!`;
                 } else if (
@@ -524,7 +529,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             playAgainBtn.style.display = 'block';
         }
         
-        // ** Yeni Fonksiyon: Oyunu Sıfırlama **
         function resetRPS() {
             rpsResultDisplay.innerHTML = '';
             rpsButtons.rockBtn.disabled = false;
@@ -533,20 +537,20 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             playAgainBtn.style.display = 'none';
         }
 
-
         // Ekran görünürlüğünü yönetme
         function showScreen(screen) {
             mainContent.style.display = 'none';
             rpsGameScreen.style.display = 'none';
+            towerGameScreen.style.display = 'none';
             screen.style.display = 'flex';
         }
 
         // Event Listener'lar
         playRPSBtn.addEventListener('click', () => {
             showScreen(rpsGameScreen);
-            resetRPS(); // Yeni oyun ekranı açıldığında oyunu sıfırla
+            resetRPS();
         });
-        backToMainBtn.addEventListener('click', () => {
+        backToMainFromRPSBtn.addEventListener('click', () => {
             showScreen(mainContent);
         });
         playAgainBtn.addEventListener('click', resetRPS);
@@ -554,7 +558,14 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         rpsButtons.rockBtn.addEventListener('click', () => playRPS('taş'));
         rpsButtons.paperBtn.addEventListener('click', () => playRPS('kağıt'));
         rpsButtons.scissorsBtn.addEventListener('click', () => playRPS('makas'));
-
+        
+        // Yeni Kule Yıkma Oyunu Event Listener'ları
+        playTowerBtn.addEventListener('click', () => {
+            showScreen(towerGameScreen);
+        });
+        backToMainFromTowerBtn.addEventListener('click', () => {
+            showScreen(mainContent);
+        });
 
         window.addEventListener('load', () => {
             const WebApp = window.Telegram.WebApp;
@@ -631,6 +642,11 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 score++;
                 scoreDisplay.textContent = `Skor: ${score}`;
 
+                // Hızı her 5 skorda bir artır
+                if (score % 5 === 0 && score < MAX_SCORE) {
+                    blockSpeed += 0.2;
+                }
+
                 if (score % 10 === 0 && currentUserTelegramId) {
                     addPoints(15);
                 }
@@ -667,12 +683,13 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 }
 
                 BLOCK_WIDTH = newWidth;
+                const newDirection = Math.random() < 0.5 ? 1 : -1; // Yönü rastgele belirle
                 currentBlock = {
-                    x: currentBlock.speed > 0 ? 0 : canvas.width - BLOCK_WIDTH,
+                    x: newDirection > 0 ? 0 : canvas.width - BLOCK_WIDTH, // Yöne göre başlangıç pozisyonunu ayarla
                     y: (tower.length) * BLOCK_HEIGHT,
                     width: BLOCK_WIDTH,
                     color: getColorForScore(score),
-                    speed: INITIAL_BLOCK_SPEED
+                    speed: blockSpeed * newDirection // Yeni hızı ve yönü uygula
                 };
                 animate();
             } else {
@@ -757,6 +774,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             score = 0;
             tower = [];
             BLOCK_WIDTH = 150;
+            blockSpeed = 4; // Oyun başladığında hızı sıfırla
             currentBlock = null;
             yOffset = 0;
             scoreDisplay.textContent = `Skor: ${score}`;
@@ -765,8 +783,14 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             canvas.style.display = 'block';
 
             tower.push({ x: (canvas.width - BLOCK_WIDTH) / 2, y: 0, width: BLOCK_WIDTH, color: getColorForScore(0) }); 
-
-            currentBlock = { x: 0, y: BLOCK_HEIGHT, width: BLOCK_WIDTH, color: getColorForScore(0), speed: INITIAL_BLOCK_SPEED };
+            const newDirection = Math.random() < 0.5 ? 1 : -1;
+            currentBlock = { 
+                x: newDirection > 0 ? 0 : canvas.width - BLOCK_WIDTH, 
+                y: BLOCK_HEIGHT, 
+                width: BLOCK_WIDTH, 
+                color: getColorForScore(0), 
+                speed: blockSpeed * newDirection 
+            };
             drawGame();
             animate();
         }
