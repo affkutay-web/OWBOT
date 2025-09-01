@@ -371,7 +371,57 @@
         .error {
             color: #ff5722;
         }
+        
+        /* Yönetici Paneli Stilleri */
+        .admin-panel {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .admin-panel .user-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
 
+        .admin-panel input {
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: var(--text-color);
+            margin-right: 5px;
+        }
+        
+        .admin-panel button {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .admin-user-item {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid #444;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .admin-user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .admin-user-info {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .admin-user-info span {
+            font-weight: bold;
+            color: var(--accent-light);
+        }
     </style>
 </head>
 <body>
@@ -392,6 +442,8 @@
         <button id="playTowerBtn" class="action-btn">Kule Yıkma Oyna</button>
         <button id="playRPSBtn" class="action-btn">Taş-Kağıt-Makas Oyna</button>
         <button id="showShopBtn" class="action-btn">Ödül Mağazası</button>
+
+        <button id="showAdminBtn" class="action-btn" style="display:none;">Yönetici Paneli</button>
 
         <div class="card content-section">
             <h2>Sıkça Sorulan Sorular</h2>
@@ -507,6 +559,16 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         <button id="backToMainFromShopBtn" class="action-btn">Geri Dön</button>
     </div>
 
+    <div id="adminPanel" class="container admin-panel">
+        <div class="card content-section">
+            <h2>Yönetici Paneli</h2>
+            <div id="adminUserList">
+                <p>Kullanıcılar yükleniyor...</p>
+            </div>
+        </div>
+        <button id="backToMainFromAdminBtn" class="action-btn">Geri Dön</button>
+    </div>
+
 
     <script>
         const firebaseConfig = {
@@ -525,6 +587,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const db = firebase.database();
         const scoreRef = db.ref('tower_stack_scores');
         const generalScoreRef = db.ref('scores');
+        const userRef = db.ref('users');
         const MAX_SCORE = 100;
 
         const canvas = document.getElementById('gameCanvas');
@@ -540,7 +603,11 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         let yOffset = 0;
         let currentUserTelegramId = null;
         let currentUserName = "Anonim";
-        let userTotalScore = 0; // Kullanıcının toplam puanını tutacak değişken
+        let userTotalScore = 0;
+        let isUserBanned = false; // Kullanıcı yasaklı mı?
+
+        // YÖNETİCİ ID'nizi buraya girin. Kendi Telegram ID'nizi öğrenip tırnak içine yazın.
+        const ADMIN_ID = "6817203711";
 
         const scoreDisplay = document.getElementById('scoreDisplay');
         const startGameBtn = document.getElementById('startGameBtn');
@@ -551,6 +618,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const userScoreElement = document.getElementById('userScore');
         const shopItemsContainer = document.getElementById('shopItems');
         const shopMessage = document.getElementById('shopMessage');
+        const adminUserList = document.getElementById('adminUserList');
 
         const faqItems = document.querySelectorAll('.faq-item');
         faqItems.forEach(item => {
@@ -564,13 +632,16 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const towerGameScreen = document.getElementById('towerGameScreen');
         const gameContainer = document.getElementById('gameContainer');
         const shopContainer = document.getElementById('shopContainer');
+        const adminPanel = document.getElementById('adminPanel');
         const playRPSBtn = document.getElementById('playRPSBtn');
         const playTowerBtn = document.getElementById('playTowerBtn');
         const showShopBtn = document.getElementById('showShopBtn');
+        const showAdminBtn = document.getElementById('showAdminBtn');
         const rpsResultDisplay = document.getElementById('rpsResult');
         const playAgainBtn = document.getElementById('playAgainBtn');
         const backToMainFromGameBtn = document.getElementById('backToMainFromGameBtn');
         const backToMainFromShopBtn = document.getElementById('backToMainFromShopBtn');
+        const backToMainFromAdminBtn = document.getElementById('backToMainFromAdminBtn');
 
 
         const rpsChoices = ['taş', 'kağıt', 'makas'];
@@ -589,6 +660,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         ];
 
         function addPoints(points) {
+            if (isUserBanned) {
+                alert('Yasaklı olduğunuz için işlem yapamazsınız.');
+                return;
+            }
             if (currentUserTelegramId) {
                 generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
                     return (currentTotalScore || 0) + points;
@@ -618,6 +693,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
             document.querySelectorAll('.buy-btn').forEach(button => {
                 button.addEventListener('click', (e) => {
+                    if (isUserBanned) {
+                         alert('Yasaklı olduğunuz için işlem yapamazsınız.');
+                         return;
+                    }
                     const itemId = e.target.dataset.itemId;
                     const item = shopProducts.find(p => p.id === itemId);
                     if (item) {
@@ -628,12 +707,16 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         }
         
         function buyItem(itemPrice) {
+            if (isUserBanned) {
+                 alert('Yasaklı olduğunuz için işlem yapamazsınız.');
+                 return;
+            }
             if (currentUserTelegramId) {
                 generalScoreRef.child(currentUserTelegramId).transaction(currentScore => {
                     if (currentScore >= itemPrice) {
                         return (currentScore || 0) - itemPrice;
                     } else {
-                        return; // undefined döndürerek işlemi iptal et
+                        return;
                     }
                 }, (error, committed, snapshot) => {
                     if (error) {
@@ -646,12 +729,16 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                         shopMessage.textContent = 'Yetersiz puan. Lütfen daha fazla puan toplayın!';
                         shopMessage.className = 'error';
                     }
-                    setTimeout(() => shopMessage.textContent = '', 3000); // 3 saniye sonra mesajı temizle
+                    setTimeout(() => shopMessage.textContent = '', 3000);
                 });
             }
         }
         
         function playRPS(userChoice) {
+            if (isUserBanned) {
+                alert('Yasaklı olduğunuz için oyun oynayamazsınız.');
+                return;
+            }
             rpsButtons.rockBtn.disabled = true;
             rpsButtons.paperBtn.disabled = true;
             rpsButtons.scissorsBtn.disabled = true;
@@ -697,6 +784,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             towerGameScreen.style.display = 'none';
             gameContainer.style.display = 'none';
             shopContainer.style.display = 'none';
+            adminPanel.style.display = 'none';
             
             if (screen === 'main') {
                 mainContent.style.display = 'flex';
@@ -708,8 +796,77 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 gameContainer.style.display = 'flex';
             } else if (screen === 'shop') {
                 shopContainer.style.display = 'flex';
+            } else if (screen === 'admin') {
+                adminPanel.style.display = 'flex';
+                renderAdminPanel();
             }
         }
+
+        // Yönetici paneli fonksiyonları
+        async function renderAdminPanel() {
+            adminUserList.innerHTML = '<p>Yükleniyor...</p>';
+            try {
+                const usersSnapshot = await userRef.once('value');
+                const scoresSnapshot = await generalScoreRef.once('value');
+                const users = usersSnapshot.val() || {};
+                const scores = scoresSnapshot.val() || {};
+                
+                adminUserList.innerHTML = '';
+                
+                for (const userId in users) {
+                    const userData = users[userId];
+                    const userScore = scores[userId] || 0;
+                    const isBanned = userData.isBanned || false;
+                    
+                    const userItem = document.createElement('div');
+                    userItem.className = 'admin-user-item';
+                    userItem.innerHTML = `
+                        <div class="admin-user-info">
+                            <span>Ad:</span> ${userData.firstName || 'Bilinmiyor'} (@${userData.username || 'N/A'})<br>
+                            <span>ID:</span> ${userId}<br>
+                            <span>Puan:</span> ${userScore} ${isBanned ? ' (Yasaklı)' : ''}
+                        </div>
+                        <div class="user-actions">
+                            <input type="number" class="score-input" placeholder="Yeni puan">
+                            <button class="update-score-btn action-btn" data-user-id="${userId}">Puanı Güncelle</button>
+                            <button class="reset-score-btn action-btn" data-user-id="${userId}">Puanı Sıfırla</button>
+                            <button class="ban-btn action-btn" data-user-id="${userId}">${isBanned ? 'Yasağı Kaldır' : 'Yasakla'}</button>
+                        </div>
+                    `;
+                    adminUserList.appendChild(userItem);
+                }
+
+                document.querySelectorAll('.update-score-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const userId = e.target.dataset.userId;
+                        const newScore = e.target.closest('.user-actions').querySelector('.score-input').value;
+                        if (newScore !== '') {
+                            generalScoreRef.child(userId).set(parseInt(newScore)).then(() => renderAdminPanel());
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.reset-score-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const userId = e.target.dataset.userId;
+                        generalScoreRef.child(userId).set(0).then(() => renderAdminPanel());
+                    });
+                });
+                
+                document.querySelectorAll('.ban-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const userId = e.target.dataset.userId;
+                        const isCurrentlyBanned = e.target.textContent === 'Yasakla' ? false : true;
+                        userRef.child(userId).child('isBanned').set(!isCurrentlyBanned).then(() => renderAdminPanel());
+                    });
+                });
+
+            } catch (error) {
+                adminUserList.innerHTML = '<p class="error">Kullanıcı verileri yüklenemedi.</p>';
+                console.error("Error loading admin panel:", error);
+            }
+        }
+
 
         // Event Listener'lar
         playRPSBtn.addEventListener('click', () => {
@@ -723,10 +880,16 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         showShopBtn.addEventListener('click', () => {
             showScreen('shop');
         });
+        showAdminBtn.addEventListener('click', () => {
+            showScreen('admin');
+        });
         backToMainFromGameBtn.addEventListener('click', () => {
             showScreen('main');
         });
         backToMainFromShopBtn.addEventListener('click', () => {
+            showScreen('main');
+        });
+        backToMainFromAdminBtn.addEventListener('click', () => {
             showScreen('main');
         });
         
@@ -743,11 +906,20 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             const user = WebApp.initDataUnsafe.user;
 
             if (user) {
-                currentUserTelegramId = user.id;
+                currentUserTelegramId = user.id.toString();
                 currentUserName = user.first_name || 'Kullanıcı';
                 usernameElement.textContent = currentUserName;
                 userIdElement.textContent = `@${user.username || 'ID: ' + currentUserTelegramId}`;
                 profileIconElement.textContent = currentUserName.charAt(0).toUpperCase();
+
+                // Kullanıcı yasaklı mı kontrol et
+                userRef.child(currentUserTelegramId).on('value', snapshot => {
+                    const userData = snapshot.val() || {};
+                    isUserBanned = userData.isBanned || false;
+                    if (isUserBanned) {
+                        alert('Hesabınız yasaklanmıştır. Lütfen yönetici ile iletişime geçin.');
+                    }
+                });
 
                 db.ref('users/' + currentUserTelegramId).update({
                     firstName: user.first_name,
@@ -761,6 +933,12 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     userTotalScore = totalScore;
                     userScoreElement.textContent = `${totalScore} Puan`;
                 });
+
+                // Admin butonu görünür mü kontrol et
+                if (currentUserTelegramId === ADMIN_ID) {
+                    showAdminBtn.style.display = 'block';
+                }
+
             } else {
                 usernameElement.textContent = 'Kullanıcı verisi alınamadı.';
                 userIdElement.textContent = 'Lütfen uygulamayı Telegram içinden açın.';
@@ -804,6 +982,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         }
 
         function placeBlock() {
+            if (isUserBanned) {
+                alert('Yasaklı olduğunuz için oyun oynayamazsınız.');
+                return;
+            }
             if (!gameStarted || !currentBlock) return;
             cancelAnimationFrame(animationFrameId);
             
@@ -941,6 +1123,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         }
 
         function initializeGame() {
+             if (isUserBanned) {
+                alert('Yasaklı olduğunuz için oyun oynayamazsınız.');
+                return;
+            }
             gameStarted = true;
             score = 0;
             tower = [];
