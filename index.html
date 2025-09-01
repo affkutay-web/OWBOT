@@ -341,7 +341,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         </div>
     </div>
 
-
         <div class="card content-section">
             <h2>Liderlik Tablosu</h2>
             <ul id="leaderboardList" class="leaderboard-list">
@@ -352,7 +351,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </div>
     
     <script>
-         const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   databaseURL: "https://onwingiris-afccf-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -373,12 +372,12 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const ctx = canvas.getContext('2d');
         const BLOCK_HEIGHT = 40;
         let BLOCK_WIDTH = 150;
-        let blockColor = '#FF0077';
         let gameStarted = false;
         let score = 0;
         let tower = [];
         let currentBlock = null;
         let animationFrameId;
+        let yOffset = 0; // Ekranı kaydırmak için yeni değişken
         let currentUserTelegramId = null;
         let currentUserName = "Anonim";
 
@@ -430,13 +429,13 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
         function drawBlock(block) {
             ctx.fillStyle = block.color;
-            ctx.fillRect(block.x, canvas.height - block.y - BLOCK_HEIGHT, block.width, BLOCK_HEIGHT);
+            ctx.fillRect(block.x, canvas.height - block.y - BLOCK_HEIGHT + yOffset, block.width, BLOCK_HEIGHT);
             
             ctx.fillStyle = 'white';
             ctx.font = 'bold 24px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('ONWIN', block.x + block.width / 2, canvas.height - block.y - BLOCK_HEIGHT / 2);
+            ctx.fillText('ONWIN', block.x + block.width / 2, canvas.height - block.y - BLOCK_HEIGHT / 2 + yOffset);
         }
 
         function drawGame() {
@@ -487,11 +486,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 };
                 tower.push(newBlock);
 
-                // Ekran kaydırma optimizasyonu: Kuleye 5. blok eklendiğinde,
-                // tüm kuleyi aşağı kaydırarak yeni blokların ekrana sığmasını sağla.
-                // Bu, blokların ekranın dışına çıkmasını engeller.
-                if (tower.length >= 5) {
-                    tower.forEach(block => block.y -= BLOCK_HEIGHT);
+                // **Yeni ekran kaydırma mantığı:**
+                // Kule uzunluğu 3'ten büyükse her yeni blok eklendiğinde ekranı yukarı kaydır.
+                if (tower.length > 3) {
+                    yOffset += BLOCK_HEIGHT;
                 }
 
                 // Eğer skor 100'e ulaştıysa oyunu bitir ve 500 puan bonus ekle
@@ -519,7 +517,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     y: (tower.length) * BLOCK_HEIGHT,
                     width: BLOCK_WIDTH,
                     color: `hsl(${score * 40 % 360}, 70%, 50%)`,
-                    speed: currentBlock.speed * 1.05
+                    speed: currentBlock.speed
                 };
                 animate();
             } else {
@@ -607,6 +605,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             tower = [];
             BLOCK_WIDTH = 150;
             currentBlock = null;
+            yOffset = 0; // Yeni oyun başladığında kaydırma değerini sıfırla
             scoreDisplay.textContent = `Skor: ${score}`;
             startGameBtn.style.display = 'none';
             restartGameBtn.style.display = 'none';
