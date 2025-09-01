@@ -341,6 +341,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         </div>
     </div>
 
+
         <div class="card content-section">
             <h2>Liderlik Tablosu</h2>
             <ul id="leaderboardList" class="leaderboard-list">
@@ -351,7 +352,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </div>
     
     <script>
-        const firebaseConfig = {
+         const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   databaseURL: "https://onwingiris-afccf-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -486,9 +487,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 };
                 tower.push(newBlock);
 
-                // Ekran kaydırma optimizasyonu: Kule ekranın yarısından fazlasını kapladığında,
+                // Ekran kaydırma optimizasyonu: Kuleye 5. blok eklendiğinde,
                 // tüm kuleyi aşağı kaydırarak yeni blokların ekrana sığmasını sağla.
-                if ((tower.length) * BLOCK_HEIGHT > canvas.height / 2) {
+                // Bu, blokların ekranın dışına çıkmasını engeller.
+                if (tower.length >= 5) {
                     tower.forEach(block => block.y -= BLOCK_HEIGHT);
                 }
 
