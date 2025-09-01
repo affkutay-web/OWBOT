@@ -351,7 +351,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </div>
     
     <script>
-        const firebaseConfig = {
+         const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   databaseURL: "https://onwingiris-afccf-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -465,6 +465,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             
             if (overlap > 0) {
                 score++;
+                scoreDisplay.textContent = `Skor: ${score}`;
 
                 // Her 10 skorda 15 puan bonusu genel puana ekle
                 if (score % 10 === 0 && currentUserTelegramId) {
