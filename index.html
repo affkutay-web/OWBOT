@@ -256,7 +256,7 @@
         
         /* Yeni Oyun Ekranı Stilleri */
         .game-screen {
-            display: none; /* Varsayılan olarak gizli */
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -294,8 +294,84 @@
         #rpsResult {
             font-size: 20px;
             font-weight: 600;
-            min-height: 100px; /* Sonuç için yeterli alan bırakır */
+            min-height: 100px;
         }
+
+        /* Ödül Mağazası Stilleri */
+        .shop-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .shop-item {
+            background-color: #3b3b3b;
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .shop-item h3 {
+            margin: 0;
+            font-size: 18px;
+            color: var(--accent-light);
+        }
+        
+        .shop-item p {
+            margin: 0;
+            font-size: 14px;
+            color: #b0b0b0;
+        }
+        
+        .shop-item .item-price {
+            font-weight: 700;
+            color: #4CAF50;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 16px;
+        }
+        
+        .shop-item .item-price::before {
+            content: '⭐';
+        }
+        
+        .shop-item button {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .shop-item button:hover:not(:disabled) {
+            background-color: #c085e8;
+        }
+        
+        .shop-item button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+        
+        #shopMessage {
+            text-align: center;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .success {
+            color: #4CAF50;
+        }
+        
+        .error {
+            color: #ff5722;
+        }
+
     </style>
 </head>
 <body>
@@ -315,6 +391,7 @@
 
         <button id="playTowerBtn" class="action-btn">Kule Yıkma Oyna</button>
         <button id="playRPSBtn" class="action-btn">Taş-Kağıt-Makas Oyna</button>
+        <button id="showShopBtn" class="action-btn">Ödül Mağazası</button>
 
         <div class="card content-section">
             <h2>Sıkça Sorulan Sorular</h2>
@@ -384,41 +461,52 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
            </div>
         </div>
     </div>
+    
+    <div id="gameContainer" class="container" style="display:none;">
+        <div id="towerGameScreen" class="game-screen" style="display:none;">
+            <div class="card game-section">
+                <h2>Kule Yıkma Oyunu</h2>
+                <div id="scoreDisplay">Skor: 0</div>
+                <canvas id="gameCanvas" width="300" height="400"></canvas>
+                <button id="startGameBtn">Oyunu Başlat</button>
+                <button id="restartGameBtn" style="display:none;">Yeniden Başlat</button>
+            </div>
+        </div>
 
-        <div class="card content-section">
+        <div id="rpsGameScreen" class="game-screen" style="display:none;">
+            <div class="card">
+                <h2>Taş-Kağıt-Makas</h2>
+                <p>Birini seç ve oyna:</p>
+                <div class="rps-options">
+                    <button id="rockBtn">✊ Taş</button>
+                    <button id="paperBtn">✋ Kağıt</button>
+                    <button id="scissorsBtn">✌️ Makas</button>
+                </div>
+                <div id="rpsResult"></div>
+                <button id="playAgainBtn" class="action-btn" style="display:none;">Tekrar Oyna</button>
+            </div>
+        </div>
+
+        <div id="leaderboardCard" class="card content-section">
             <h2>Liderlik Tablosu</h2>
             <ul id="leaderboardList" class="leaderboard-list">
-                
-<li class="leaderboard-item"><span>1.</span> <span class="name">Yükleniyor...</span> <span class="score">0</span></li>
+                <li class="leaderboard-item"><span>1.</span> <span class="name">Yükleniyor...</span> <span class="score">0</span></li>
             </ul>
         </div>
-    </div>
-    
-    <div id="towerGameScreen" class="container game-screen">
-        <div class="card game-section">
-            <h2>Kule Yıkma Oyunu</h2>
-            <div id="scoreDisplay">Skor: 0</div>
-            <canvas id="gameCanvas" width="300" height="400"></canvas>
-            <button id="startGameBtn">Oyunu Başlat</button>
-            <button id="restartGameBtn" style="display:none;">Yeniden Başlat</button>
-            <button id="backToMainFromTowerBtn" class="action-btn">Geri Dön</button>
-        </div>
+        
+        <button id="backToMainFromGameBtn" class="action-btn">Geri Dön</button>
     </div>
 
-    <div id="rpsGameScreen" class="container game-screen">
-        <div class="card">
-            <h2>Taş-Kağıt-Makas</h2>
-            <p>Birini seç ve oyna:</p>
-            <div class="rps-options">
-                <button id="rockBtn">✊ Taş</button>
-                <button id="paperBtn">✋ Kağıt</button>
-                <button id="scissorsBtn">✌️ Makas</button>
-            </div>
-            <div id="rpsResult"></div>
-            <button id="playAgainBtn" class="action-btn" style="display:none;">Tekrar Oyna</button>
-            <button id="backToMainFromRPSBtn" class="action-btn">Geri Dön</button>
+    <div id="shopContainer" class="container" style="display:none;">
+        <div class="card shop-container">
+            <h2>Ödül Mağazası</h2>
+            <div id="shopItems">
+                </div>
+            <div id="shopMessage"></div>
         </div>
+        <button id="backToMainFromShopBtn" class="action-btn">Geri Dön</button>
     </div>
+
 
     <script>
         const firebaseConfig = {
@@ -431,6 +519,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
   appId: "1:1059998132611:web:8ddcf7ed2bd56019796eb6",
   measurementId: "G-DCSV6R5H98"
 };
+
         firebase.initializeApp(firebaseConfig);
 
         const db = firebase.database();
@@ -442,7 +531,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const ctx = canvas.getContext('2d');
         const BLOCK_HEIGHT = 40;
         let BLOCK_WIDTH = 150;
-        let blockSpeed = 4; // Başlangıç hızı 2'den 4'e yükseltildi
+        let blockSpeed = 4;
         let gameStarted = false;
         let score = 0;
         let tower = [];
@@ -451,6 +540,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         let yOffset = 0;
         let currentUserTelegramId = null;
         let currentUserName = "Anonim";
+        let userTotalScore = 0; // Kullanıcının toplam puanını tutacak değişken
 
         const scoreDisplay = document.getElementById('scoreDisplay');
         const startGameBtn = document.getElementById('startGameBtn');
@@ -459,6 +549,8 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const profileIconElement = document.getElementById('profileIcon');
         const userIdElement = document.getElementById('userId');
         const userScoreElement = document.getElementById('userScore');
+        const shopItemsContainer = document.getElementById('shopItems');
+        const shopMessage = document.getElementById('shopMessage');
 
         const faqItems = document.querySelectorAll('.faq-item');
         faqItems.forEach(item => {
@@ -470,12 +562,15 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const mainContent = document.getElementById('mainContent');
         const rpsGameScreen = document.getElementById('rpsGameScreen');
         const towerGameScreen = document.getElementById('towerGameScreen');
+        const gameContainer = document.getElementById('gameContainer');
+        const shopContainer = document.getElementById('shopContainer');
         const playRPSBtn = document.getElementById('playRPSBtn');
         const playTowerBtn = document.getElementById('playTowerBtn');
+        const showShopBtn = document.getElementById('showShopBtn');
         const rpsResultDisplay = document.getElementById('rpsResult');
         const playAgainBtn = document.getElementById('playAgainBtn');
-        const backToMainFromRPSBtn = document.getElementById('backToMainFromRPSBtn');
-        const backToMainFromTowerBtn = document.getElementById('backToMainFromTowerBtn');
+        const backToMainFromGameBtn = document.getElementById('backToMainFromGameBtn');
+        const backToMainFromShopBtn = document.getElementById('backToMainFromShopBtn');
 
 
         const rpsChoices = ['taş', 'kağıt', 'makas'];
@@ -485,6 +580,14 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             scissorsBtn: document.getElementById('scissorsBtn')
         };
         
+        // Ödül Mağazası Ürünleri
+        const shopProducts = [
+            { id: '1', name: 'Özel Kullanıcı Rozeti', price: 1000, description: 'Telegram profilinizde kullanabileceğiniz nadir bir rozet.' },
+            { id: '2', name: 'Tek kullanımlık 250 Puan', price: 500, description: 'Oyun içinde kullanabileceğiniz 250 bonus puan.' },
+            { id: '3', name: 'Sınırsız Oyun Hakkı', price: 2000, description: 'Sınırlı süreliğine oyun hakkınızı yeniler.' },
+            { id: '4', name: 'Şanslı Kutu', price: 750, description: 'İçinden rastgele miktarda puan veya sürpriz ödül çıkar.' }
+        ];
+
         function addPoints(points) {
             if (currentUserTelegramId) {
                 generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
@@ -494,6 +597,56 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     loadLeaderboard();
                 }).catch(error => {
                     console.error("Error updating general user score:", error);
+                });
+            }
+        }
+        
+        // ** Ödül Mağazası Fonksiyonu **
+        function renderShopItems() {
+            shopItemsContainer.innerHTML = '';
+            shopProducts.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'shop-item card';
+                itemDiv.innerHTML = `
+                    <h3>${item.name}</h3>
+                    <p>${item.description}</p>
+                    <div class="item-price">${item.price}</div>
+                    <button class="buy-btn" data-item-id="${item.id}">Satın Al</button>
+                `;
+                shopItemsContainer.appendChild(itemDiv);
+            });
+
+            document.querySelectorAll('.buy-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const itemId = e.target.dataset.itemId;
+                    const item = shopProducts.find(p => p.id === itemId);
+                    if (item) {
+                        buyItem(item.price);
+                    }
+                });
+            });
+        }
+        
+        function buyItem(itemPrice) {
+            if (currentUserTelegramId) {
+                generalScoreRef.child(currentUserTelegramId).transaction(currentScore => {
+                    if (currentScore >= itemPrice) {
+                        return (currentScore || 0) - itemPrice;
+                    } else {
+                        return; // undefined döndürerek işlemi iptal et
+                    }
+                }, (error, committed, snapshot) => {
+                    if (error) {
+                        shopMessage.textContent = 'İşlem sırasında bir hata oluştu.';
+                        shopMessage.className = 'error';
+                    } else if (committed) {
+                        shopMessage.textContent = 'Satın alma başarılı! Puanınız düşüldü.';
+                        shopMessage.className = 'success';
+                    } else {
+                        shopMessage.textContent = 'Yetersiz puan. Lütfen daha fazla puan toplayın!';
+                        shopMessage.className = 'error';
+                    }
+                    setTimeout(() => shopMessage.textContent = '', 3000); // 3 saniye sonra mesajı temizle
                 });
             }
         }
@@ -542,30 +695,47 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             mainContent.style.display = 'none';
             rpsGameScreen.style.display = 'none';
             towerGameScreen.style.display = 'none';
-            screen.style.display = 'flex';
+            gameContainer.style.display = 'none';
+            shopContainer.style.display = 'none';
+            
+            if (screen === 'main') {
+                mainContent.style.display = 'flex';
+            } else if (screen === 'tower') {
+                towerGameScreen.style.display = 'flex';
+                gameContainer.style.display = 'flex';
+            } else if (screen === 'rps') {
+                rpsGameScreen.style.display = 'flex';
+                gameContainer.style.display = 'flex';
+            } else if (screen === 'shop') {
+                shopContainer.style.display = 'flex';
+            }
         }
 
         // Event Listener'lar
         playRPSBtn.addEventListener('click', () => {
-            showScreen(rpsGameScreen);
+            showScreen('rps');
             resetRPS();
         });
-        backToMainFromRPSBtn.addEventListener('click', () => {
-            showScreen(mainContent);
+        playTowerBtn.addEventListener('click', () => {
+            showScreen('tower');
+            initializeGame();
         });
+        showShopBtn.addEventListener('click', () => {
+            showScreen('shop');
+        });
+        backToMainFromGameBtn.addEventListener('click', () => {
+            showScreen('main');
+        });
+        backToMainFromShopBtn.addEventListener('click', () => {
+            showScreen('main');
+        });
+        
         playAgainBtn.addEventListener('click', resetRPS);
         
         rpsButtons.rockBtn.addEventListener('click', () => playRPS('taş'));
         rpsButtons.paperBtn.addEventListener('click', () => playRPS('kağıt'));
         rpsButtons.scissorsBtn.addEventListener('click', () => playRPS('makas'));
-        
-        // Yeni Kule Yıkma Oyunu Event Listener'ları
-        playTowerBtn.addEventListener('click', () => {
-            showScreen(towerGameScreen);
-        });
-        backToMainFromTowerBtn.addEventListener('click', () => {
-            showScreen(mainContent);
-        });
+
 
         window.addEventListener('load', () => {
             const WebApp = window.Telegram.WebApp;
@@ -588,6 +758,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
                 generalScoreRef.child(currentUserTelegramId).on('value', snapshot => {
                     const totalScore = snapshot.val() || 0;
+                    userTotalScore = totalScore;
                     userScoreElement.textContent = `${totalScore} Puan`;
                 });
             } else {
@@ -596,6 +767,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 profileIconElement.textContent = '?';
             }
             loadLeaderboard();
+            renderShopItems();
         });
 
         function getColorForScore(score) {
@@ -642,7 +814,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 score++;
                 scoreDisplay.textContent = `Skor: ${score}`;
 
-                // Hızı her 5 skorda bir artır
                 if (score % 5 === 0 && score < MAX_SCORE) {
                     blockSpeed += 0.2;
                 }
@@ -683,13 +854,13 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 }
 
                 BLOCK_WIDTH = newWidth;
-                const newDirection = Math.random() < 0.5 ? 1 : -1; // Yönü rastgele belirle
+                const newDirection = Math.random() < 0.5 ? 1 : -1;
                 currentBlock = {
-                    x: newDirection > 0 ? 0 : canvas.width - BLOCK_WIDTH, // Yöne göre başlangıç pozisyonunu ayarla
+                    x: newDirection > 0 ? 0 : canvas.width - BLOCK_WIDTH,
                     y: (tower.length) * BLOCK_HEIGHT,
                     width: BLOCK_WIDTH,
                     color: getColorForScore(score),
-                    speed: blockSpeed * newDirection // Yeni hızı ve yönü uygula
+                    speed: blockSpeed * newDirection
                 };
                 animate();
             } else {
@@ -774,7 +945,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             score = 0;
             tower = [];
             BLOCK_WIDTH = 150;
-            blockSpeed = 4; // Oyun başladığında hızı sıfırla
+            blockSpeed = 4;
             currentBlock = null;
             yOffset = 0;
             scoreDisplay.textContent = `Skor: ${score}`;
@@ -804,7 +975,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             placeBlock();
         });
 
-        canvas.style.display = 'none';
     </script>
 </body>
 </html>
