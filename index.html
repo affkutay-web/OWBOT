@@ -251,6 +251,28 @@
             font-weight: 700;
             color: var(--accent-light);
         }
+        
+        /* Yeni buton için stil */
+        .action-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background-color: var(--accent-light);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -263,6 +285,10 @@
             <p class="user-id" id="userId"></p>
             <p class="user-score" id="userScore">0 Puan</p>
         </div>
+        
+        <a href="https://cutt.ly/2rJxA8Z3" class="action-btn" target="_blank">
+            Güncel giriş
+        </a>
 
         <div class="card game-section">
             <h2>Kule Yıkma Oyunu</h2>
@@ -372,6 +398,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const ctx = canvas.getContext('2d');
         const BLOCK_HEIGHT = 40;
         let BLOCK_WIDTH = 150;
+        const INITIAL_BLOCK_SPEED = 2; // Başlangıç hızı
         let gameStarted = false;
         let score = 0;
         let tower = [];
@@ -427,6 +454,11 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             loadLeaderboard();
         });
 
+        function getColorForScore(score) {
+            return '#5A005A'; 
+        }
+
+
         function drawBlock(block) {
             ctx.fillStyle = block.color;
             ctx.fillRect(block.x, canvas.height - block.y - BLOCK_HEIGHT + yOffset, block.width, BLOCK_HEIGHT);
@@ -467,7 +499,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 score++;
                 scoreDisplay.textContent = `Skor: ${score}`;
 
-                // Her 10 skorda 15 puan bonusu genel puana ekle
                 if (score % 10 === 0 && currentUserTelegramId) {
                     generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
                         return (currentTotalScore || 0) + 15;
@@ -482,30 +513,26 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     x: newX,
                     y: (tower.length) * BLOCK_HEIGHT,
                     width: newWidth,
-                    color: '#9b59b6'
+                    color: getColorForScore(score)
                 };
                 tower.push(newBlock);
 
-                // **Yeni ekran kaydırma mantığı:**
-                // Kule uzunluğu 3'ten büyükse her yeni blok eklendiğinde ekranı yukarı kaydır.
                 if (tower.length > 3) {
                     yOffset += BLOCK_HEIGHT;
                 }
 
-                // Eğer skor 100'e ulaştıysa oyunu bitir ve 500 puan bonus ekle
                 if (score >= MAX_SCORE) {
                     gameStarted = false;
                     scoreDisplay.textContent = `Tebrikler! Maksimum Skor: ${MAX_SCORE}`;
                     startGameBtn.style.display = 'none';
                     restartGameBtn.style.display = 'block';
 
-                    // 500 puanlık büyük ödülü genel puana ekle
                     if (currentUserTelegramId) {
                          generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
                             return (currentTotalScore || 0) + 500;
                         }).then(() => {
                             console.log("500 points bonus added!");
-                            loadLeaderboard(); // Liderlik tablosunu yeniden yükle
+                            loadLeaderboard();
                         });
                     }
                     return;
@@ -516,8 +543,8 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     x: currentBlock.speed > 0 ? 0 : canvas.width - BLOCK_WIDTH,
                     y: (tower.length) * BLOCK_HEIGHT,
                     width: BLOCK_WIDTH,
-                    color: `hsl(${score * 40 % 360}, 70%, 50%)`,
-                    speed: currentBlock.speed
+                    color: getColorForScore(score),
+                    speed: INITIAL_BLOCK_SPEED
                 };
                 animate();
             } else {
@@ -525,11 +552,10 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 scoreDisplay.textContent = `Oyun Bitti! Skor: ${score}`;
                 startGameBtn.style.display = 'none';
                 restartGameBtn.style.display = 'block';
-                saveScore(score); // Sadece oyun skoru bittiğinde kaydet
+                saveScore(score);
             }
         }
 
-        // Oyun skoru bittiğinde kaydediliyor
         function saveScore(finalScore) {
             if (currentUserTelegramId) {
                 scoreRef.child(currentUserTelegramId).once('value').then(snapshot => {
@@ -547,7 +573,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                     }
                 });
                 
-                // Oyun bittiğinde skoru genel puana ekle
                 generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
                     return (currentTotalScore || 0) + finalScore;
                 }).then(() => {
@@ -605,15 +630,15 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             tower = [];
             BLOCK_WIDTH = 150;
             currentBlock = null;
-            yOffset = 0; // Yeni oyun başladığında kaydırma değerini sıfırla
+            yOffset = 0;
             scoreDisplay.textContent = `Skor: ${score}`;
             startGameBtn.style.display = 'none';
             restartGameBtn.style.display = 'none';
             canvas.style.display = 'block';
 
-            tower.push({ x: (canvas.width - BLOCK_WIDTH) / 2, y: 0, width: BLOCK_WIDTH, color: '#9b59b6' }); 
+            tower.push({ x: (canvas.width - BLOCK_WIDTH) / 2, y: 0, width: BLOCK_WIDTH, color: getColorForScore(0) }); 
 
-            currentBlock = { x: 0, y: BLOCK_HEIGHT, width: BLOCK_WIDTH, color: `hsl(${score * 40 % 360}, 70%, 50%)`, speed: 2 };
+            currentBlock = { x: 0, y: BLOCK_HEIGHT, width: BLOCK_WIDTH, color: getColorForScore(0), speed: INITIAL_BLOCK_SPEED };
             drawGame();
             animate();
         }
