@@ -351,7 +351,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
     </div>
     
     <script>
-         const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
   authDomain: "onwingiris-afccf.firebaseapp.com",
   databaseURL: "https://onwingiris-afccf-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -486,10 +486,12 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 };
                 tower.push(newBlock);
 
-                if (tower.length * BLOCK_HEIGHT > canvas.height - BLOCK_HEIGHT * 2) {
+                // Ekran kaydırma optimizasyonu: Kule ekranın yarısından fazlasını kapladığında,
+                // tüm kuleyi aşağı kaydırarak yeni blokların ekrana sığmasını sağla.
+                if ((tower.length) * BLOCK_HEIGHT > canvas.height / 2) {
                     tower.forEach(block => block.y -= BLOCK_HEIGHT);
                 }
-                
+
                 // Eğer skor 100'e ulaştıysa oyunu bitir ve 500 puan bonus ekle
                 if (score >= MAX_SCORE) {
                     gameStarted = false;
