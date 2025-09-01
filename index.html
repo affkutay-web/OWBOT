@@ -1,4 +1,344 @@
-<h2>Sıkça Sorulan Sorular</h2>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Mini Uygulaması</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-color: #2b2b2b;
+            --text-color: #f5f5f5;
+            --accent-color: #9b59b6;
+            --accent-light: #c085e8;
+            --glow-color: #a453e9;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-top: 20px;
+            opacity: 0;
+            animation: fadeIn 0.8s forwards;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .profile-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .profile-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-color);
+            text-transform: uppercase;
+        }
+        
+        .username {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--accent-light);
+        }
+
+        .user-id {
+            color: #b0b0b0;
+            font-size: 16px;
+            margin: 4px 0 0;
+        }
+        
+        .user-score {
+            font-size: 18px;
+            font-weight: 600;
+            color: #4CAF50;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-score::before {
+            content: '⭐';
+        }
+
+        .content-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 8px;
+            margin-top: 0;
+        }
+
+        /* FAQ Stil Kodları */
+        .faq-item {
+            border-bottom: 1px solid #3a3a3a;
+            padding: 15px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--accent-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .faq-question::after {
+            content: '+';
+            font-size: 24px;
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.active .faq-question::after {
+            content: '-';
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            color: #b0b0b0;
+            font-size: 14px;
+            padding-top: 0;
+        }
+        
+        .faq-item.active .faq-answer {
+            max-height: 200px;
+            padding-top: 15px;
+        }
+
+        /* OYUN STİLLERİ */
+        .game-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        #gameCanvas {
+            background-color: #333;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            margin-bottom: 15px;
+            touch-action: manipulation; /* Dokunma kaydırmayı engeller */
+        }
+
+        #startGameBtn, #restartGameBtn, #playRPSBtn {
+            padding: 12px 25px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            margin-top: 10px;
+        }
+
+        #startGameBtn:hover, #restartGameBtn:hover, #playRPSBtn:hover {
+            background-color: var(--accent-light);
+            transform: translateY(-2px);
+        }
+
+        #scoreDisplay {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-light);
+            margin-bottom: 10px;
+        }
+
+        /* LİDERLİK TABLOSU STİLLERİ */
+        .leaderboard-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #444;
+        }
+
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+
+        .leaderboard-item span {
+            font-size: 16px;
+        }
+
+        .leaderboard-item .name {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .leaderboard-item .score {
+            font-weight: 700;
+            color: var(--accent-light);
+        }
+        
+        /* Yeni buton için stil */
+        .action-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background-color: var(--accent-light);
+            transform: translateY(-2px);
+        }
+        
+        /* Yeni Oyun Ekranı Stilleri */
+        .game-screen {
+            display: none; /* Varsayılan olarak gizli */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            gap: 20px;
+        }
+
+        .rps-options {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .rps-options button {
+            padding: 15px 25px;
+            font-size: 24px;
+            background-color: #4a148c;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        
+        .rps-options button:hover {
+            background-color: #6a1b9a;
+            transform: translateY(-3px);
+        }
+        
+        #rpsResult {
+            font-size: 20px;
+            font-weight: 600;
+            min-height: 100px; /* Sonuç için yeterli alan bırakır */
+        }
+    </style>
+</head>
+<body>
+    <div id="mainContent" class="container">
+        <div class="card profile-header">
+            <div class="profile-info">
+                <div id="profileIcon" class="profile-icon">?</div>
+                <h1 class="username" id="username">Yükleniyor...</h1>
+            </div>
+            <p class="user-id" id="userId"></p>
+            <p class="user-score" id="userScore">0 Puan</p>
+        </div>
+        
+        <a href="https://cutt.ly/2rJxA8Z3" class="action-btn" target="_blank">
+            Güncel giriş
+        </a>
+
+        <div class="card game-section">
+            <h2>Kule Yıkma Oyunu</h2>
+            <div id="scoreDisplay">Skor: 0</div>
+            <canvas id="gameCanvas" width="300" height="400"></canvas>
+            <button id="startGameBtn">Oyunu Başlat</button>
+            <button id="restartGameBtn" style="display:none;">Yeniden Başlat</button>
+        </div>
+        
+        <button id="playRPSBtn" class="action-btn">Taş-Kağıt-Makas Oyna</button>
+
+        <div class="card content-section">
+            <h2>Sıkça Sorulan Sorular</h2>
              <div id="faqContainer">
                 <!-- FAQ items buraya, değişiklik yok -->
                 <div class="faq-item">
@@ -65,3 +405,389 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
            </div>
         </div>
     </div>
+
+        <div class="card content-section">
+            <h2>Liderlik Tablosu</h2>
+            <ul id="leaderboardList" class="leaderboard-list">
+                
+<li class="leaderboard-item"><span>1.</span> <span class="name">Yükleniyor...</span> <span class="score">0</span></li>
+            </ul>
+        </div>
+    </div>
+    
+    <div id="rpsGameScreen" class="container game-screen">
+        <div class="card">
+            <h2>Taş-Kağıt-Makas</h2>
+            <p>Birini seç ve oyna:</p>
+            <div class="rps-options">
+                <button id="rockBtn">✊ Taş</button>
+                <button id="paperBtn">✋ Kağıt</button>
+                <button id="scissorsBtn">✌️ Makas</button>
+            </div>
+            <div id="rpsResult"></div>
+            <button id="backToMainBtn" class="action-btn">Geri Dön</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+  apiKey: "AIzaSyBnktrT7Pp7WucJP_xtEu_mmQle_VthRAE",
+  authDomain: "onwingiris-afccf.firebaseapp.com",
+  databaseURL: "https://onwingiris-afccf-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "onwingiris-afccf",
+  storageBucket: "onwingiris-afccf.firebasestorage.app",
+  messagingSenderId: "1059998132611",
+  appId: "1:1059998132611:web:8ddcf7ed2bd56019796eb6",
+  measurementId: "G-DCSV6R5H98"
+};
+        firebase.initializeApp(firebaseConfig);
+
+        const db = firebase.database();
+        const scoreRef = db.ref('tower_stack_scores');
+        const generalScoreRef = db.ref('scores');
+        const MAX_SCORE = 100;
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const BLOCK_HEIGHT = 40;
+        let BLOCK_WIDTH = 150;
+        const INITIAL_BLOCK_SPEED = 2; // Başlangıç hızı
+        let gameStarted = false;
+        let score = 0;
+        let tower = [];
+        let currentBlock = null;
+        let animationFrameId;
+        let yOffset = 0; // Ekranı kaydırmak için yeni değişken
+        let currentUserTelegramId = null;
+        let currentUserName = "Anonim";
+
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const restartGameBtn = document.getElementById('restartGameBtn');
+        const usernameElement = document.getElementById('username');
+        const profileIconElement = document.getElementById('profileIcon');
+        const userIdElement = document.getElementById('userId');
+        const userScoreElement = document.getElementById('userScore');
+
+        const faqItems = document.querySelectorAll('.faq-item');
+        faqItems.forEach(item => {
+            item.addEventListener('click', () => {
+                item.classList.toggle('active');
+            });
+        });
+        
+        // Yeni Oyun için DOM Elementleri
+        const mainContent = document.getElementById('mainContent');
+        const rpsGameScreen = document.getElementById('rpsGameScreen');
+        const playRPSBtn = document.getElementById('playRPSBtn');
+        const rpsResultDisplay = document.getElementById('rpsResult');
+        const backToMainBtn = document.getElementById('backToMainBtn');
+
+        const rpsChoices = ['taş', 'kağıt', 'makas'];
+        const rpsButtons = {
+            rockBtn: document.getElementById('rockBtn'),
+            paperBtn: document.getElementById('paperBtn'),
+            scissorsBtn: document.getElementById('scissorsBtn')
+        };
+        
+        // ** Yeni Fonksiyon: Puan Ekleme **
+        function addPoints(points) {
+            if (currentUserTelegramId) {
+                generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
+                    return (currentTotalScore || 0) + points;
+                }).then(() => {
+                    console.log(`${points} points added to general score!`);
+                    loadLeaderboard();
+                }).catch(error => {
+                    console.error("Error updating general user score:", error);
+                });
+            }
+        }
+        
+        // ** Taş-Kağıt-Makas Oyunu Mantığı **
+        function playRPS(userChoice) {
+            const botChoice = rpsChoices[Math.floor(Math.random() * 3)];
+            let resultText;
+            let win = false;
+            
+            // %40 kazanma şansı için botun seçimini manipüle et
+            const rand = Math.random();
+            if (rand < 0.4) { // %40 kazanma şansı
+                win = true;
+            }
+
+            if (win) {
+                // Kazanma durumunda, botun kaybedeceği hamleyi ayarla
+                if (userChoice === 'taş') {
+                    botChoiceOverride = 'makas';
+                } else if (userChoice === 'kağıt') {
+                    botChoiceOverride = 'taş';
+                } else { // userChoice === 'makas'
+                    botChoiceOverride = 'kağıt';
+                }
+                resultText = `Senin seçimin: ${userChoice} | Rakibin seçimi: ${botChoiceOverride} | Sonuç: Kazandın! (+10 Puan)`;
+                addPoints(10);
+            } else {
+                // Kaybetme veya Beraberlik
+                if (userChoice === botChoice) {
+                    resultText = `Senin seçimin: ${userChoice} | Rakibin seçimi: ${botChoice} | Sonuç: Berabere!`;
+                } else if (
+                    (userChoice === 'taş' && botChoice === 'kağıt') ||
+                    (userChoice === 'kağıt' && botChoice === 'makas') ||
+                    (userChoice === 'makas' && botChoice === 'taş')
+                ) {
+                    resultText = `Senin seçimin: ${userChoice} | Rakibin seçimi: ${botChoice} | Sonuç: Kaybettin!`;
+                } else {
+                    resultText = `Senin seçimin: ${userChoice} | Rakibin seçimi: ${botChoice} | Sonuç: Kazandın! (+10 Puan)`;
+                    addPoints(10);
+                }
+            }
+
+            rpsResultDisplay.innerHTML = resultText;
+        }
+
+
+        // Ekran görünürlüğünü yönetme
+        function showScreen(screen) {
+            mainContent.style.display = 'none';
+            rpsGameScreen.style.display = 'none';
+            screen.style.display = 'flex';
+        }
+
+        // Event Listener'lar
+        playRPSBtn.addEventListener('click', () => showScreen(rpsGameScreen));
+        backToMainBtn.addEventListener('click', () => showScreen(mainContent));
+        
+        rpsButtons.rockBtn.addEventListener('click', () => playRPS('taş'));
+        rpsButtons.paperBtn.addEventListener('click', () => playRPS('kağıt'));
+        rpsButtons.scissorsBtn.addEventListener('click', () => playRPS('makas'));
+
+
+        window.addEventListener('load', () => {
+            const WebApp = window.Telegram.WebApp;
+            WebApp.ready();
+            const user = WebApp.initDataUnsafe.user;
+
+            if (user) {
+                currentUserTelegramId = user.id;
+                currentUserName = user.first_name || 'Kullanıcı';
+                usernameElement.textContent = currentUserName;
+                userIdElement.textContent = `@${user.username || 'ID: ' + currentUserTelegramId}`;
+                profileIconElement.textContent = currentUserName.charAt(0).toUpperCase();
+
+                db.ref('users/' + currentUserTelegramId).update({
+                    firstName: user.first_name,
+                    lastName: user.last_name || null,
+                    username: user.username || null,
+                    lastLogin: firebase.database.ServerValue.TIMESTAMP
+                });
+
+                generalScoreRef.child(currentUserTelegramId).on('value', snapshot => {
+                    const totalScore = snapshot.val() || 0;
+                    userScoreElement.textContent = `${totalScore} Puan`;
+                });
+            } else {
+                usernameElement.textContent = 'Kullanıcı verisi alınamadı.';
+                userIdElement.textContent = 'Lütfen uygulamayı Telegram içinden açın.';
+                profileIconElement.textContent = '?';
+            }
+            loadLeaderboard();
+        });
+
+        function getColorForScore(score) {
+            return '#5A005A'; 
+        }
+
+        function drawBlock(block) {
+            ctx.fillStyle = block.color;
+            ctx.fillRect(block.x, canvas.height - block.y - BLOCK_HEIGHT + yOffset, block.width, BLOCK_HEIGHT);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('ONWIN', block.x + block.width / 2, canvas.height - block.y - BLOCK_HEIGHT / 2 + yOffset);
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            tower.forEach(block => drawBlock(block));
+            if (currentBlock && gameStarted) {
+                drawBlock(currentBlock);
+            }
+        }
+
+        function animate() {
+            if (!gameStarted || !currentBlock) return;
+            currentBlock.x += currentBlock.speed;
+            if (currentBlock.x + currentBlock.width > canvas.width || currentBlock.x < 0) {
+                currentBlock.speed *= -1;
+            }
+            drawGame();
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        function placeBlock() {
+            if (!gameStarted || !currentBlock) return;
+            cancelAnimationFrame(animationFrameId);
+            
+            let previousBlock = tower[tower.length - 1];
+            const overlap = Math.max(0, previousBlock.width - Math.abs(currentBlock.x - previousBlock.x));
+            
+            if (overlap > 0) {
+                score++;
+                scoreDisplay.textContent = `Skor: ${score}`;
+
+                if (score % 10 === 0 && currentUserTelegramId) {
+                    addPoints(15);
+                }
+
+                const newWidth = overlap;
+                const newX = currentBlock.x > previousBlock.x ? currentBlock.x : previousBlock.x;
+                const newBlock = {
+                    x: newX,
+                    y: (tower.length) * BLOCK_HEIGHT,
+                    width: newWidth,
+                    color: getColorForScore(score)
+                };
+                tower.push(newBlock);
+
+                if (tower.length > 3) {
+                    yOffset += BLOCK_HEIGHT;
+                }
+
+                if (score >= MAX_SCORE) {
+                    gameStarted = false;
+                    scoreDisplay.textContent = `Tebrikler! Maksimum Skor: ${MAX_SCORE}`;
+                    startGameBtn.style.display = 'none';
+                    restartGameBtn.style.display = 'block';
+
+                    if (currentUserTelegramId) {
+                         generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
+                            return (currentTotalScore || 0) + 500;
+                        }).then(() => {
+                            console.log("500 points bonus added!");
+                            loadLeaderboard();
+                        });
+                    }
+                    return;
+                }
+
+                BLOCK_WIDTH = newWidth;
+                currentBlock = {
+                    x: currentBlock.speed > 0 ? 0 : canvas.width - BLOCK_WIDTH,
+                    y: (tower.length) * BLOCK_HEIGHT,
+                    width: BLOCK_WIDTH,
+                    color: getColorForScore(score),
+                    speed: INITIAL_BLOCK_SPEED
+                };
+                animate();
+            } else {
+                gameStarted = false;
+                scoreDisplay.textContent = `Oyun Bitti! Skor: ${score}`;
+                startGameBtn.style.display = 'none';
+                restartGameBtn.style.display = 'block';
+                saveScore(score);
+            }
+        }
+
+        function saveScore(finalScore) {
+            if (currentUserTelegramId) {
+                scoreRef.child(currentUserTelegramId).once('value').then(snapshot => {
+                    const currentHighScore = snapshot.val()?.score || 0;
+                    if (finalScore > currentHighScore) {
+                        scoreRef.child(currentUserTelegramId).set({
+                            username: currentUserName,
+                            score: finalScore,
+                            timestamp: firebase.database.ServerValue.TIMESTAMP
+                        }).then(() => {
+                            console.log("Tower Stack High Score updated!");
+                        }).catch(error => {
+                            console.error("Error updating Tower Stack high score:", error);
+                        });
+                    }
+                });
+                
+                generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
+                    return (currentTotalScore || 0) + finalScore;
+                }).then(() => {
+                    console.log("General user score updated!");
+                    loadLeaderboard();
+                }).catch(error => {
+                    console.error("Error updating general user score:", error);
+                });
+            } else {
+                console.warn("User not logged in, score not saved.");
+            }
+        }
+
+        function loadLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboardList');
+            leaderboardList.innerHTML = '<li class="leaderboard-item"><span>1.</span> <span class="name">Yükleniyor...</span> <span class="score">0</span></li>';
+
+            generalScoreRef.orderByValue().limitToLast(10).on('value', async snapshot => {
+                const scores = [];
+                const userPromises = [];
+
+                snapshot.forEach(childSnapshot => {
+                    const userId = childSnapshot.key;
+                    const totalScore = childSnapshot.val() || 0; // Check for null or undefined
+                    
+                    userPromises.push(
+                        db.ref('users/' + userId).once('value').then(userSnapshot => {
+                            const userData = userSnapshot.val();
+                            const username = userData?.firstName || 'Anonim';
+                            scores.push({ username, score: totalScore, id: userId });
+                        })
+                    );
+                });
+
+                await Promise.all(userPromises);
+                scores.sort((a, b) => b.score - a.score);
+
+                leaderboardList.innerHTML = '';
+                if (scores.length === 0) {
+                    leaderboardList.innerHTML = '<li class="leaderboard-item"><span class="name">Henüz skor yok.</span></li>';
+                } else {
+                    scores.forEach((item, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'leaderboard-item';
+                        li.innerHTML = `<span>${index + 1}.</span> <span class="name">${item.username}</span> <span class="score">${item.score}</span>`;
+                        leaderboardList.appendChild(li);
+                    });
+                }
+            });
+        }
+
+        function initializeGame() {
+            gameStarted = true;
+            score = 0;
+            tower = [];
+            BLOCK_WIDTH = 150;
+            currentBlock = null;
+            yOffset = 0;
+            scoreDisplay.textContent = `Skor: ${score}`;
+            startGameBtn.style.display = 'none';
+            restartGameBtn.style.display = 'none';
+            canvas.style.display = 'block';
+
+            tower.push({ x: (canvas.width - BLOCK_WIDTH) / 2, y: 0, width: BLOCK_WIDTH, color: getColorForScore(0) }); 
+
+            currentBlock = { x: 0, y: BLOCK_HEIGHT, width: BLOCK_WIDTH, color: getColorForScore(0), speed: INITIAL_BLOCK_SPEED };
+            drawGame();
+            animate();
+        }
+
+        startGameBtn.addEventListener('click', initializeGame);
+        restartGameBtn.addEventListener('click', initializeGame);
+
+        canvas.addEventListener('click', placeBlock);
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            placeBlock();
+        });
+
+        canvas.style.display = 'none';
+    </script>
+</body>
+</html>
