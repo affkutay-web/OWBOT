@@ -194,7 +194,7 @@
             touch-action: manipulation; /* Dokunma kaydırmayı engeller */
         }
 
-        #startGameBtn, #restartGameBtn, #playRPSBtn {
+        #startGameBtn, #restartGameBtn, .action-btn {
             padding: 12px 25px;
             background-color: var(--accent-color);
             color: white;
@@ -206,9 +206,11 @@
             transition: background-color 0.3s ease, transform 0.1s ease;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
             margin-top: 10px;
+            text-decoration: none;
+            text-align: center;
         }
-
-        #startGameBtn:hover, #restartGameBtn:hover, #playRPSBtn:hover {
+        
+        #startGameBtn:hover, #restartGameBtn:hover, .action-btn:hover {
             background-color: var(--accent-light);
             transform: translateY(-2px);
         }
@@ -252,28 +254,6 @@
             color: var(--accent-light);
         }
         
-        /* Yeni buton için stil */
-        .action-btn {
-            display: inline-block;
-            padding: 12px 25px;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-            text-decoration: none;
-            text-align: center;
-        }
-
-        .action-btn:hover {
-            background-color: var(--accent-light);
-            transform: translateY(-2px);
-        }
-        
         /* Yeni Oyun Ekranı Stilleri */
         .game-screen {
             display: none; /* Varsayılan olarak gizli */
@@ -300,9 +280,15 @@
             transition: background-color 0.3s, transform 0.1s;
         }
         
-        .rps-options button:hover {
+        .rps-options button:hover:not(:disabled) {
             background-color: #6a1b9a;
             transform: translateY(-3px);
+        }
+        
+        .rps-options button:disabled {
+            background-color: #333;
+            cursor: not-allowed;
+            color: #888;
         }
         
         #rpsResult {
@@ -425,6 +411,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
                 <button id="scissorsBtn">✌️ Makas</button>
             </div>
             <div id="rpsResult"></div>
+            <button id="playAgainBtn" class="action-btn" style="display:none;">Tekrar Oyna</button>
             <button id="backToMainBtn" class="action-btn">Geri Dön</button>
         </div>
     </div>
@@ -482,6 +469,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         const playRPSBtn = document.getElementById('playRPSBtn');
         const rpsResultDisplay = document.getElementById('rpsResult');
         const backToMainBtn = document.getElementById('backToMainBtn');
+        const playAgainBtn = document.getElementById('playAgainBtn');
 
         const rpsChoices = ['taş', 'kağıt', 'makas'];
         const rpsButtons = {
@@ -490,7 +478,6 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             scissorsBtn: document.getElementById('scissorsBtn')
         };
         
-        // ** Yeni Fonksiyon: Puan Ekleme **
         function addPoints(points) {
             if (currentUserTelegramId) {
                 generalScoreRef.child(currentUserTelegramId).transaction(currentTotalScore => {
@@ -506,29 +493,19 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         
         // ** Taş-Kağıt-Makas Oyunu Mantığı **
         function playRPS(userChoice) {
+            // Seçenek butonlarını pasif yap
+            rpsButtons.rockBtn.disabled = true;
+            rpsButtons.paperBtn.disabled = true;
+            rpsButtons.scissorsBtn.disabled = true;
+            
             const botChoice = rpsChoices[Math.floor(Math.random() * 3)];
             let resultText;
-            let win = false;
             
-            // %40 kazanma şansı için botun seçimini manipüle et
             const rand = Math.random();
             if (rand < 0.4) { // %40 kazanma şansı
-                win = true;
-            }
-
-            if (win) {
-                // Kazanma durumunda, botun kaybedeceği hamleyi ayarla
-                if (userChoice === 'taş') {
-                    botChoiceOverride = 'makas';
-                } else if (userChoice === 'kağıt') {
-                    botChoiceOverride = 'taş';
-                } else { // userChoice === 'makas'
-                    botChoiceOverride = 'kağıt';
-                }
-                resultText = `Senin seçimin: ${userChoice} | Rakibin seçimi: ${botChoiceOverride} | Sonuç: Kazandın! (+10 Puan)`;
+                resultText = `Senin seçimin: ${userChoice} | Rakibin seçimi: ${botChoice} | Sonuç: Kazandın! (+10 Puan)`;
                 addPoints(10);
-            } else {
-                // Kaybetme veya Beraberlik
+            } else { // %60 kaybetme veya berabere
                 if (userChoice === botChoice) {
                     resultText = `Senin seçimin: ${userChoice} | Rakibin seçimi: ${botChoice} | Sonuç: Berabere!`;
                 } else if (
@@ -544,6 +521,16 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
             }
 
             rpsResultDisplay.innerHTML = resultText;
+            playAgainBtn.style.display = 'block';
+        }
+        
+        // ** Yeni Fonksiyon: Oyunu Sıfırlama **
+        function resetRPS() {
+            rpsResultDisplay.innerHTML = '';
+            rpsButtons.rockBtn.disabled = false;
+            rpsButtons.paperBtn.disabled = false;
+            rpsButtons.scissorsBtn.disabled = false;
+            playAgainBtn.style.display = 'none';
         }
 
 
@@ -555,8 +542,14 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
         }
 
         // Event Listener'lar
-        playRPSBtn.addEventListener('click', () => showScreen(rpsGameScreen));
-        backToMainBtn.addEventListener('click', () => showScreen(mainContent));
+        playRPSBtn.addEventListener('click', () => {
+            showScreen(rpsGameScreen);
+            resetRPS(); // Yeni oyun ekranı açıldığında oyunu sıfırla
+        });
+        backToMainBtn.addEventListener('click', () => {
+            showScreen(mainContent);
+        });
+        playAgainBtn.addEventListener('click', resetRPS);
         
         rpsButtons.rockBtn.addEventListener('click', () => playRPS('taş'));
         rpsButtons.paperBtn.addEventListener('click', () => playRPS('kağıt'));
@@ -731,7 +724,7 @@ Bonuslar, kampanya kural ve şartlarına bağlı olarak bazen oyun oynandıktan 
 
                 snapshot.forEach(childSnapshot => {
                     const userId = childSnapshot.key;
-                    const totalScore = childSnapshot.val() || 0; // Check for null or undefined
+                    const totalScore = childSnapshot.val() || 0;
                     
                     userPromises.push(
                         db.ref('users/' + userId).once('value').then(userSnapshot => {
