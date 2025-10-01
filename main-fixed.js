@@ -1,43 +1,97 @@
-
-// main-fixed.js
+// main-fixed.js (Cutt.ly API entegrasyonlu)
+// Kullanıcı kendi API anahtarını buraya yazmalı
+const API_KEY = "e12d776d63512216390ac046aab33ca0";
 
 document.addEventListener("DOMContentLoaded", () => {
-    // =============================
-    // ECharts Performans Grafiği
-    // =============================
     const chartDom = document.getElementById("performanceChart");
     const myChart = echarts.init(chartDom);
-
-    // Örnek veri setleri
-    const dataSets = {
-        daily: [120, 200, 150, 80, 70, 110, 130],
-        weekly: [820, 932, 901, 934, 1290, 1330, 1320],
-        monthly: [3200, 2800, 3500, 4100, 3900, 4500, 4700, 5000, 5300, 4900, 5200, 6100]
-    };
-
     let currentPeriod = "daily";
+    let linksCache = [];
 
-    function renderChart(period) {
+    // =============================
+    // Cutt.ly API çağrıları
+    // =============================
+    async function fetchAllLinks() {
+        const url = `https://cutt.ly/api/api.php?key=${API_KEY}&links`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.urlList) {
+            return Object.values(data.urlList);
+        }
+        return [];
+    }
+
+    async function fetchLinkStats(shortLink) {
+        const url = `https://cutt.ly/api/api.php?key=${API_KEY}&stats=${shortLink}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.stats) {
+            return data.stats;
+        }
+        return null;
+    }
+
+    // =============================
+    // Dashboard Güncelleme
+    // =============================
+    async function updateMetrics() {
+        try {
+            const links = await fetchAllLinks();
+            linksCache = links;
+
+            // toplam tıklama
+            let totalClicks = links.reduce((sum, link) => sum + link.clicks, 0);
+            document.getElementById("totalClicks").textContent = totalClicks.toLocaleString("tr-TR");
+
+            // bugünkü tıklama (örnek: ilk linkin istatistikleri üzerinden)
+            if (links.length > 0) {
+                const stats = await fetchLinkStats(links[0].shortLink);
+                if (stats && stats.title) {
+                    let todayClicks = stats.stats.day[Object.keys(stats.stats.day).pop()];
+                    document.getElementById("todayClicks").textContent = todayClicks.toLocaleString("tr-TR");
+                }
+            }
+
+            // aktif linkler
+            document.getElementById("activeLinks").textContent = links.length;
+
+            // son güncelleme
+            const now = new Date();
+            document.getElementById("lastUpdateTime").textContent = now.toLocaleTimeString("tr-TR", {hour: "2-digit", minute:"2-digit"});
+            document.getElementById("lastUpdate").textContent = "Az önce güncellendi";
+
+            // grafik verisini ilk link için doldur
+            if (links.length > 0) {
+                const stats = await fetchLinkStats(links[0].shortLink);
+                if (stats && stats.stats.day) {
+                    const dates = Object.keys(stats.stats.day);
+                    const values = Object.values(stats.stats.day);
+
+                    renderChart(dates, values);
+                }
+            }
+        } catch (err) {
+            console.error("Cutt.ly API Hatası:", err);
+        }
+    }
+
+    // =============================
+    // Grafik Çizimi
+    // =============================
+    function renderChart(labels, values) {
         const option = {
             tooltip: { trigger: "axis" },
-            xAxis: {
-                type: "category",
-                data: period === "daily"
-                    ? ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
-                    : period === "weekly"
-                        ? ["Hafta 1", "Hafta 2", "Hafta 3", "Hafta 4", "Hafta 5", "Hafta 6", "Hafta 7"]
-                        : ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"]
-            },
+            xAxis: { type: "category", data: labels },
             yAxis: { type: "value" },
             series: [
                 {
-                    data: dataSets[period],
+                    data: values,
                     type: "line",
                     smooth: true,
                     areaStyle: { color: "rgba(66, 165, 245, 0.2)" },
                     lineStyle: { color: "#42a5f5", width: 3 },
                     symbol: "circle",
-                    symbolSize: 8,
+                    symbolSize: 6,
                     itemStyle: { color: "#1e88e5" }
                 }
             ]
@@ -45,58 +99,18 @@ document.addEventListener("DOMContentLoaded", () => {
         myChart.setOption(option);
     }
 
-    // İlk grafik
-    renderChart(currentPeriod);
-
     // =============================
-    // Tab Butonları (Günlük/Haftalık/Aylık)
+    // Event Listeners
     // =============================
-    document.querySelectorAll(".nav-tab").forEach(btn => {
-        btn.addEventListener("click", () => {
-            document.querySelectorAll(".nav-tab").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            currentPeriod = btn.getAttribute("data-period");
-            renderChart(currentPeriod);
-        });
-    });
+    document.getElementById("refreshBtn").addEventListener("click", updateMetrics);
 
-    // =============================
-    // Metrik Güncelleme
-    // =============================
-    function updateMetrics() {
-        const totalClicks = Math.floor(Math.random() * 50000) + 10000;
-        const todayClicks = Math.floor(Math.random() * 2000) + 500;
-        const activeLinks = Math.floor(Math.random() * 10) + 1;
-
-        document.getElementById("totalClicks").textContent = totalClicks.toLocaleString("tr-TR");
-        document.getElementById("todayClicks").textContent = todayClicks.toLocaleString("tr-TR");
-        document.getElementById("activeLinks").textContent = activeLinks;
-
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-        document.getElementById("lastUpdateTime").textContent = timeStr;
-        document.getElementById("lastUpdate").textContent = "Az önce güncellendi";
-    }
-
-    // Refresh Butonu
-    document.getElementById("refreshBtn").addEventListener("click", () => {
-        updateMetrics();
-    });
-
-    // =============================
-    // CSV Export
-    // =============================
     document.getElementById("exportBtn").addEventListener("click", () => {
-        const rows = [
-            ["Tarih", "Tıklamalar"],
-            ...(
-                currentPeriod === "daily"
-                    ? ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"]
-                    : currentPeriod === "weekly"
-                        ? ["Hafta 1", "Hafta 2", "Hafta 3", "Hafta 4", "Hafta 5", "Hafta 6", "Hafta 7"]
-                        : ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"]
-            ).map((label, i) => [label, dataSets[currentPeriod][i]])
-        ];
+        if (linksCache.length === 0) return;
+
+        const rows = [["Kısa Link", "Tıklama"]];
+        linksCache.forEach(link => {
+            rows.push([link.shortLink, link.clicks]);
+        });
 
         let csvContent = "data:text/csv;charset=utf-8," 
             + rows.map(e => e.join(",")).join("\n");
@@ -109,6 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.removeChild(link);
     });
 
-    // İlk metrik seti
+    // İlk yükleme
     updateMetrics();
 });
